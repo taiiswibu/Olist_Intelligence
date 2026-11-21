@@ -1,58 +1,55 @@
+"""Start the HTML application on one local port with a one-use browser ticket."""
 import os
-import signal
-import subprocess
+import secrets
 import sys
+import threading
 import time
-import httpx
-from olist.config import ROOT, init_env, settings
+import webbrowser
+from pathlib import Path
 
 
 def main():
-    os.chdir(ROOT)
-    init_env()
-    cfg = settings()
-    if not cfg.app_token or cfg.app_token == "CHANGE_ME_LOCAL_TOKEN":
-        raise SystemExit("APP_TOKEN missing/placeholder. Remove that line from .env and regenerate a random token.")
-    from olist.database import ready
-    if not ready():
-        raise SystemExit("Chưa có dữ liệu. Chạy python manage.py setup trước.")
-    children = []
+    root = Path(__file__).resolve().parent
+    os.chdir(root)
     try:
-        with httpx.Client(timeout=1, trust_env=False) as client:
-            try:
-                client.get("http://127.0.0.1:8000/health")
-            except httpx.HTTPError:
-                pass
-            else:
-                raise SystemExit("Port 8000 đang được dùng. Dừng bản API cũ trước khi chạy lại.")
-        api = subprocess.Popen([sys.executable, "-m", "uvicorn", "olist.api:app", "--host", "127.0.0.1", "--port", "8000"])
-        children.append(api)
+        import uvicorn
+        from olist.config import init_env, settings
+        from olist.database import ready
+    except ImportError as exc:
+        print(f"Thiếu thư viện: {exc.name}. Bước cài đặt chưa hoàn tất.")
+        print(r"Chạy SETUP_WINDOWS.bat hoặc .\.venv\Scripts\python.exe -m pip install --timeout 180 --retries 10 -r requirements.txt")
+        raise SystemExit(1)
+    init_env()
+    if not settings().app_token or settings().app_token == "CHANGE_ME_LOCAL_TOKEN":
+        raise SystemExit("APP_TOKEN chưa hợp lệ. Chạy lại python manage.py setup")
+    import socket
+    with socket.socket() as s:
+        try:
+            s.bind(("127.0.0.1", 8000))
+        except OSError:
+            raise SystemExit("Port 8000 đang được dùng. Dừng bản ứng dụng cũ rồi chạy lại.")
+    ticket = secrets.token_urlsafe(32)
+    os.environ["OLIST_BROWSER_TICKET"] = ticket
+    url = "http://127.0.0.1:8000/"
+    def open_browser():
+        import urllib.request
         for _ in range(60):
-            if api.poll() is not None:
-                raise RuntimeError("API failed to start")
             try:
-                if httpx.get("http://127.0.0.1:8000/health", timeout=1, trust_env=False).status_code == 200:
-                    break
-            except httpx.HTTPError:
+                opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+                with opener.open(url + "health", timeout=1) as r:
+                    if r.status == 200:
+                        webbrowser.open(url + "#ticket=" + ticket)
+                        return
+            except Exception:
                 time.sleep(.25)
-        else:
-            raise RuntimeError("Timed out starting API")
-        print("Olist Intelligence: http://127.0.0.1:8501\nCtrl+C to stop", flush=True)
-        ui = subprocess.Popen([sys.executable, "-m", "streamlit", "run", "app.py", "--server.address", "127.0.0.1", "--server.port", "8501", "--browser.gatherUsageStats", "false"])
-        children.append(ui)
-        while ui.poll() is None and api.poll() is None:
-            time.sleep(.5)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        for child in reversed(children):
-            if child.poll() is None:
-                child.terminate()
-        for child in children:
-            try:
-                child.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                child.kill()
+    if os.getenv("OLIST_NO_BROWSER") != "1":
+        threading.Thread(target=open_browser, daemon=True).start()
+    print("Olist Intelligence · HTML/CSS web app", flush=True)
+    print(url + "  |  Ctrl+C để dừng", flush=True)
+    print("Nếu mở thủ công: dùng APP_TOKEN trong .env ở màn hình kết nối.", flush=True)
+    if not ready():
+        print("Chưa có dữ liệu: chạy python manage.py setup để tải Olist.", flush=True)
+    uvicorn.run("olist.api:app", host="127.0.0.1", port=8000, log_level="warning")
 
 
 if __name__ == "__main__":

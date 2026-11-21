@@ -12,3 +12,7 @@ models/*.npy
 *.log
 .streamlit/secrets.toml
 .DS_Store
+
+node_modules/
+.openai/
+*.bundle

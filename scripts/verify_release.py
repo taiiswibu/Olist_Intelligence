@@ -120,28 +120,18 @@ def main():
             assert r.status_code==200 and r.json()["sources"]
             assert httpx.get(cfg.api_url+"/status",trust_env=False).status_code==401
             assert c.get("/erp/catalog").status_code==422 # no credentials: clear failure, no fake ERP
-        from streamlit.testing.v1 import AppTest
-        at = AppTest.from_file(str(ROOT / "app.py"),default_timeout=30).run()
-        assert not at.exception and not at.error, [e.message for e in at.exception]
-        ui["initial_metrics"] = [{"label":x.label,"value":x.value} for x in at.metric]
-        next(b for b in at.button if b.label=="GMV theo tháng năm 2017").click().run()
-        assert not at.exception and len(at.session_state["chat_history"])==1
-        ui["chat"] = "passed"
-        next(b for b in at.button if b.label=="Tra cứu").click().run()
-        assert not at.exception
-        ui["retrieval_form"] = "passed"
-        from olist.ml import MODEL
-        if MODEL.exists():
-            oid = rows("SELECT order_id FROM order_fact WHERE purchase_month='2018-07' AND order_status='delivered' ORDER BY order_id LIMIT 1")[0]["order_id"]
-            next(t for t in at.text_input if t.label.startswith("Mã order_id")).set_value(oid)
-            next(b for b in at.button if b.label=="Tính điểm rủi ro").click().run()
-            assert not at.exception
-            assert any(m.label=="Điểm rủi ro" for m in at.metric)
-            ui["ml_form"] = "passed"
-        # Change state and dates to exercise actual dashboard filter requests.
-        next(x for x in at.selectbox if x.label=="Bang khách hàng").select("SP").run()
-        assert not at.exception
-        ui["state_filter"] = "passed"
+        with httpx.Client(base_url=cfg.api_url,trust_env=False,timeout=30) as web:
+            html=web.get('/')
+            assert html.status_code==200 and 'text/html' in html.headers['content-type']
+            assert cfg.app_token not in html.text
+            assert web.get('/assets/app.js').status_code==200
+            assert web.get('/assets/styles.css').status_code==200
+            assert web.get('/status').status_code==401
+            session=web.post('/session',json={'key':cfg.app_token})
+            assert session.status_code==200 and 'httponly' in session.headers['set-cookie'].lower()
+            assert web.get('/status').status_code==200
+            assert web.post('/agent/chat',json={'question':'Tổng quan KPI năm 2018'},headers={'X-Olist-Request':'1'}).status_code==200
+            ui={"html":"passed","javascript_asset":"passed","stylesheet_asset":"passed","http_only_session":"passed","cookie_authenticated_chat":"passed"}
     finally:
         p.terminate()
         p.wait(timeout=10)
@@ -150,7 +140,7 @@ def main():
     report = {"verified_at_utc":datetime.now(timezone.utc).isoformat(),"platform":platform.platform(),"python":platform.python_version(),
         "unit_tests_passed":tests,"cloud_llm_tested":False,"odoo_server_tested":False,"postgres_server_tested":False,
         "windows_executed":False,"hybrid_embedding_model_tested":False,"browser_visual_tested":False,
-        "api_http_checks":checks,"streamlit_apptest":ui,"compose_structure":"passed; no Docker daemon available",
+        "api_http_checks":checks,"html_web_checks":ui,"compose_structure":"passed; no Docker daemon available",
         "raw_csv_reconciliation_2018_SP":{"orders":len(scope),"gmv":expected_gmv,"late_eligible":len(known),"late_orders":expected_late,"passed":True},
         "lexical_retrieval":{"cases":len(GOLD),"recall_at_1":float(np.mean(recalls1)),"recall_at_3":float(np.mean(recalls3)),"mrr_at_5":float(np.mean(reciprocal)),"details":retrieval_cases},
         "local_rule_router":{"cases":len(tools),"accuracy":sum(x["actual"]==x["expected"] for x in tools)/len(tools),"details":tools},

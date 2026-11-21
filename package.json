@@ -1,0 +1,9 @@
+{
+  "name": "olist-intelligence-web",
+  "private": true,
+  "version": "0.2.0",
+  "scripts": {
+    "dev": "node scripts/preview.mjs",
+    "check": "node --check frontend/assets/app.js"
+  }
+}

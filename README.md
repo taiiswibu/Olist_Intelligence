@@ -1,52 +1,61 @@
 # Olist Intelligence
 
-Ứng dụng chạy trên máy cá nhân để xem BI từ dữ liệu Olist, hỏi bằng tiếng Việt, tra tài liệu có nguồn và tích hợp Odoo Community local.
+Không gian dữ liệu thương mại chạy local: dashboard, hỏi bằng tiếng Việt, tra tài liệu có nguồn và tạo đề xuất báo giá trong Odoo Community.
 
-**Bản 0.1:** dashboard + FastAPI + công cụ BI + truy xuất tài liệu + cấu hình nhiều nguồn LLM + quy trình duyệt báo giá Odoo + model giao trễ thử nghiệm. Không cần thuê VPS. Chế độ mặc định không gọi API cloud, không cần Docker để mở BI.
+**v0.2 — HTML / CSS / JavaScript + FastAPI.** Frontend được phục vụ cùng backend trên một địa chỉ. Không cần Node, frontend build hoặc VPS để chạy trên Windows. Biểu đồ SVG lấy số liệu thật từ API; không dùng số liệu mẫu thay thế khi chưa có dữ liệu.
 
 ## Chạy trên Windows
 
-1. Cài **Python 3.12 64-bit**. Bản này đã kiểm thử bằng Python 3.12 trên Linux; script Windows được cung cấp nhưng chưa chạy trên Windows thật. Nếu được hỏi, chọn thêm Python vào PATH.
-2. Giải nén dự án vào một thư mục, ví dụ `D:\Code\Olist_Intelligence`.
-3. Chạy **SETUP_WINDOWS.bat**. Lần đầu cài thư viện, tạo `.env` với token ngẫu nhiên, tải khoảng 45 MB CSV Olist chính thức và tạo database SQLite. Cần Internet ở bước này.
-4. Chạy **START_WINDOWS.bat**, mở **http://127.0.0.1:8501**. Nếu trình duyệt không tự mở, dán địa chỉ vào Chrome.
+1. Cài **Python 3.12 64-bit**, giải nén/clone mã nguồn vào một thư mục.
+2. Chạy **SETUP_WINDOWS.bat**. Bước này tạo `.venv`, cài requirements với timeout/retry, tạo `.env` và tải khoảng 45 MB CSV Olist chính thức.
+3. Chạy **START_WINDOWS.bat**. Trình duyệt tự mở **http://127.0.0.1:8000/**.
 
-Giữ cửa sổ chạy ứng dụng mở. Nhấn Ctrl+C để dừng. Không cần mở VSCode hay bật Docker để xem dashboard.
+Nếu trình duyệt không tự mở, truy cập địa chỉ trên và dùng giá trị `APP_TOKEN` trong `.env` để kết nối. Phiên trình duyệt dùng cookie HttpOnly, SameSite Strict; API key của các model không được đưa vào frontend. Link tự mở dùng ticket một lần trong URL fragment, được xóa khỏi thanh địa chỉ sau khi kết nối.
 
-Nếu tải Kaggle lỗi: tải ZIP tại https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce, giải nén chín CSV trực tiếp vào `data/raw/`, chạy lại SETUP_WINDOWS.bat. Nếu chỉ cần tạo lại dữ liệu:
+Bản cũ dùng cổng 8501; bản này dùng **8000**. Dừng tiến trình cũ trước khi chạy. Giữ cửa sổ Terminal mở; Ctrl+C để dừng.
+
+### Dùng Terminal PowerShell
 
 ```powershell
+cd D:\Code\project_AI\Olist_Intelligence
+.\.venv\Scripts\python.exe -m pip install --timeout 180 --retries 10 --progress-bar off -r requirements.txt
 .\.venv\Scripts\python.exe manage.py setup
+.\.venv\Scripts\python.exe run.py
 ```
 
-## Cài bằng terminal / Linux
+Chỉ chạy dòng tiếp theo sau khi dòng trước thành công. Lỗi thiếu `httpx` hoặc thư viện khác nghĩa là bước cài thư viện chưa hoàn tất hoặc đang dùng sai interpreter; dùng đúng `.venv\Scripts\python.exe`. Nếu pip timeout, giữ `.venv` và cache, chạy lại SETUP. Không dùng nút Run Code trong VSCode để chạy file batch; mở Terminal.
 
-```bash
-python3 -m venv .venv
-# Linux/macOS
-source .venv/bin/activate
-# Windows PowerShell thay dòng trên bằng: .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python manage.py setup
-python run.py
-```
+Nếu Kaggle không tải được, tải ZIP từ https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce và giải nén chín CSV trực tiếp vào `data/raw/`, rồi chạy `manage.py setup`.
 
-Luôn chạy lệnh từ thư mục có README này. Nếu PowerShell chặn activate, dùng thẳng `.\.venv\Scripts\python.exe`, không cần thay policy toàn máy. Nếu port 8000/8501 bị chiếm, dừng bản ứng dụng cũ trước khi chạy lại.
+## Các màn hình
 
-## Dữ liệu nào đang dùng?
+| Màn hình | Chức năng |
+|---|---|
+| Tổng quan | KPI, xu hướng tháng, cơ cấu ngành hàng, bảng seller/bang/category, bộ lọc và xuất CSV |
+| Trợ lý dữ liệu | Hỏi bằng tiếng Việt, xem công cụ, SQL, phạm vi và nguồn tài liệu |
+| Kho tri thức | Tra định nghĩa KPI, từ điển dữ liệu, quy trình ERP và thiết kế ML |
+| Rủi ro giao hàng | Chọn đơn lịch sử, chạy model thử nghiệm và đọc kết quả holdout |
+| ERP & Phê duyệt | Kết nối Odoo, lưu đề xuất, xem payload và duyệt tạo báo giá nháp |
+| Kiểm chứng dữ liệu | Đối soát CSV, checksum, báo cáo kiểm thử và nhật ký thao tác |
 
-- Nguồn: **Brazilian E-Commerce Public Dataset by Olist**, chín CSV chính thức trên Kaggle, dữ liệu lịch sử đã ẩn danh.
-- Snapshot đã chạy: **99.441 đơn, 112.650 item**. `reports/data_quality.json` ghi số dòng, hash và đối soát CSV; setup trên máy bạn tạo lại báo cáo theo file thực tế đã tải.
-- Mặc định dashboard lọc **01/01/2017–31/08/2018**, không phải toàn bộ snapshot. Đổi bộ lọc ở sidebar nếu muốn xem toàn bộ.
-- Tiền tệ **BRL (R$)**. GMV hàng hóa dùng đơn delivered, không gồm cước; không gọi là doanh thu ròng hay lợi nhuận.
-- Giao trễ so sánh **ngày lịch**: giao trong ngày hẹn vẫn đúng hạn. Chỉ đơn delivered có đủ actual/estimated date mới nằm trong mẫu số.
-- Không có tồn kho, giá vốn, BOM hoặc dữ liệu sản xuất. Các đối tượng trong Odoo là demo chuyển đổi từ lịch sử, không phải ERP gốc của Olist.
+Frontend có bố cục responsive, thao tác bàn phím và không dùng CDN để tải thư viện biểu đồ/font. Các trang không bịa trạng thái tích hợp khi thiếu cấu hình.
 
-CSV và database không đưa vào gói mã nguồn/Git. Setup tải từ nguồn chính thức. Giấy phép dữ liệu **CC BY-NC-SA 4.0**, xem `DATA_LICENSE.md`; giấy phép mã dự án tách riêng.
+## Dữ liệu và KPI
 
-## Gemini, Groq, OpenRouter, NVIDIA, AMD
+Nguồn: **Brazilian E-Commerce Public Dataset by Olist** trên Kaggle, chín CSV đã ẩn danh, giai đoạn 2016–2018. Snapshot đã chạy có **99.441 đơn và 112.650 item**. `reports/data_quality.json` ghi số dòng và SHA-256 thực tế. Setup tạo lại báo cáo theo file bạn tải.
 
-Mở `.env` bằng VSCode/Notepad. Chỉ điền key trên máy của bạn, không đưa `.env` lên GitHub.
+- Mặc định dashboard lọc ngày mua **01/01/2017–31/08/2018**; không phải toàn bộ snapshot.
+- Tiền tệ **BRL / R$**. GMV hàng hóa là tổng giá item của đơn delivered, chưa gồm cước; không phải doanh thu ròng/lợi nhuận Olist.
+- AOV hàng hóa dùng số đơn delivered làm mẫu số, không dùng số item/payment.
+- Giao trễ so sánh **ngày lịch**; giao trong ngày hẹn vẫn đúng hạn. Chỉ đơn delivered đủ ngày giao thực tế và ngày hẹn nằm trong mẫu số.
+- Item/payment được aggregate riêng trước khi join để tránh nhân tiền. Customer mua lại phải dùng `customer_unique_id`.
+- Không có tồn kho, giá vốn hoặc dữ liệu nhà máy trong nguồn này. Dữ liệu Odoo là các đối tượng demo chuyển đổi từ lịch sử, không phải ERP gốc của Olist.
+
+Raw CSV, database, `.env` và artifact model không commit lên Git. Xem `DATA_LICENSE.md` cho CC BY-NC-SA 4.0 và attribution. Mã dự án có giấy phép riêng.
+
+## Cấu hình LLM
+
+Mở `.env` và điền provider/model bạn đang có quyền dùng, ví dụ:
 
 ```dotenv
 LLM_PROVIDERS=groq,gemini,openrouter,nvidia,amd,ollama
@@ -56,7 +65,7 @@ GEMINI_API_KEY=your_key
 GEMINI_MODEL=exact_model_id_available_to_your_account
 ```
 
-Tương tự cho `OPENROUTER_*`, `NVIDIA_*`. Với AMD, thêm `AMD_BASE_URL` từ đúng dịch vụ bạn đang dùng; không có một endpoint AMD được giả định sẵn. Model ID để trống có chủ đích vì chưa biết model/quota của tài khoản bạn. Có thể liệt kê model:
+Có sẵn endpoint cho Gemini, Groq, OpenRouter và NVIDIA. Với AMD, cung cấp `AMD_BASE_URL` theo đúng dịch vụ của bạn; chưa giả định nhà cung cấp. Model ID để trống có chủ đích vì chưa xác minh quota/model của tài khoản. Chỉ provider đủ key/model được gọi. Sửa `.env` xong cần khởi động lại.
 
 ```powershell
 .\.venv\Scripts\python.exe manage.py models --provider groq
@@ -65,60 +74,39 @@ Tương tự cho `OPENROUTER_*`, `NVIDIA_*`. Với AMD, thêm `AMD_BASE_URL` t�
 .\.venv\Scripts\python.exe manage.py models --provider nvidia
 ```
 
-Sau khi sửa `.env`, dừng và chạy lại ứng dụng. Chỉ provider có đủ model/key mới được gọi. Chuyển nguồn theo thứ tự trên khi lỗi; một lần thử mỗi nguồn, không xoay key/tài khoản để né quota. Ứng dụng **không biết số dư hoặc bảo đảm model bạn chọn miễn phí**. Chọn model/quota free trong console; không thêm nguồn trả phí nếu không muốn phát sinh phí. Mặc định `LLM_PROVIDERS=` rỗng.
+Mặc định `LLM_PROVIDERS=` rỗng, không gọi cloud. Khi không có model/API, giao diện ghi rõ **quy tắc local / trích đoạn tài liệu**. Khi có LLM, model chọn công cụ từ danh sách cố định; số liệu BI vẫn dựng trực tiếp từ kết quả truy vấn, không để LLM tự viết lại số.
 
-Không có key: dashboard vẫn đầy đủ, hội thoại dùng quy tắc, tài liệu trả trích đoạn. Giao diện ghi rõ chế độ, không giả làm kết quả LLM.
+Fallback thử theo thứ tự khi lỗi, tối đa một lần mỗi provider. Không xoay key/tài khoản để né quota. Phần mềm không biết số dư và không bảo đảm model bạn chọn miễn phí; chọn đúng model/quota free trong console.
 
-Nguồn tài liệu endpoint:
+Nguồn endpoint: https://ai.google.dev/gemini-api/docs/openai · https://console.groq.com/docs/openai · https://openrouter.ai/docs/api/reference/overview · https://docs.api.nvidia.com/nim/reference/llm-apis
 
-- Gemini: https://ai.google.dev/gemini-api/docs/openai
-- Groq: https://console.groq.com/docs/openai
-- OpenRouter: https://openrouter.ai/docs/api/reference/overview
-- NVIDIA: https://docs.api.nvidia.com/nim/reference/llm-apis
+## Ollama và RAG
 
-## Chạy LLM local bằng Ollama
+Cài Ollama từ https://ollama.com/download. Có thể bắt đầu bằng `ollama pull qwen3:4b`, đặt `LLM_PROVIDERS=ollama`. Chưa benchmark trên GTX 1650 của bạn; ứng dụng giới hạn context 4096 token, vẫn cần thêm bộ nhớ ngoài weights.
 
-Cài Ollama từ https://ollama.com/download, sau đó:
+Corpus nằm trong `docs/knowledge/`, do dự án biên soạn; không phải tài liệu nội bộ Olist. Mặc định truy xuất **lexical TF-IDF** có bỏ dấu tiếng Việt. Có thể bật hybrid qua Ollama embedding: đặt `EMBED_MODEL`, chạy `python manage.py embed`, đặt `RAG_MODE=hybrid`. Chế độ model embedding thật chưa được xác minh trong môi trường phát hành.
 
-```bash
-ollama pull qwen3:4b
-```
+## Odoo Community local
 
-Sửa `.env`: `LLM_PROVIDERS=ollama`, `OLLAMA_MODEL=qwen3:4b`. Bản quantized khoảng 2,5 GB; RAM/VRAM chạy còn có runtime và context. Chưa benchmark trên GTX 1650 của bạn. Nếu chậm hoặc thiếu bộ nhớ có thể chọn model nhỏ hơn và đổi tên trong `.env`. Giới hạn context của ứng dụng là 4096 token; không cần fine-tune.
+Xem **docs/ODOO_WINDOWS.md**. Compose chạy Odoo Community 19 và PostgreSQL; BI mặc định dùng SQLite nên không cần Docker để mở dashboard.
 
-## RAG
+Luồng: nhập demo bằng `manage.py odoo-seed --limit 10` → đọc catalog qua RPC → lưu đề xuất trong ứng dụng → người dùng xem payload và duyệt → tạo `sale.order` draft → audit. Không xác nhận đơn, xuất kho, lập hóa đơn hoặc thu tiền.
 
-Corpus `docs/knowledge/` do dự án viết từ schema công khai và các định nghĩa/quy trình demo. Mỗi kết quả có tên file, section và chunk ID. Mặc định **TF-IDF lexical**, không được gọi là semantic embedding.
+Odoo/PostgreSQL server thật chưa được kiểm thử trong môi trường xây dựng; tests mock không được mô tả là đã tích hợp server thành công. Bản local một operator, chưa có RBAC doanh nghiệp. Không mở port ứng dụng ra Internet.
 
-Tùy chọn hybrid dùng embedding Ollama local:
+## ML giao trễ thử nghiệm
 
-```bash
-ollama pull qwen3-embedding:0.6b
-```
-
-Đặt `EMBED_MODEL=qwen3-embedding:0.6b`, chạy `python manage.py embed`, đặt `RAG_MODE=hybrid`, khởi động lại. Nếu model/tag không có trong Ollama của bạn, chọn embedding model đang hỗ trợ `/api/embed`. Chế độ này chưa kiểm thử với model thật trong môi trường đóng gói. Corpus nhỏ nên chưa cần dịch vụ vector database riêng.
-
-## Tích hợp ERP Odoo miễn phí
-
-Làm theo **[docs/ODOO_WINDOWS.md](docs/ODOO_WINDOWS.md)**. Dùng Odoo Community 19 local, không đăng ký Odoo Online. Bước nhập demo là lệnh riêng, không tự ghi ERP khi mở dashboard. Chưa kiểm thử server Odoo/Docker thật trong môi trường xây dựng vì không có Docker.
-
-Luồng: nhập demo → đọc khách/sản phẩm qua RPC → lưu đề xuất → người dùng xem và duyệt → tạo `sale.order` nháp → lưu audit. Không xác nhận đơn, giao hàng, xuất hóa đơn hoặc thu tiền.
-
-## ML giao trễ — thử nghiệm
-
-Gói phát hành kèm artifact đã train bằng dữ liệu thật và phiên bản thư viện trong requirements. Nếu không có artifact hoặc phiên bản khác, train lại:
+Nếu chưa có artifact (ví dụ clone từ Git):
 
 ```powershell
 .\.venv\Scripts\python.exe manage.py train
 ```
 
-So sánh Dummy prior, Logistic Regression và HistGradientBoosting. Model/ngưỡng chọn trên validation; holdout tháng 07/2018 không dùng để chỉnh lại. `reports/ml_evaluation.json` ghi đầy đủ cấu hình, features, split và kết quả.
+Dùng CPU. So Dummy prior, Logistic Regression, HistGradientBoosting với chia tập thời gian. Model/ngưỡng chọn trên validation, không đổi theo kết quả test. Báo cáo tại `reports/ml_evaluation.json`.
 
-**Kết quả hiện còn yếu.** Boosting được chọn trên validation, holdout AP khoảng 0,050 và ROC-AUC khoảng 0,602. Ở ngưỡng 0,13, precision khoảng 4,6%, recall khoảng 45,1%; Brier kém baseline. Giữ model để minh họa pipeline và giới hạn, **chưa dùng để tự động ra quyết định**. Không chọn lại Logistic chỉ vì đã nhìn kết quả test.
+**Kết quả hiện còn yếu.** Boosting được chọn trên validation có AP test khoảng 0,050; ROC-AUC khoảng 0,602; precision khoảng 4,6% và recall khoảng 45,1% ở ngưỡng 0,13. Brier kém baseline. Chưa dùng để tự động ra quyết định; điểm chưa hiệu chỉnh xác suất. Snapshot không chứng minh mọi thuộc tính chưa bị sửa sau thời điểm dự đoán; chỉ đánh giá trên đơn delivered đủ nhãn.
 
-Không dùng ngày giao thực tế hay review làm feature. Snapshot không chứng minh ngày hẹn/product attributes chưa bị cập nhật sau lúc duyệt đơn. Chỉ đánh giá trên đơn delivered đủ nhãn; không đại diện đơn chưa hoàn tất/hủy, không chứng minh hiệu quả với dữ liệu hiện tại. Điểm rủi ro chưa hiệu chỉnh xác suất.
-
-## Kiểm thử và API
+## Kiểm thử
 
 ```bash
 python -m pip install -r requirements-dev.txt
@@ -126,27 +114,12 @@ python -m pytest -q
 python scripts/verify_release.py
 ```
 
-API docs: http://127.0.0.1:8000/docs. Trừ `/health`, các endpoint yêu cầu header `X-App-Token` lấy từ `.env`. Swagger chưa có ô Authorize riêng; có thể dùng trường header của từng request.
+API docs: http://127.0.0.1:8000/docs. HTTP clients có thể dùng `X-App-Token`; frontend dùng cookie HttpOnly. Request ghi qua cookie cần kiểm tra same-origin và header riêng. Không có endpoint chạy SQL/shell tùy ý. SQL BI cố định và parameter binding; ghi ERP phải qua bước duyệt.
 
-`/analytics/kpis`, `/analytics/monthly`, `/analytics/category`, `/analytics/seller`, `/analytics/state`, `/agent/chat`, `/rag/search`, `/ml/order/{id}`, `/erp/catalog`, `/erp/quotations`, `/actions`, `/audit`.
+Node chỉ cần cho kiểm tra cú pháp JavaScript (`node --check frontend/assets/app.js`) hoặc preview trong môi trường phát triển; người dùng Windows không cần cài Node để chạy ứng dụng.
 
-Không có API thực thi SQL tùy ý. Truy vấn BI dùng SQL cố định và parameter binding. Bản local dùng một operator/token, **chưa có RBAC nhiều người**, không công bố port ra Internet. Trong hội thoại, khoảng ngày có thể ghi `năm 2018`, `tháng 2/2018`, `tháng 2 năm 2018`, hoặc hai ngày ISO; bộ lọc thực tế luôn hiển thị. Các ngưỡng/top tùy ý chưa hỗ trợ sẽ yêu cầu làm rõ.
+## Quản lý commit
 
-Xem `reports/verification.json` và `docs/VERIFICATION.md` để biết chính xác phần nào đã chạy, phần nào chỉ được kiểm tra qua mock. Workflow GitHub được cung cấp nhưng chưa có kết quả CI remote khi chưa tạo/push repo.
+Mã nguồn có lịch sử Git theo từng phần việc. Mỗi đợt sửa: xem diff → chạy kiểm tra phù hợp → commit thông điệp mô tả hành vi → push lên repo đã kết nối. Không tự động commit `.env`, data hoặc model. CI GitHub chỉ được ghi nhận thành công khi workflow thực sự chạy xong trên repo.
 
-## Cấu trúc
-
-```text
-app.py                  Giao diện Streamlit
-run.py                  Chạy API và UI local
-manage.py               Setup, ingest, train, seed Odoo, embedding
-olist/                  ETL, BI, Agent, RAG, ML, adapter ERP, API
-scripts/                Setup Windows, seed ERP, xác minh phát hành
-docs/knowledge/         Corpus tri thức do dự án biên soạn
-tests/                  Kiểm thử grain, KPI, auth, routing, approvals
-reports/                Kết quả đã chạy; không phải số liệu minh họa
-models/                 Artifact ML thử nghiệm
-docker-compose.yml      Odoo + PostgreSQL; analytical PostgreSQL tùy chọn
-```
-
-Lộ trình sau khi bản local chạy được: xác minh Odoo trên máy Windows → kiểm tra từng API/model bạn có → bổ sung bộ đánh giá hội thoại thật → cải thiện mô hình ở một vòng nghiên cứu mới, giữ riêng holdout mới → cân nhắc UI/auth nâng cao. Không cần thuê VPS ở bước này.
+Việc commit tiếp theo được thực hiện trong các phiên làm việc được yêu cầu; không có tiến trình tự sửa mã hay push khi cuộc trò chuyện không hoạt động.

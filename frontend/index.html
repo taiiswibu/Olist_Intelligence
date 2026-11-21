@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#103b30">
+  <meta name="description" content="Không gian phân tích thương mại Olist: BI, trợ lý dữ liệu và ERP local.">
+  <title>Olist Intelligence · Không gian dữ liệu</title>
+  <link rel="icon" href="/assets/mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/styles.css">
+  <script src="/assets/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#view">Đến nội dung chính</a>
+  <aside class="sidebar" id="sidebar" aria-label="Điều hướng chính">
+    <a class="brand" data-page="overview" href="#overview" aria-label="Olist Intelligence"><img src="/assets/mark.svg" alt="" width="38" height="38"><span>olist<span class="brand-sub">INTELLIGENCE</span></span></a>
+    <div class="workspace-label"><span class="workspace-avatar">O</span><span>Commerce workspace<small>Không gian cá nhân</small></span><span data-icon="chevron"></span></div>
+    <p class="nav-heading">KHÔNG GIAN LÀM VIỆC</p>
+    <nav>
+      <button class="nav-item active" data-page="overview" aria-current="page"><span data-icon="grid"></span>Tổng quan<span class="nav-active-dot"></span></button>
+      <button class="nav-item" data-page="assistant"><span data-icon="spark"></span>Trợ lý dữ liệu<span class="nav-tag">AI</span></button>
+      <button class="nav-item" data-page="knowledge"><span data-icon="book"></span>Kho tri thức</button>
+      <button class="nav-item" data-page="delivery"><span data-icon="truck"></span>Rủi ro giao hàng</button>
+      <div class="nav-divider"></div>
+      <p class="nav-heading">VẬN HÀNH</p>
+      <button class="nav-item" data-page="erp"><span data-icon="layers"></span>ERP & Phê duyệt</button>
+      <button class="nav-item" data-page="verification"><span data-icon="shield"></span>Kiểm chứng dữ liệu</button>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="sidebar-note"><span class="note-symbol">✧</span><strong>Bắt đầu từ một câu hỏi.</strong><p>Để dữ liệu giải thích điều đang diễn ra trong hoạt động kinh doanh.</p><button data-page="assistant">Mở trợ lý dữ liệu</button></div>
+      <button class="profile" id="connection-button"><span class="profile-avatar">VT</span><span>Local workspace<small id="sidebar-status">Đang kết nối…</small></span><span data-icon="settings"></span></button>
+    </div>
+  </aside>
+  <div class="app-shell">
+    <header class="topbar"><div class="breadcrumbs"><button id="mobile-menu" class="icon-button mobile-only" aria-label="Mở menu"><span data-icon="menu"></span></button><span>Workspace</span><span class="crumb-separator">/</span><strong id="breadcrumb">Tổng quan</strong></div><div class="topbar-actions"><span class="topbar-badge"><span class="status-dot"></span>Chạy trên máy</span><button class="quick-search" id="quick-search"><span data-icon="search"></span><span>Hỏi dữ liệu của bạn</span><kbd>Ctrl K</kbd></button><button class="icon-button" id="refresh-button" aria-label="Làm mới dữ liệu"><span data-icon="refresh"></span></button><span class="user-avatar" title="Không gian cá nhân">VT</span></div></header>
+    <main id="main">
+      <div class="page-heading"><div><div class="eyebrow" id="page-eyebrow">YOUR BUSINESS, AT A GLANCE</div><h1 id="page-title">Tổng quan kinh doanh</h1><p id="page-description">Một góc nhìn rõ ràng hơn về dữ liệu thương mại của bạn.</p></div><button id="export-button" class="button secondary"><span data-icon="download"></span>Xuất dữ liệu</button></div>
+      <form class="filter-bar" id="filters"><span class="filter-caption"><span data-icon="sliders"></span>Bộ lọc</span><label>Từ ngày<input name="start" id="filter-start" type="date" value="2017-01-01" required></label><span class="date-divider">—</span><label>Đến ngày<input name="end" id="filter-end" type="date" value="2018-08-31" required></label><div class="filter-separator"></div><label class="state-label">Bang khách hàng<select id="filter-state" name="state"><option value="">Tất cả các bang</option></select></label><button type="submit" class="button small">Áp dụng</button><span class="filter-source">Nguồn Olist · BRL</span></form>
+      <div id="global-error" class="notice error" role="alert" hidden></div>
+      <div id="view" tabindex="-1" aria-live="polite"><div class="loading-state"><span class="spinner"></span>Đang kết nối không gian dữ liệu…</div></div>
+      <footer class="page-footer"><span><span class="footer-mark">◈</span> Olist Intelligence <span class="footer-version">v0.2</span></span><span>Dữ liệu lịch sử 2016–2018 · CC BY-NC-SA 4.0</span></footer>
+    </main>
+  </div>
+  <dialog id="connect-dialog" class="connect-dialog"><div class="dialog-brand"><img src="/assets/mark.svg" alt="" width="44" height="44"> Olist Intelligence</div><span class="eyebrow">YOUR LOCAL WORKSPACE</span><h2>Kết nối không gian dữ liệu</h2><p>Ứng dụng chạy trên máy của bạn. Mở bằng <strong>START_WINDOWS.bat</strong> để kết nối tự động, hoặc nhập APP_TOKEN từ tệp <code>.env</code>.</p><form id="connect-form"><label for="connection-key">Mã kết nối local</label><input id="connection-key" type="password" autocomplete="off" required placeholder="APP_TOKEN trong tệp .env"><p id="connect-error" class="form-error" role="alert"></p><button class="button full" type="submit">Mở không gian làm việc</button></form><p class="privacy-note"><span data-icon="lock"></span>Mã được xác thực trên backend, không lưu trong trình duyệt.</p></dialog>
+  <dialog id="status-dialog" class="status-dialog"><div class="dialog-header"><h2>Kết nối & cấu hình</h2><button class="icon-button" data-close="status-dialog" aria-label="Đóng"><span data-icon="close"></span></button></div><div id="connection-detail"></div><div class="dialog-actions"><button id="logout-button" class="button secondary">Ngắt phiên trình duyệt</button></div></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>

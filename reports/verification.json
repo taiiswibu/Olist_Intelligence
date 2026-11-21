@@ -1,8 +1,8 @@
 {
-  "verified_at_utc": "2026-11-21T15:36:57.496757+00:00",
+  "verified_at_utc": "2026-11-21T17:01:58.122046+00:00",
   "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
   "python": "3.12.14",
-  "unit_tests_passed": 27,
+  "unit_tests_passed": 34,
   "cloud_llm_tested": false,
   "odoo_server_tested": false,
   "postgres_server_tested": false,
@@ -43,29 +43,12 @@
       "status": 200
     }
   ],
-  "streamlit_apptest": {
-    "initial_metrics": [
-      {
-        "label": "GMV hàng hóa · R$",
-        "value": "13,181,027.13"
-      },
-      {
-        "label": "Số đơn",
-        "value": "99,092"
-      },
-      {
-        "label": "AOV hàng hóa · R$",
-        "value": "137.00"
-      },
-      {
-        "label": "Tỷ lệ giao trễ",
-        "value": "6.79%"
-      }
-    ],
-    "chat": "passed",
-    "retrieval_form": "passed",
-    "ml_form": "passed",
-    "state_filter": "passed"
+  "html_web_checks": {
+    "html": "passed",
+    "javascript_asset": "passed",
+    "stylesheet_asset": "passed",
+    "http_only_session": "passed",
+    "cookie_authenticated_chat": "passed"
   },
   "compose_structure": "passed; no Docker daemon available",
   "raw_csv_reconciliation_2018_SP": {
@@ -235,8 +218,8 @@
     ]
   },
   "offline_agent_latency_ms": {
-    "p50": 104.48125800030539,
-    "p95": 423.3068091498353,
+    "p50": 100.19893150001735,
+    "p95": 432.6711427506779,
     "note": "local test environment, no LLM; not the user's laptop"
   }
 }

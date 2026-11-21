@@ -1,0 +1,35 @@
+{
+  "checked_at_utc": "2026-11-21T17:03:39.340866+00:00",
+  "app_version": "0.2.0",
+  "browser": "Chrome via managed preview",
+  "checks": {
+    "one_use_ticket_session": "passed; fragment removed after authentication",
+    "dashboard_real_data": "passed",
+    "state_filter_SP": {
+      "orders_rendered": "41.621",
+      "gmv_rendered": "R$ 5.055.587,13",
+      "late_rate_rendered": "4,5%"
+    },
+    "chart_switch_to_late_rate": "passed",
+    "bi_chat_2018_SP": {
+      "orders_rendered": "23,871",
+      "gmv_rendered": "R$ 2,919,328.17",
+      "route": "local_rules"
+    },
+    "rag_search": "passed; three source sections displayed",
+    "ml_form": {
+      "score_rendered": "0.084",
+      "model": "hist_gradient_boosting",
+      "threshold": 0.13
+    },
+    "odoo_missing_configuration": "clear ODOO_PASSWORD error; no fake connection",
+    "desktop_visual": "reviewed at browser viewport; no browser screenshots saved as deliverables"
+  },
+  "not_verified": [
+    "Windows runtime",
+    "Odoo live server",
+    "cloud model APIs",
+    "mobile browser viewport",
+    "GitHub remote CI"
+  ]
+}
