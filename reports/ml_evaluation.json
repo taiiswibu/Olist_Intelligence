@@ -1,0 +1,102 @@
+{
+  "winner": "hist_gradient_boosting",
+  "threshold": 0.13,
+  "features": [
+    "product_gmv",
+    "freight",
+    "item_count",
+    "seller_count",
+    "mean_weight_g",
+    "category_count",
+    "purchase_weekday",
+    "purchase_hour",
+    "approval_hours",
+    "promised_days",
+    "customer_state",
+    "dominant_category"
+  ],
+  "sklearn": "1.9.1",
+  "python": "3.12.14",
+  "prediction_time": "order approval; assumes item, product and promised delivery information already available",
+  "split": {
+    "train": "approval before May 2018; actual + promised dates before May 1",
+    "validation": "May 2018 approvals with outcomes known by July 1",
+    "test": "July 2018 approvals; delivered and labeled orders only; no refit"
+  },
+  "validation": {
+    "prior": {
+      "rows": 6418,
+      "positive_rate": 0.06808974758491743,
+      "threshold": 0.5,
+      "pr_auc_ap": 0.06808974758491743,
+      "roc_auc": 0.5,
+      "brier": 0.06350908280487928,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "logistic": {
+      "rows": 6418,
+      "positive_rate": 0.06808974758491743,
+      "threshold": 0.5,
+      "pr_auc_ap": 0.12825095430843877,
+      "roc_auc": 0.6823143616111584,
+      "brier": 0.06200757370081922,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "hist_gradient_boosting": {
+      "rows": 6418,
+      "positive_rate": 0.06808974758491743,
+      "threshold": 0.5,
+      "pr_auc_ap": 0.14658066291515212,
+      "roc_auc": 0.6780324957330555,
+      "brier": 0.06239377430517152,
+      "precision": 0.5,
+      "recall": 0.002288329519450801,
+      "f1": 0.004555808656036446
+    }
+  },
+  "test": {
+    "prior": {
+      "rows": 6047,
+      "positive_rate": 0.03191665288572846,
+      "threshold": 0.5,
+      "pr_auc_ap": 0.03191665288572846,
+      "roc_auc": 0.5,
+      "brier": 0.032801226461274355,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "logistic": {
+      "rows": 6047,
+      "positive_rate": 0.03191665288572846,
+      "threshold": 0.5,
+      "pr_auc_ap": 0.06584999216730437,
+      "roc_auc": 0.6108732171970452,
+      "brier": 0.03702078180027736,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "hist_gradient_boosting": {
+      "rows": 6047,
+      "positive_rate": 0.03191665288572846,
+      "threshold": 0.13,
+      "pr_auc_ap": 0.049952631797251915,
+      "roc_auc": 0.6021514893496498,
+      "brier": 0.04150631428023212,
+      "precision": 0.04559748427672956,
+      "recall": 0.45077720207253885,
+      "f1": 0.08281770585435506
+    }
+  },
+  "limitations": [
+    "Completed orders only; no accuracy claim for open/canceled orders or current business data.",
+    "Historical CSV cannot prove that estimated delivery dates and product attributes were not revised later.",
+    "Risk scores are uncalibrated; no probability calibration claim.",
+    "Changing cohorts and observable-outcome filtering can introduce selection bias."
+  ]
+}

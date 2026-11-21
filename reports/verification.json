@@ -1,0 +1,242 @@
+{
+  "verified_at_utc": "2026-11-21T15:36:57.496757+00:00",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "python": "3.12.14",
+  "unit_tests_passed": 27,
+  "cloud_llm_tested": false,
+  "odoo_server_tested": false,
+  "postgres_server_tested": false,
+  "windows_executed": false,
+  "hybrid_embedding_model_tested": false,
+  "browser_visual_tested": false,
+  "api_http_checks": [
+    {
+      "path": "/status",
+      "status": 200
+    },
+    {
+      "path": "/analytics/kpis",
+      "status": 200
+    },
+    {
+      "path": "/analytics/monthly",
+      "status": 200
+    },
+    {
+      "path": "/analytics/category",
+      "status": 200
+    },
+    {
+      "path": "/analytics/seller",
+      "status": 200
+    },
+    {
+      "path": "/analytics/state",
+      "status": 200
+    },
+    {
+      "path": "/actions",
+      "status": 200
+    },
+    {
+      "path": "/audit",
+      "status": 200
+    }
+  ],
+  "streamlit_apptest": {
+    "initial_metrics": [
+      {
+        "label": "GMV hàng hóa · R$",
+        "value": "13,181,027.13"
+      },
+      {
+        "label": "Số đơn",
+        "value": "99,092"
+      },
+      {
+        "label": "AOV hàng hóa · R$",
+        "value": "137.00"
+      },
+      {
+        "label": "Tỷ lệ giao trễ",
+        "value": "6.79%"
+      }
+    ],
+    "chat": "passed",
+    "retrieval_form": "passed",
+    "ml_form": "passed",
+    "state_filter": "passed"
+  },
+  "compose_structure": "passed; no Docker daemon available",
+  "raw_csv_reconciliation_2018_SP": {
+    "orders": 23871,
+    "gmv": 2919328.17,
+    "late_eligible": 23329,
+    "late_orders": 1167,
+    "passed": true
+  },
+  "lexical_retrieval": {
+    "cases": 17,
+    "recall_at_1": 0.8235294117647058,
+    "recall_at_3": 0.9411764705882353,
+    "mrr_at_5": 0.8823529411764706,
+    "details": [
+      {
+        "question": "GMV hàng hóa gồm phí vận chuyển không?",
+        "relevant_section_contains": "GMV hàng hóa",
+        "rank": 2
+      },
+      {
+        "question": "AOV hàng hóa tính như thế nào?",
+        "relevant_section_contains": "AOV hàng hóa",
+        "rank": 1
+      },
+      {
+        "question": "Giao trong ngày hẹn có bị tính giao trễ?",
+        "relevant_section_contains": "Tỷ lệ giao trễ",
+        "rank": 1
+      },
+      {
+        "question": "Tỷ lệ hủy có gộp unavailable không?",
+        "relevant_section_contains": "Tỷ lệ hủy",
+        "rank": 1
+      },
+      {
+        "question": "Join item với payment có nhân đôi tiền?",
+        "relevant_section_contains": "Grain",
+        "rank": 1
+      },
+      {
+        "question": "Dữ liệu nguồn có timezone UTC không?",
+        "relevant_section_contains": "Nguồn dữ liệu",
+        "rank": 1
+      },
+      {
+        "question": "Olist có tồn kho và giá vốn không?",
+        "relevant_section_contains": "Giá trị thiếu",
+        "rank": 1
+      },
+      {
+        "question": "Chín CSV gồm bảng nào?",
+        "relevant_section_contains": "Các bảng CSV",
+        "rank": null
+      },
+      {
+        "question": "Duyệt tạo báo giá Odoo ra sao?",
+        "relevant_section_contains": "Duyệt tạo báo giá",
+        "rank": 1
+      },
+      {
+        "question": "Import dữ liệu Olist vào ERP tạo trạng thái gì?",
+        "relevant_section_contains": "Import dữ liệu",
+        "rank": 1
+      },
+      {
+        "question": "Odoo Community miễn phí khác Odoo Online?",
+        "relevant_section_contains": "Odoo Community",
+        "rank": 1
+      },
+      {
+        "question": "Bản local có phân quyền RBAC không?",
+        "relevant_section_contains": "Giới hạn bản local",
+        "rank": 1
+      },
+      {
+        "question": "Không có API thì Agent dùng gì?",
+        "relevant_section_contains": "Agent và nguồn",
+        "rank": 2
+      },
+      {
+        "question": "RAG mặc định có semantic embedding không?",
+        "relevant_section_contains": "RAG và nguồn",
+        "rank": 1
+      },
+      {
+        "question": "Dự báo giao trễ tránh leakage thế nào?",
+        "relevant_section_contains": "Dự báo giao trễ",
+        "rank": 1
+      },
+      {
+        "question": "Chia tập ML theo thời gian và chọn ngưỡng ra sao?",
+        "relevant_section_contains": "Chia tập",
+        "rank": 1
+      },
+      {
+        "question": "API free có được bảo đảm không?",
+        "relevant_section_contains": "Nguồn API",
+        "rank": 1
+      }
+    ]
+  },
+  "local_rule_router": {
+    "cases": 12,
+    "accuracy": 1.0,
+    "details": [
+      {
+        "question": "Tổng quan KPI",
+        "expected": "kpis",
+        "actual": "kpis"
+      },
+      {
+        "question": "GMV theo tháng năm 2018",
+        "expected": "monthly",
+        "actual": "monthly"
+      },
+      {
+        "question": "Doanh số theo ngành hàng",
+        "expected": "category",
+        "actual": "category"
+      },
+      {
+        "question": "Hiệu suất seller",
+        "expected": "seller",
+        "actual": "seller"
+      },
+      {
+        "question": "Bang nào giao trễ nhiều",
+        "expected": "state",
+        "actual": "state"
+      },
+      {
+        "question": "Định nghĩa AOV",
+        "expected": "docs",
+        "actual": "docs"
+      },
+      {
+        "question": "Công thức tỷ lệ hủy",
+        "expected": "docs",
+        "actual": "docs"
+      },
+      {
+        "question": "Tồn kho còn bao nhiêu",
+        "expected": "unsupported",
+        "actual": "unsupported"
+      },
+      {
+        "question": "Lợi nhuận Olist",
+        "expected": "unsupported",
+        "actual": "unsupported"
+      },
+      {
+        "question": "Tạo báo giá Odoo",
+        "expected": "erp",
+        "actual": "erp"
+      },
+      {
+        "question": "Tỷ lệ giao trễ",
+        "expected": "kpis",
+        "actual": "kpis"
+      },
+      {
+        "question": "Xu hướng GMV",
+        "expected": "monthly",
+        "actual": "monthly"
+      }
+    ]
+  },
+  "offline_agent_latency_ms": {
+    "p50": 104.48125800030539,
+    "p95": 423.3068091498353,
+    "note": "local test environment, no LLM; not the user's laptop"
+  }
+}

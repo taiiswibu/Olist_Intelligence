@@ -1,0 +1,48 @@
+name: olist-intelligence
+services:
+  odoo-db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: ${ODOO_PG_PASSWORD:-olist_local_demo}
+      POSTGRES_DB: postgres
+    volumes:
+      - odoo-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  odoo:
+    image: odoo:19.0
+    depends_on:
+      odoo-db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8069:8069"
+    environment:
+      HOST: odoo-db
+      USER: odoo
+      PASSWORD: ${ODOO_PG_PASSWORD:-olist_local_demo}
+    volumes:
+      - odoo-web:/var/lib/odoo
+  analytics-db:
+    image: postgres:16
+    profiles: ["postgres"]
+    ports:
+      - "127.0.0.1:5433:5432"
+    environment:
+      POSTGRES_USER: olist
+      POSTGRES_PASSWORD: ${ANALYTICS_PG_PASSWORD:-olist_local_demo}
+      POSTGRES_DB: olist_analytics
+    volumes:
+      - analytics-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U olist -d olist_analytics"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+volumes:
+  odoo-pg:
+  odoo-web:
+  analytics-pg:
