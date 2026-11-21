@@ -2,6 +2,7 @@
 const $ = (s, root = document) => root.querySelector(s);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money = v => v == null ? '—' : new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:2}).format(Number(v));
+const moneyHTML = v => v == null ? '—' : `<span class="currency">R$</span><span>${esc(money(v).replace(/^R\$\s*/,''))}</span>`;
 const number = v => v == null ? '—' : new Intl.NumberFormat('vi-VN',{maximumFractionDigits:0}).format(Number(v));
 const percent = v => v == null ? '—' : new Intl.NumberFormat('vi-VN',{style:'percent',maximumFractionDigits:2}).format(Number(v));
 const paths = {
@@ -27,15 +28,32 @@ const paths = {
 const icon = name => `<svg viewBox="0 0 24 24" class="icon" aria-hidden="true">${paths[name] || paths.chart}</svg>`;
 function hydrateIcons(root=document){root.querySelectorAll('[data-icon]').forEach(el => {el.outerHTML=icon(el.dataset.icon);});}
 const meta = {
- overview:['Tổng quan','YOUR BUSINESS, AT A GLANCE','Tổng quan kinh doanh','Một góc nhìn rõ ràng hơn về dữ liệu thương mại của bạn.'],
- assistant:['Trợ lý dữ liệu','ASK BETTER QUESTIONS','Đối thoại cùng dữ liệu','Đặt câu hỏi bằng tiếng Việt. Mọi con số đều có căn cứ.'],
- knowledge:['Kho tri thức','KNOWLEDGE, WITH CONTEXT','Tri thức có nguồn gốc','Định nghĩa KPI, cấu trúc dữ liệu và quy trình ở cùng một nơi.'],
- delivery:['Rủi ro giao hàng','RESEARCH & EXPERIMENTS','Hiểu rủi ro giao hàng','Khám phá mô hình hồi cứu và giới hạn trước khi sử dụng.'],
- erp:['ERP & Phê duyệt','FROM INSIGHT TO ACTION','Hành động có kiểm soát','Kết nối Odoo Community, xem đề xuất và duyệt từng thao tác.'],
- verification:['Kiểm chứng dữ liệu','TRUST IS IN THE DETAILS','Minh bạch từ dữ liệu gốc','Đối soát nguồn, kiểm tra hệ thống và theo dõi nhật ký.']
+ overview:['Tổng quan','DỮ LIỆU THÀNH GÓC NHÌN','Tổng quan kinh doanh','Nắm bắt nhịp kinh doanh. Khám phá điều đứng sau những con số.'],
+ assistant:['Trợ lý dữ liệu','BẮT ĐẦU TỪ MỘT CÂU HỎI','Đối thoại cùng dữ liệu','Đặt câu hỏi bằng tiếng Việt. Mọi con số đều có căn cứ.'],
+ knowledge:['Kho tri thức','HIỂU DỮ LIỆU TRONG BỐI CẢNH','Tri thức có nguồn gốc','Định nghĩa KPI, cấu trúc dữ liệu và quy trình ở cùng một nơi.'],
+ delivery:['Rủi ro giao hàng','NGHIÊN CỨU & THỬ NGHIỆM','Hiểu rủi ro giao hàng','Khám phá mô hình hồi cứu và giới hạn trước khi sử dụng.'],
+ erp:['ERP & Phê duyệt','TỪ GÓC NHÌN ĐẾN HÀNH ĐỘNG','Hành động có kiểm soát','Kết nối Odoo Community, xem đề xuất và duyệt từng thao tác.'],
+ verification:['Kiểm chứng dữ liệu','TIN CẬY TỪ NHỮNG CHI TIẾT','Minh bạch từ dữ liệu gốc','Đối soát nguồn, kiểm tra hệ thống và theo dõi nhật ký.']
 };
 const state = {page:'overview', status:null, filters:{start:'2017-01-01',end:'2018-08-31'}, cache:{}, history:[], chart:'gmv', table:'seller', search:'', catalog:null, quotations:[], pendingQuestion:'', busy:false};
 let renderSequence = 0, toastTimer;
+const chartObserver = new ResizeObserver(()=>{
+ const target=$('#main-chart');
+ if(target&&state.page==='overview')target.innerHTML=areaChart(state.cache.monthly||[]);
+});
+const mobileNavigation = window.matchMedia('(max-width: 760px)');
+function setMenu(open, {restoreFocus=false}={}){
+ const isOpen=open && mobileNavigation.matches, sidebar=$('#sidebar');
+ sidebar.classList.toggle('open',isOpen);
+ sidebar.inert=mobileNavigation.matches && !isOpen;
+ document.body.classList.toggle('menu-open',isOpen);
+ $('#sidebar-backdrop').hidden=!isOpen;
+ $('#mobile-menu').setAttribute('aria-expanded',String(isOpen));
+ $('.app-shell').inert=isOpen;
+ if(isOpen){sidebar.setAttribute('role','dialog');sidebar.setAttribute('aria-modal','true');$('#close-menu').focus();}
+ else{sidebar.removeAttribute('role');sidebar.removeAttribute('aria-modal');if(restoreFocus)$('#mobile-menu').focus();}
+}
+mobileNavigation.addEventListener('change',()=>setMenu(false,{restoreFocus:mobileNavigation.matches && $('#sidebar').contains(document.activeElement)}));
 function toast(text){$('#toast').textContent=text;$('#toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').hidden=true,4200);}
 function readableError(detail){if(Array.isArray(detail))return detail.map(x=>x.msg || String(x)).join('; ');return typeof detail === 'string' ? detail : 'Yêu cầu chưa hoàn tất. Hãy kiểm tra kết nối.';}
 async function api(path, {method='GET', body, filters=false}={}){
@@ -48,23 +66,24 @@ async function api(path, {method='GET', body, filters=false}={}){
  return data;
 }
 function showConnect(){if(!$('#connect-dialog').open)$('#connect-dialog').showModal();}
-async function loadStatus(){state.status=await api('/status');$('#sidebar-status').textContent=state.status.data_ready?'Đã kết nối · dữ liệu sẵn sàng':'Đã kết nối · chờ dữ liệu';return state.status;}
+async function loadStatus(){state.status=await api('/status');$('#sidebar-status').textContent=state.status.data_ready?'Dữ liệu sẵn sàng':'Đã kết nối · chờ dữ liệu';return state.status;}
 function scopeText(filters=state.filters){return `${filters.start} — ${filters.end}${filters.state?' · '+filters.state:''}`;}
 function basicMarkdown(text){return esc(text).replace(/^###? (.+)$/gm,'<strong>$1</strong>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\n/g,'<br>');}
 function empty(title,description,command=''){return `<div class="panel empty-state"><div class="ai-emblem">${icon('folder')}</div><h2>${esc(title)}</h2><p>${esc(description)}</p>${command?`<pre>${esc(command)}</pre>`:''}</div>`;}
-function sparkline(data){const nums=data.filter(Number.isFinite);if(nums.length<2)return '';const lo=Math.min(...nums),hi=Math.max(...nums),points=nums.map((v,i)=>`${i/(nums.length-1)*65},${23-(v-lo)/(hi-lo||1)*20}`).join(' ');return `<svg class="kpi-spark" viewBox="0 0 65 25" aria-hidden="true"><polyline points="${points}" fill="none" stroke="#9bb48b" stroke-width="1.5"/></svg>`;}
+function sparkline(data){const nums=data.filter(Number.isFinite);if(nums.length<2)return '';const lo=Math.min(...nums),hi=Math.max(...nums),points=nums.map((v,i)=>`${i/(nums.length-1)*220},${23-(v-lo)/(hi-lo||1)*20}`).join(' ');return `<svg class="kpi-spark" viewBox="0 0 220 25" preserveAspectRatio="none" aria-hidden="true"><polyline points="${points}" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>`;}
 function kpi(label,value,foot,name,series=[]){return `<article class="kpi"><div class="kpi-head">${esc(label)}<span class="kpi-icon">${icon(name)}</span></div><div class="kpi-value">${value}</div><div class="kpi-foot">${foot}</div>${sparkline(series)}</article>`;}
 function areaChart(data){
  if(!data.length)return '<div class="empty-state">Không có dữ liệu trong phạm vi đã chọn.</div>';
- const width=650,height=225,left=53,right=18,top=20,bottom=35;
+ const width=Math.max(240,($('#main-chart')?.clientWidth||674)-24),height=270,left=48,right=24,top=24,bottom=35;
  const values=data.map(r=>state.chart==='gmv'?Number(r.product_gmv):Number(r.late_eligible)?100*Number(r.late_orders)/Number(r.late_eligible):0);
  const max=Math.max(...values,1)*1.14,plotW=width-left-right,plotH=height-top-bottom;
  const x=i=>left+i/Math.max(1,data.length-1)*plotW,y=v=>top+plotH-v/max*plotH;
  const line=values.map((v,i)=>`${i?'L':'M'}${x(i).toFixed(2)},${y(v).toFixed(2)}`).join(' ');
  const area=`${line} L${x(data.length-1)},${height-bottom} L${left},${height-bottom} Z`;
  const ticks=Array.from({length:5},(_,i)=>{const val=max*i/4,yy=y(val);const label=state.chart==='gmv'?(val>=1e6?(val/1e6).toFixed(1)+'M':number(val/1000)+'k'):val.toFixed(1)+'%';return `<line x1="${left}" x2="${width-right}" y1="${yy}" y2="${yy}" stroke="#edf1eb" stroke-dasharray="3 4"/><text x="${left-12}" y="${yy+4}" text-anchor="end">${label}</text>`;}).join('');
- const step=Math.max(1,Math.ceil(data.length/7));
- const labels=data.map((r,i)=>i%step===0||i===data.length-1?`<text x="${x(i)}" y="${height-10}" text-anchor="middle">${esc(r.month.slice(5)+'/'+r.month.slice(2,4))}</text>`:'').join('');
+ const labelCount=Math.min(data.length,Math.max(2,Math.min(7,Math.floor(plotW/60))));
+ const labelIndices=new Set(Array.from({length:labelCount},(_,i)=>Math.round(i*(data.length-1)/Math.max(1,labelCount-1))));
+ const labels=data.map((r,i)=>labelIndices.has(i)?`<text x="${x(i)}" y="${height-10}" text-anchor="middle">${esc(r.month.slice(5)+'/'+r.month.slice(2,4))}</text>`:'').join('');
  return `<div class="chart-wrap"><svg class="area-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Biểu đồ ${state.chart==='gmv'?'GMV':'tỷ lệ giao trễ'} theo tháng, đơn vị ${state.chart==='gmv'?'BRL':'phần trăm'}"><defs><linearGradient id="area-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#85ad83" stop-opacity=".28"/><stop offset="100%" stop-color="#c3d8b8" stop-opacity=".03"/></linearGradient></defs>${ticks}<path d="${area}" fill="url(#area-fill)"/><path d="${line}" fill="none" stroke="#5e8a61" stroke-width="2.4" stroke-linejoin="round"/>${values.map((v,i)=>`<g class="chart-point"><line x1="${x(i)}" x2="${x(i)}" y1="${top}" y2="${height-bottom}" stroke="#91ae85" stroke-dasharray="3 3"/><circle cx="${x(i)}" cy="${y(v)}" r="4" fill="#5e8a61" stroke="white" stroke-width="2"/><rect x="${x(i)-plotW/Math.max(2,data.length-1)/2}" y="${top}" width="${Math.max(18,plotW/Math.max(1,data.length-1))}" height="${plotH}" fill="transparent"><title>${esc(rMonth(data[i].month))}: ${state.chart==='gmv'?esc(money(v)):v.toFixed(2)+'%'}</title></rect></g>`).join('')}${labels}</svg></div>`;
 }
 function rMonth(m){return 'Tháng '+m.slice(5)+'/'+m.slice(0,4);}
@@ -85,7 +104,7 @@ async function overview(){
  const [k,monthly,categories,sellers,states]=await Promise.all(['/analytics/kpis','/analytics/monthly','/analytics/category','/analytics/seller','/analytics/state'].map(p=>api(p,{filters:true})));
  state.cache={k,monthly:monthly.rows,category:categories.rows,seller:sellers.rows,state:states.rows};
  const v=k.values;
- return `<div class="page-enter"><div class="kpi-grid">${kpi('GMV hàng hóa',esc(money(v.product_gmv)),`<strong>${number(v.delivered_orders)}</strong>&nbsp; đơn đã giao`,'wallet',monthly.rows.map(r=>Number(r.product_gmv)))}${kpi('Tổng số đơn',number(v.orders),'Theo khoảng ngày mua đã chọn','bag',monthly.rows.map(r=>Number(r.orders)))}${kpi('Giá trị đơn trung bình',esc(money(v.product_aov)),'AOV hàng hóa · chưa gồm cước','chart')}${kpi('Tỷ lệ giao trễ',percent(v.late_delivery_rate),`Trên <strong>${number(v.late_eligible)}</strong>&nbsp; đơn đủ ngày`,'truck',monthly.rows.map(r=>r.late_eligible?r.late_orders/r.late_eligible:0))}</div><div class="dashboard-grid"><section class="panel"><div class="panel-header"><div><h2>Nhịp độ kinh doanh</h2><p>Biến động theo tháng trong phạm vi đã chọn</p></div><div class="segmented"><button data-chart="gmv" class="${state.chart==='gmv'?'active':''}">GMV</button><button data-chart="late" class="${state.chart==='late'?'active':''}">Giao trễ</button></div></div><div class="chart-legend"><span class="legend-line"></span><span id="chart-series-label">${state.chart==='gmv'?'GMV hàng hóa (BRL)':'Tỷ lệ giao trễ (%)'}</span></div><div id="main-chart">${areaChart(monthly.rows)}</div><div class="chart-note">${state.chart==='gmv'?'Chỉ tính giá hàng hóa của đơn delivered, không gồm phí vận chuyển.':'Chỉ tính đơn delivered có đủ ngày giao thực tế và ngày hẹn.'}</div></section><section class="panel"><div class="panel-header"><div><h2>Cơ cấu ngành hàng</h2><p>Tỷ trọng trong GMV hàng hóa</p></div><span class="tag neutral">Top 15</span></div>${categoryDonut(categories.rows,v.product_gmv)}</section></div><div class="insight-strip"><span class="insight-icon">${icon('spark')}</span><div><strong>Con số là điểm bắt đầu. Câu hỏi mới mở ra góc nhìn.</strong><p>Khám phá seller, ngành hàng và hiệu quả giao hàng cùng trợ lý dữ liệu.</p></div><button class="button" data-ask="Bang nào giao trễ nhiều năm 2018?">Khám phá cùng AI</button></div><section class="panel"><div class="panel-header"><div><h2>Đi sâu vào dữ liệu</h2><p id="table-scope-note">Seller có tối thiểu 20 đơn · xếp theo số đơn trễ</p></div><div class="table-toolbar"><div class="table-tabs"><button data-table="seller" class="${state.table==='seller'?'active':''}">Người bán</button><button data-table="state" class="${state.table==='state'?'active':''}">Bang</button><button data-table="category" class="${state.table==='category'?'active':''}">Ngành hàng</button></div><input class="table-search" id="table-search" aria-label="Tìm trong bảng" placeholder="Tìm trong bảng…"></div></div><div id="data-table">${tableHTML(state.cache[state.table]||[],state.table)}</div><div class="table-bottom"><span id="table-count">${number((state.cache[state.table]||[]).length)} kết quả trong bảng</span><span>Tiền tệ BRL · Dữ liệu lịch sử</span></div></section></div>`;
+ return `<div class="page-enter"><div class="kpi-grid">${kpi('GMV hàng hóa',moneyHTML(v.product_gmv),`<strong>${number(v.delivered_orders)}</strong>&nbsp; đơn đã giao`,'wallet',monthly.rows.map(r=>Number(r.product_gmv)))}${kpi('Tổng số đơn',number(v.orders),'Theo khoảng ngày mua đã chọn','bag',monthly.rows.map(r=>Number(r.orders)))}${kpi('Giá trị đơn trung bình',moneyHTML(v.product_aov),'AOV hàng hóa · chưa gồm cước','chart')}${kpi('Tỷ lệ giao trễ',percent(v.late_delivery_rate),`Trên <strong>${number(v.late_eligible)}</strong>&nbsp; đơn đủ ngày`,'truck',monthly.rows.map(r=>r.late_eligible?r.late_orders/r.late_eligible:0))}</div><div class="dashboard-grid"><section class="panel"><div class="panel-header"><div><h2>Nhịp độ kinh doanh</h2><p>Biến động theo tháng trong phạm vi đã chọn</p></div><div class="segmented"><button data-chart="gmv" aria-pressed="${state.chart==='gmv'}" class="${state.chart==='gmv'?'active':''}">GMV</button><button data-chart="late" aria-pressed="${state.chart==='late'}" class="${state.chart==='late'?'active':''}">Giao trễ</button></div></div><div class="chart-legend"><span class="legend-line"></span><span id="chart-series-label">${state.chart==='gmv'?'GMV hàng hóa (BRL)':'Tỷ lệ giao trễ (%)'}</span></div><div id="main-chart">${areaChart(monthly.rows)}</div><div class="chart-note">${state.chart==='gmv'?'Chỉ tính giá hàng hóa của đơn delivered, không gồm phí vận chuyển.':'Chỉ tính đơn delivered có đủ ngày giao thực tế và ngày hẹn.'}</div></section><section class="panel"><div class="panel-header"><div><h2>Cơ cấu ngành hàng</h2><p>Tỷ trọng trong GMV hàng hóa</p></div><span class="tag neutral">Top 15</span></div>${categoryDonut(categories.rows,v.product_gmv)}</section></div><div class="insight-strip"><span class="insight-icon">${icon('spark')}</span><div><strong>Con số là điểm bắt đầu. Câu hỏi mới mở ra góc nhìn.</strong><p>Khám phá seller, ngành hàng và hiệu quả giao hàng cùng trợ lý dữ liệu.</p></div><button class="button" data-ask="Bang nào giao trễ nhiều năm 2018?">Khám phá cùng AI</button></div><section class="panel"><div class="panel-header"><div><h2>Đi sâu vào dữ liệu</h2><p id="table-scope-note">Seller có tối thiểu 20 đơn · xếp theo số đơn trễ</p></div><div class="table-toolbar"><div class="table-tabs"><button data-table="seller" class="${state.table==='seller'?'active':''}">Người bán</button><button data-table="state" class="${state.table==='state'?'active':''}">Bang</button><button data-table="category" class="${state.table==='category'?'active':''}">Ngành hàng</button></div><input class="table-search" id="table-search" value="${esc(state.search)}" aria-label="Tìm trong bảng" placeholder="Tìm trong bảng…"></div></div><div id="data-table">${tableHTML(state.cache[state.table]||[],state.table)}</div><div class="table-bottom"><span id="table-count">${number((state.cache[state.table]||[]).length)} kết quả trong bảng</span><span>Tiền tệ BRL · Dữ liệu lịch sử</span></div></section></div>`;
 }
 function responseHTML(r){
  const route=r.routing||{},mode=route.provider?`${route.provider} / ${route.model}`:'Quy tắc local · không dùng LLM định tuyến';
@@ -124,20 +143,25 @@ async function verification(){const [quality,audit]=await Promise.all([api('/rep
 const renderers={overview,assistant,knowledge,delivery,erp,verification};
 async function navigate(page, {replace=false}={}){
  if(!meta[page])page='overview';
+ chartObserver.disconnect();
  state.page=page;const sequence=++renderSequence;const [breadcrumb,eyebrow,title,description]=meta[page];
  $('#breadcrumb').textContent=breadcrumb;$('#page-eyebrow').textContent=eyebrow;$('#page-title').textContent=title;$('#page-description').textContent=description;
+ document.title=breadcrumb+' · Olist Intelligence';
  $('#export-button').hidden=page!=='overview';$('#filters').hidden=!['overview','assistant'].includes(page);
  document.querySelectorAll('.nav-item').forEach(b=>{const active=b.dataset.page===page;b.classList.toggle('active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
- $('#sidebar').classList.remove('open');$('#global-error').hidden=true;
+ setMenu(false,{restoreFocus:document.body.classList.contains('menu-open')});$('#global-error').hidden=true;
  if(!replace)history.replaceState({},'', '#'+page);
+ $('#view').setAttribute('aria-busy','true');
  $('#view').innerHTML='<div class="loading-state"><span class="spinner"></span>Đang chuẩn bị góc nhìn…</div>';
  try{
   if(!state.status.data_ready){$('#view').innerHTML=empty('Dữ liệu chưa được khởi tạo','Mở Terminal trong thư mục dự án và chạy bước setup. Sau đó nhấn nút làm mới.','python manage.py setup');return;}
   const html=await renderers[page]();if(sequence!==renderSequence)return;$('#view').innerHTML=html;
+  if(page==='overview'){updateTable();chartObserver.observe($('#main-chart'));}
   if(page==='assistant'&&state.pendingQuestion){const q=state.pendingQuestion;state.pendingQuestion='';await sendQuestion(q);}
  }catch(e){if(sequence===renderSequence){$('#view').innerHTML=empty('Chưa tải được dữ liệu',e.message);}}
+ finally{if(sequence===renderSequence)$('#view').setAttribute('aria-busy','false');}
 }
-function updateTable(){let rows=state.cache[state.table]||[];if(state.search)rows=rows.filter(r=>Object.values(r).some(v=>String(v).toLowerCase().includes(state.search.toLowerCase())));$('#data-table').innerHTML=tableHTML(rows,state.table);$('#table-count').textContent=rows.length+' kết quả trong bảng';$('#table-scope-note').textContent=state.table==='seller'?'Seller có tối thiểu 20 đơn · xếp theo số đơn trễ':state.table==='state'?'Bang có tối thiểu 20 đơn đủ ngày giao':'Top 15 ngành hàng theo GMV của đơn delivered';document.querySelectorAll('[data-table]').forEach(b=>b.classList.toggle('active',b.dataset.table===state.table));}
+function updateTable(){let rows=state.cache[state.table]||[];if(state.search)rows=rows.filter(r=>Object.values(r).some(v=>String(v).toLowerCase().includes(state.search.toLowerCase())));$('#data-table').innerHTML=tableHTML(rows,state.table);$('#table-count').textContent=rows.length+' kết quả trong bảng';$('#table-scope-note').textContent=state.table==='seller'?'Seller có tối thiểu 20 đơn · xếp theo số đơn trễ':state.table==='state'?'Bang có tối thiểu 20 đơn đủ ngày giao':'Top 15 ngành hàng theo GMV của đơn delivered';document.querySelectorAll('[data-table]').forEach(b=>{const active=b.dataset.table===state.table;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});}
 function exportCSV(){const rows=state.cache[state.table]||[];if(!rows.length){toast('Không có dữ liệu để xuất.');return;}const keys=Object.keys(rows[0]),cell=v=>'"'+String(v??'').replaceAll('"','""')+'"';const csv='\ufeff'+[keys.map(cell).join(','),...rows.map(r=>keys.map(k=>cell(r[k])).join(','))].join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=`olist_${state.table}_${state.filters.start}_${state.filters.end}.csv`;a.click();URL.revokeObjectURL(url);toast('Đã xuất bảng '+state.table+' theo bộ lọc hiện tại.');}
 async function connectionDetails(){if(!state.status)return;$('#connection-detail').innerHTML=`<div class="status-detail">Phiên bản<span class="value">${esc(state.status.version)}</span></div><div class="status-detail">Database<span class="value">${esc(state.status.database)}</span></div><div class="status-detail">Nguồn đơn hàng<span class="value">${number(state.status.range?.orders)} đơn</span></div><div class="status-detail">Mô hình ML<span class="value">${state.status.model_ready?'Có artifact thử nghiệm':'Chưa train'}</span></div><div class="notice" style="margin-top:20px">${state.status.providers.length?'Nguồn LLM: '+state.status.providers.map(p=>esc(p.provider)+' / '+esc(p.model)).join('<br>'):'Chưa cấu hình LLM. Điền key và model trong .env, sau đó khởi động lại ứng dụng.'}</div><p class="small-text muted">Ứng dụng không hiển thị hoặc gửi API key lên giao diện. Cấu hình AMD cần đúng endpoint của dịch vụ bạn dùng.</p>`;$('#status-dialog').showModal();}
 document.addEventListener('click',async e=>{
@@ -145,11 +169,12 @@ document.addEventListener('click',async e=>{
  if(b.dataset.page){e.preventDefault();await navigate(b.dataset.page);return;}
  if(b.dataset.ask){e.preventDefault();await sendQuestion(b.dataset.ask);return;}
  if(b.dataset.close){$('#'+b.dataset.close).close();return;}
- if(b.dataset.chart){state.chart=b.dataset.chart;document.querySelectorAll('[data-chart]').forEach(x=>x.classList.toggle('active',x.dataset.chart===state.chart));$('#main-chart').innerHTML=areaChart(state.cache.monthly);$('#chart-series-label').textContent=state.chart==='gmv'?'GMV hàng hóa (BRL)':'Tỷ lệ giao trễ (%)';$('#main-chart').parentElement.querySelector('.chart-note').textContent=state.chart==='gmv'?'Chỉ tính giá hàng hóa của đơn delivered, không gồm phí vận chuyển.':'Chỉ tính đơn delivered có đủ ngày giao thực tế và ngày hẹn.';return;}
+ if(b.dataset.chart){state.chart=b.dataset.chart;document.querySelectorAll('[data-chart]').forEach(x=>{const active=x.dataset.chart===state.chart;x.classList.toggle('active',active);x.setAttribute('aria-pressed',String(active));});$('#main-chart').innerHTML=areaChart(state.cache.monthly);$('#chart-series-label').textContent=state.chart==='gmv'?'GMV hàng hóa (BRL)':'Tỷ lệ giao trễ (%)';$('#main-chart').parentElement.querySelector('.chart-note').textContent=state.chart==='gmv'?'Chỉ tính giá hàng hóa của đơn delivered, không gồm phí vận chuyển.':'Chỉ tính đơn delivered có đủ ngày giao thực tế và ngày hẹn.';return;}
  if(b.dataset.table){state.table=b.dataset.table;state.search='';if($('#table-search'))$('#table-search').value='';updateTable();return;}
  if(b.dataset.doc){const queries={kpi:'GMV AOV tỷ lệ giao trễ công thức',data:'Nguồn dữ liệu schema CSV timezone giá trị thiếu',erp:'Odoo Community import duyệt tạo báo giá',model:'Agent RAG dự báo giao trễ chia tập ML'};$('#knowledge-query').value=queries[b.dataset.doc];await searchKnowledge(queries[b.dataset.doc]);return;}
  if(b.id==='clear-chat'){state.history=[];await navigate('assistant');return;}
- if(b.id==='mobile-menu'){$('#sidebar').classList.toggle('open');return;}
+ if(b.id==='mobile-menu'){setMenu(true);return;}
+ if(b.id==='close-menu'||b.id==='sidebar-backdrop'){setMenu(false,{restoreFocus:true});return;}
  if(b.id==='export-button'){exportCSV();return;}
  if(b.id==='quick-search'){await navigate('assistant');$('#chat-input')?.focus();return;}
  if(b.id==='refresh-button'){try{await loadStatus();await navigate(state.page);toast('Đã làm mới dữ liệu.');}catch(err){toast(err.message);}return;}
@@ -160,7 +185,19 @@ document.addEventListener('click',async e=>{
 });
 document.addEventListener('change',e=>{if(e.target.dataset.approveCheck){const id=e.target.dataset.approveCheck;document.querySelector(`[data-approve="${id}"]`).disabled=!e.target.checked;}if(e.target.id==='risk-sample')$('#risk-order').value=e.target.value;});
 document.addEventListener('input',e=>{if(e.target.id==='table-search'){state.search=e.target.value;updateTable();}});
-document.addEventListener('keydown',async e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();await navigate('assistant');$('#chat-input')?.focus();}if(e.target.id==='chat-input'&&e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('#chat-form').requestSubmit();}});
+document.addEventListener('keydown',async e=>{
+ if(document.body.classList.contains('menu-open')){
+  if(e.key==='Escape'){e.preventDefault();setMenu(false,{restoreFocus:true});return;}
+  if(e.key==='Tab'){
+   const items=[...$('#sidebar').querySelectorAll('a[href],button:not(:disabled)')].filter(el=>el.getClientRects().length);
+   const first=items[0],last=items[items.length-1];
+   if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+   else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+  }
+ }
+ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();await navigate('assistant');$('#chat-input')?.focus();}
+ if(e.target.id==='chat-input'&&e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();$('#chat-form').requestSubmit();}
+});
 document.addEventListener('submit',async e=>{
  const form=e.target;e.preventDefault();
  if(form.id==='filters'){const start=$('#filter-start').value,end=$('#filter-end').value;if(start>end){toast('Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.');return;}state.filters={start,end};if($('#filter-state').value)state.filters.state=$('#filter-state').value;await navigate(state.page);return;}
@@ -171,6 +208,7 @@ document.addEventListener('submit',async e=>{
  if(form.id==='connect-form'){const b=form.querySelector('button');b.disabled=true;$('#connect-error').textContent='';try{await api('/session',{method:'POST',body:{key:$('#connection-key').value}});$('#connection-key').value='';$('#connect-dialog').close();await loadStatus();await navigate(state.page);}catch(err){$('#connect-error').textContent=err.message;}finally{b.disabled=false;}}
 });
 async function init(){
+ setMenu(false);
  hydrateIcons();['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'].forEach(s=>{const option=document.createElement('option');option.value=s;option.textContent=s;$('#filter-state').append(option);});
  const fragment=new URLSearchParams(location.hash.slice(1)),ticket=fragment.get('ticket');
  if(ticket){history.replaceState({},'','#overview');try{await api('/session',{method:'POST',body:{ticket}});}catch(err){$('#connect-error').textContent=err.message;showConnect();return;}}
