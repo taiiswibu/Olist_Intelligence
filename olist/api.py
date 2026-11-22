@@ -15,6 +15,7 @@ from .config import ROOT, settings
 from .database import ready, operational
 from .schemas import Quotation
 from . import agent_team
+from . import reporting, report_exports
 
 app = FastAPI(title="Olist Intelligence", version=__version__)
 app.mount("/assets", StaticFiles(directory=ROOT / "frontend/assets"), name="assets")
@@ -137,6 +138,45 @@ def get_breakdown(kind: Literal["monthly", "category", "seller", "state"], filte
 class Chat(BaseModel):
     question: str = Field(min_length=2, max_length=2000)
     filters: analytics.Filters = Field(default_factory=analytics.Filters)
+
+
+@app.get("/report-drafts", dependencies=secured)
+def report_list():
+    return reporting.list_drafts()
+
+
+@app.post("/report-drafts", dependencies=data_secured)
+def report_create(payload: reporting.Create):
+    return reporting.create(payload)
+
+
+@app.get("/report-drafts/{report_id}", dependencies=secured)
+def report_get(report_id: str):
+    try:
+        return reporting.get(report_id)
+    except KeyError:
+        raise HTTPException(404, "Không tìm thấy báo cáo.") from None
+
+
+@app.put("/report-drafts/{report_id}", dependencies=data_secured)
+def report_update(report_id: str, payload: reporting.Update):
+    try:
+        return reporting.update(report_id, payload)
+    except KeyError:
+        raise HTTPException(404, "Không tìm thấy báo cáo.") from None
+    except reporting.Conflict as exc:
+        raise HTTPException(409, str(exc)) from None
+
+
+@app.get("/report-drafts/{report_id}/export/{file_format}", dependencies=secured)
+def report_export(report_id: str, file_format: Literal["pdf", "xlsx"]):
+    try:
+        report = reporting.get(report_id)
+    except KeyError:
+        raise HTTPException(404, "Không tìm thấy báo cáo.") from None
+    body = report_exports.pdf(report) if file_format == "pdf" else report_exports.excel(report)
+    media = "application/pdf" if file_format == "pdf" else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    return Response(content=body, media_type=media, headers={"Content-Disposition": f'attachment; filename="olist_report_{report["id"][:8]}.{file_format}"', "Cache-Control": "no-store"})
 
 
 @app.post("/agent/chat", dependencies=data_secured)
