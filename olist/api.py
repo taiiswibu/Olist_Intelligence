@@ -3,16 +3,18 @@ import json
 import hashlib
 import os
 import time
+import asyncio
 from pathlib import Path
 from typing import Annotated, Literal
 from fastapi import FastAPI, Depends, Header, HTTPException, Request, Cookie, Response
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, SecretStr
 from . import __version__, analytics, agent, rag, ml, erp, llm
 from .config import ROOT, settings
 from .database import ready, operational
 from .schemas import Quotation
+from . import agent_team
 
 app = FastAPI(title="Olist Intelligence", version=__version__)
 app.mount("/assets", StaticFiles(directory=ROOT / "frontend/assets"), name="assets")
@@ -140,6 +142,57 @@ class Chat(BaseModel):
 @app.post("/agent/chat", dependencies=data_secured)
 def chat(payload: Chat):
     return agent.ask(payload.question, payload.filters)
+
+
+@app.get("/agent/team", dependencies=secured)
+def team_configuration():
+    return agent_team.team_status()
+
+
+@app.post("/agent/team/chat", dependencies=data_secured)
+async def team_chat(payload: agent_team.TeamRequest):
+    try:
+        return await agent_team.ask(payload)
+    except agent_team.TeamUnavailable as exc:
+        raise HTTPException(503, str(exc)) from None
+    except agent_team.RunBusy as exc:
+        raise HTTPException(409, str(exc)) from None
+
+
+@app.post("/agent/team/stream", dependencies=data_secured)
+async def team_stream(payload: agent_team.TeamRequest):
+    # JSON lines over fetch keeps the existing cookie/CSRF headers and POST body.
+    if not agent_team.team_status()["ready"]:
+        raise HTTPException(503, "Đội agent chưa sẵn sàng. Kiểm tra cấu hình và requirements-agent.txt.")
+    agent.extract_filters(payload.question, payload.filters)
+
+    async def events():
+        queue = asyncio.Queue()
+
+        async def run():
+            try:
+                result = await agent_team.ask(payload, queue.put_nowait)
+                queue.put_nowait({"type": "result", "result": result})
+            except (agent_team.TeamUnavailable, agent_team.RunBusy, ValueError) as exc:
+                queue.put_nowait({"type": "error", "message": str(exc)})
+            except Exception:
+                queue.put_nowait({"type": "error", "message": "Chưa hoàn tất lượt chạy. Kiểm tra trạng thái và ERP trước khi thử lại."})
+            finally:
+                queue.put_nowait(None)
+
+        task = asyncio.create_task(run())
+        try:
+            while True:
+                event = await queue.get()
+                if event is None:
+                    break
+                yield json.dumps(event, ensure_ascii=False, default=str) + "\n"
+        finally:
+            if not task.done():
+                task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+
+    return StreamingResponse(events(), media_type="application/x-ndjson", headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
 
 
 class Search(BaseModel):
