@@ -6,16 +6,17 @@ import time
 import asyncio
 from pathlib import Path
 from typing import Annotated, Literal
-from fastapi import FastAPI, Depends, Header, HTTPException, Request, Cookie, Response
+from fastapi import FastAPI, Depends, Header, HTTPException, Request, Cookie, Response, Query, Path as ApiPath
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, SecretStr
 from . import __version__, analytics, agent, rag, ml, erp, llm
 from .config import ROOT, settings
 from .database import ready, operational
-from .schemas import Quotation
+from .schemas import Quotation, SalesQuotation, SalesProposal
 from . import agent_team
 from . import reporting, report_exports
+from . import sales
 
 app = FastAPI(title="Olist Intelligence", version=__version__)
 app.mount("/assets", StaticFiles(directory=ROOT / "frontend/assets"), name="assets")
@@ -282,14 +283,54 @@ def get_erp(kind: Literal["catalog", "quotations"]):
     return erp_read(kind)
 
 
+def sales_read(operation, *args):
+    try:
+        return operation(erp.Odoo(), *args)
+    except ValueError:
+        raise
+    except Exception:
+        raise HTTPException(503, "Chưa đọc được dữ liệu Odoo. Kiểm tra kết nối rồi thử lại.") from None
+
+
+@app.get("/erp/search/{kind}", dependencies=secured)
+def sales_search(kind: Literal["partners", "products"], q: str = Query(default="", max_length=120),
+                 offset: int = Query(default=0, ge=0, le=10000), limit: int = Query(default=20, ge=1, le=50)):
+    return sales_read(sales.search, kind, q, offset, limit)
+
+
+@app.get("/erp/records/{kind}/{record_id}", dependencies=secured)
+def sales_record(kind: Literal["partners", "products"], record_id: int = ApiPath(ge=1)):
+    return sales_read(sales.record, kind, record_id)
+
+
+@app.post("/erp/quotation-preview", dependencies=secured)
+def sales_preview(payload: SalesQuotation):
+    return sales_read(sales.preview, payload.model_dump())
+
+
+@app.get("/erp/quotations/{order_id}", dependencies=secured)
+def sales_order(order_id: int = ApiPath(ge=1)):
+    return sales_read(sales.order_detail, order_id)
+
+
 @app.get("/actions", dependencies=secured)
 def actions():
     return erp.list_actions()
 
 
 @app.post("/actions", dependencies=secured)
-def propose(payload: Quotation):
-    return erp.propose(payload.model_dump())
+def propose(payload: SalesProposal | Quotation):
+    try:
+        return erp.propose(payload.model_dump())
+    except ValueError:
+        raise
+    except Exception:
+        raise HTTPException(503, "Chưa lưu được đề xuất. Kiểm tra kết nối rồi lấy lại bằng cùng mã yêu cầu.") from None
+
+
+@app.get("/actions/{action_id}", dependencies=secured)
+def action_detail(action_id: str):
+    return erp.action_detail(action_id)
 
 
 @app.post("/actions/{action_id}/approve", dependencies=secured)
