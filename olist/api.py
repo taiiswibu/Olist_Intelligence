@@ -17,6 +17,7 @@ from .schemas import Quotation, SalesQuotation, SalesProposal
 from . import agent_team
 from . import reporting, report_exports
 from . import sales
+from . import sales_pricing
 
 app = FastAPI(title="Olist Intelligence", version=__version__)
 app.mount("/assets", StaticFiles(directory=ROOT / "frontend/assets"), name="assets")
@@ -306,6 +307,11 @@ def sales_record(kind: Literal["partners", "products"], record_id: int = ApiPath
 @app.post("/erp/quotation-preview", dependencies=secured)
 def sales_preview(payload: SalesQuotation):
     return sales_read(sales.preview, payload.model_dump())
+
+
+@app.get("/erp/sales/taxes", dependencies=secured)
+def sales_taxes():
+    return sales_read(sales_pricing.tax_catalog)
 
 
 @app.get("/erp/quotations/{order_id}", dependencies=secured)

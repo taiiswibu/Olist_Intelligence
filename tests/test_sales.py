@@ -165,7 +165,7 @@ def test_rejection_and_live_precision_validation_do_not_write(client, adapter):
     {"lines": [{"product_id": 20, "quantity": ".333", "unit_price": "1"}]},
     {"lines": [{"product_id": 20, "quantity": "NaN", "unit_price": 1}]},
     {"lines": [{"product_id": 999, "quantity": 1, "unit_price": 1}]},
-    {"lines": [{"product_id": 20, "quantity": 1, "unit_price": 1, "tax_ids": [99]}]},
+    {"lines": [{"product_id": 20, "quantity": 1, "unit_price": 1, "tax_method": "arbitrary"}]},
     {"partner_id": 999}, {"method": "action_confirm"},
 ])
 def test_invalid_payload_or_non_demo_id_has_no_side_effect(client, adapter, change):
