@@ -35,7 +35,7 @@ const meta = {
  erp:['ERP & Phê duyệt','TỪ GÓC NHÌN ĐẾN HÀNH ĐỘNG','Hành động có kiểm soát','Kết nối Odoo Community, xem đề xuất và duyệt từng thao tác.'],
  verification:['Kiểm chứng dữ liệu','TIN CẬY TỪ NHỮNG CHI TIẾT','Minh bạch từ dữ liệu gốc','Đối soát nguồn, kiểm tra hệ thống và theo dõi nhật ký.']
 };
-const state = {page:'overview', status:null, filters:{start:'2017-01-01',end:'2018-08-31'}, cache:{}, history:[], chart:'gmv', table:'seller', search:'', catalog:null, quotations:[], pendingQuestion:'', busy:false};
+const state = {page:'overview', status:null, filters:{start:'2017-01-01',end:'2018-08-31'}, cache:{}, history:[], chart:'gmv', table:'seller', search:'', catalog:null, quotations:[], pendingQuestion:'', busy:false, chatMode:'team', teamConfig:null, teamThread:crypto.randomUUID().replaceAll('-',''), teamRetry:null, localSummary:false, allowProposals:false};
 let renderSequence = 0, toastTimer;
 const chartObserver = new ResizeObserver(()=>{
  const target=$('#main-chart');
@@ -107,26 +107,80 @@ async function overview(){
  return `<div class="page-enter"><div class="kpi-grid">${kpi('GMV hàng hóa',moneyHTML(v.product_gmv),`<strong>${number(v.delivered_orders)}</strong>&nbsp; đơn đã giao`,'wallet',monthly.rows.map(r=>Number(r.product_gmv)))}${kpi('Tổng số đơn',number(v.orders),'Theo khoảng ngày mua đã chọn','bag',monthly.rows.map(r=>Number(r.orders)))}${kpi('Giá trị đơn trung bình',moneyHTML(v.product_aov),'AOV hàng hóa · chưa gồm cước','chart')}${kpi('Tỷ lệ giao trễ',percent(v.late_delivery_rate),`Trên <strong>${number(v.late_eligible)}</strong>&nbsp; đơn đủ ngày`,'truck',monthly.rows.map(r=>r.late_eligible?r.late_orders/r.late_eligible:0))}</div><div class="dashboard-grid"><section class="panel"><div class="panel-header"><div><h2>Nhịp độ kinh doanh</h2><p>Biến động theo tháng trong phạm vi đã chọn</p></div><div class="segmented"><button data-chart="gmv" aria-pressed="${state.chart==='gmv'}" class="${state.chart==='gmv'?'active':''}">GMV</button><button data-chart="late" aria-pressed="${state.chart==='late'}" class="${state.chart==='late'?'active':''}">Giao trễ</button></div></div><div class="chart-legend"><span class="legend-line"></span><span id="chart-series-label">${state.chart==='gmv'?'GMV hàng hóa (BRL)':'Tỷ lệ giao trễ (%)'}</span></div><div id="main-chart">${areaChart(monthly.rows)}</div><div class="chart-note">${state.chart==='gmv'?'Chỉ tính giá hàng hóa của đơn delivered, không gồm phí vận chuyển.':'Chỉ tính đơn delivered có đủ ngày giao thực tế và ngày hẹn.'}</div></section><section class="panel"><div class="panel-header"><div><h2>Cơ cấu ngành hàng</h2><p>Tỷ trọng trong GMV hàng hóa</p></div><span class="tag neutral">Top 15</span></div>${categoryDonut(categories.rows,v.product_gmv)}</section></div><div class="insight-strip"><span class="insight-icon">${icon('spark')}</span><div><strong>Con số là điểm bắt đầu. Câu hỏi mới mở ra góc nhìn.</strong><p>Khám phá seller, ngành hàng và hiệu quả giao hàng cùng trợ lý dữ liệu.</p></div><button class="button" data-ask="Bang nào giao trễ nhiều năm 2018?">Khám phá cùng AI</button></div><section class="panel"><div class="panel-header"><div><h2>Đi sâu vào dữ liệu</h2><p id="table-scope-note">Seller có tối thiểu 20 đơn · xếp theo số đơn trễ</p></div><div class="table-toolbar"><div class="table-tabs"><button data-table="seller" class="${state.table==='seller'?'active':''}">Người bán</button><button data-table="state" class="${state.table==='state'?'active':''}">Bang</button><button data-table="category" class="${state.table==='category'?'active':''}">Ngành hàng</button></div><input class="table-search" id="table-search" value="${esc(state.search)}" aria-label="Tìm trong bảng" placeholder="Tìm trong bảng…"></div></div><div id="data-table">${tableHTML(state.cache[state.table]||[],state.table)}</div><div class="table-bottom"><span id="table-count">${number((state.cache[state.table]||[]).length)} kết quả trong bảng</span><span>Tiền tệ BRL · Dữ liệu lịch sử</span></div></section></div>`;
 }
 function responseHTML(r){
- const route=r.routing||{},mode=route.provider?`${route.provider} / ${route.model}`:'Quy tắc local · không dùng LLM định tuyến';
+ const route=r.routing||{},mode=r.tool==='team'?`Đội agent · ${r.status==='complete'?'Đã hoàn tất':'Chưa hoàn tất'} · ${r.model_calls} lượt model`:route.provider?`${route.provider} / ${route.model}`:'Quy tắc local · không dùng LLM định tuyến';
  const data=r.data?(Array.isArray(r.data)?r.data:[r.data]):null;
  let extra='';
  if(data?.length){const keys=Object.keys(data[0]);extra=`<details class="evidence"><summary>Xem ${data.length} dòng dữ liệu từ công cụ</summary><div class="table-scroll"><table class="data-table"><thead><tr>${keys.map(k=>`<th>${esc(k)}</th>`).join('')}</tr></thead><tbody>${data.map(row=>`<tr>${keys.map(k=>`<td>${esc(typeof row[k]==='number'?new Intl.NumberFormat('vi-VN',{maximumFractionDigits:3}).format(row[k]):row[k])}</td>`).join('')}</tr>`).join('')}</tbody></table></div></details>`;}
  if(r.sql)extra+=`<details class="evidence"><summary>SQL & phạm vi truy vấn</summary><div class="evidence-content"><p>${esc(scopeText(r.filters))}</p><pre>${esc(r.sql)}</pre></div></details>`;
  if(r.sources?.length)extra+=r.sources.map(s=>`<details class="evidence"><summary>${esc(s.section)} · ${esc(s.source)}</summary><div class="evidence-content">${basicMarkdown(s.text)}<p class="mono">Chunk ${esc(s.id)} · ${esc(r.retrieval)}</p></div></details>`).join('');
- return `<div class="message assistant"><div class="message-label"><span class="message-avatar">${icon('spark')}</span>Olist Intelligence<span class="tag neutral">${esc(r.tool)}</span></div><div class="message-content">${basicMarkdown(r.answer)}</div>${extra}<p class="message-meta">${esc(mode)} · ${number(r.elapsed_ms)} ms · ${esc(scopeText(r.filters))}</p></div>`;
+ if(r.evidence?.length)extra+=r.evidence.map(teamEvidence).join('');
+ if(r.trace?.length)extra+=`<details class="evidence"><summary>Các bước xử lý · ${r.trace.length} sự kiện</summary><div class="evidence-content">${teamTrace(r.trace)}</div></details>`;
+ return `<div class="message assistant"><div class="message-label"><span class="message-avatar">${icon('spark')}</span>Olist Intelligence<span class="tag neutral">${esc(r.tool==='team'?'Đội agent':r.tool)}</span></div><div class="message-content">${basicMarkdown(r.answer)}</div>${extra}<p class="message-meta">${esc(mode)} · ${number(r.elapsed_ms)} ms · ${esc(scopeText(r.filters))}</p></div>`;
 }
 function userHTML(q){return `<div class="message user"><div class="message-label"><span class="message-avatar">VT</span>Bạn</div><div class="message-content">${esc(q)}</div></div>`;}
 function welcome(){return `<div class="chat-welcome"><div class="ai-emblem">${icon('spark')}</div><h2>Hôm nay bạn muốn hiểu điều gì?</h2><p>Hỏi về dữ liệu kinh doanh, tra định nghĩa KPI hoặc tìm hiểu quy trình. Trợ lý sẽ chỉ ra nguồn và phạm vi câu trả lời.</p><div class="prompt-grid">${['Tổng quan KPI năm 2018','GMV theo tháng năm 2017','Hiệu suất seller năm 2018','Tỷ lệ giao trễ được tính như thế nào?'].map(q=>`<button class="prompt-card" data-ask="${esc(q)}">${esc(q)}</button>`).join('')}</div></div>`;}
-async function assistant(){return `<div class="chat-layout page-enter"><section class="panel chat-panel"><div class="chat-header"><strong>Trợ lý dữ liệu</strong><button class="button secondary small" id="clear-chat">Hội thoại mới</button></div><div class="chat-messages" id="chat-messages">${state.history.length?state.history.map(x=>userHTML(x.question)+responseHTML(x.response)).join(''):welcome()}</div><form class="chat-composer" id="chat-form"><div class="composer-input"><textarea name="question" id="chat-input" rows="2" maxlength="2000" required placeholder="Đặt một câu hỏi về dữ liệu của bạn…" aria-label="Câu hỏi cho trợ lý"></textarea><button class="button" type="submit" aria-label="Gửi câu hỏi">${icon('send')}</button></div><p class="composer-note">Enter để gửi · Shift + Enter để xuống dòng · Khoảng ngày: ${esc(scopeText())}</p></form></section><aside class="chat-aside"><div class="panel side-card"><h3>Một trợ lý, nhiều góc nhìn</h3><ul class="tool-list"><li>${icon('chart')}<span>Phân tích kinh doanh<small>KPI, xu hướng tháng và ngành hàng</small></span></li><li>${icon('truck')}<span>Hiệu quả giao hàng<small>Bang và seller có đơn giao trễ</small></span></li><li>${icon('book')}<span>Tra cứu tri thức<small>Định nghĩa, dữ liệu và quy trình demo</small></span></li></ul></div><div class="panel side-card"><h3>Nguồn mô hình</h3><p>${state.status.providers.length?state.status.providers.map(p=>esc(p.provider)+' / '+esc(p.model)).join('<br>'):'Chưa cấu hình API. Trợ lý đang dùng quy tắc local và trích đoạn tài liệu.'}</p><p>Mọi con số BI được lấy trực tiếp từ công cụ truy vấn.</p></div></aside></div>`;}
-async function sendQuestion(question){
+const teamStatusNames={running:'Đang xử lý',done:'Đã trả kết quả',tool_running:'Đang gọi công cụ',tool_done:'Có bằng chứng',tool_failed:'Lỗi công cụ',failed:'Chưa hoàn tất',validation_failed:'Đang sửa định dạng nguồn',numeric_prose_replaced:'Dựng số liệu từ công cụ'};
+function teamTrace(steps){return `<ol class="team-trace">${steps.map(e=>`<li><strong>${esc(e.label)}</strong><span>${esc(teamStatusNames[e.status]||e.status)}${e.tool?' · '+esc(e.tool):''}${e.evidence_id?' · ['+esc(e.evidence_id)+']':''}${e.error?' · '+esc(e.error):''}${e.http_status?' · HTTP '+esc(e.http_status):''}</span><small>${esc(e.provider)} / ${esc(e.model)} · ${number(e.elapsed_ms)} ms</small></li>`).join('')}</ol>`;}
+function teamEvidence(e){
+ const r=e.result;
+ let content;
+ if(r?.values){const labels={orders:'Tổng số đơn',delivered_orders:'Đơn đã giao',product_gmv:'GMV hàng hóa (BRL)',freight:'Cước (BRL)',canceled_orders:'Đơn hủy',late_eligible:'Đơn đủ ngày giao',late_orders:'Đơn giao trễ',product_aov:'AOV hàng hóa (BRL)',cancellation_rate:'Tỷ lệ hủy',late_delivery_rate:'Tỷ lệ giao trễ'};content=`<div class="table-scroll"><table class="data-table"><tbody>${Object.entries(r.values).map(([k,v])=>`<tr><th>${esc(labels[k]||k)}</th><td>${esc(k.endsWith('_rate')?percent(v):['product_gmv','freight','product_aov'].includes(k)?money(v):typeof v==='number'?number(v):v??'—')}</td></tr>`).join('')}</tbody></table></div><p>${esc(r.definition)}</p>`;}
+ else if(r?.sources){content=r.sources.map(x=>`<p><strong>${esc(x.section)}</strong> · ${esc(x.source)} · ${esc(x.id)}</p><p>${basicMarkdown(x.text)}</p>`).join('')||'<p>Không có tài liệu phù hợp.</p>';}
+ else content=`<pre>${esc(JSON.stringify(r,null,2))}</pre>`;
+ if(r?.filters)content=`<p>${esc(scopeText(r.filters))}</p>`+content;
+ if(r?.sql)content+=`<details><summary>Truy vấn đã chạy</summary><pre>${esc(r.sql)}</pre></details>`;
+ return `<details class="evidence"><summary>[${esc(e.id)}] ${esc(e.tool)}</summary><div class="evidence-content">${content}</div></details>`;
+}
+async function assistant(){
+ try{state.teamConfig=await api('/agent/team');}catch{state.teamConfig=null;}
+ const team=state.teamConfig,active=state.chatMode==='team';
+ const roles=team?.roles||[];
+ return `<div class="chat-layout page-enter"><section class="panel chat-panel"><div class="chat-header"><strong>Trợ lý dữ liệu</strong><button class="button secondary small" id="clear-chat" ${state.busy?'disabled':''}>Hội thoại mới</button></div>
+ <div class="team-options"><label>Chế độ <select id="chat-mode" ${state.busy?'disabled':''}><option value="team" ${active?'selected':''}>Đội agent</option><option value="single" ${!active?'selected':''}>Trợ lý thường</option></select></label>
+ <div id="team-options" ${active?'':'hidden'}><label><input type="checkbox" id="team-local" ${state.localSummary?'checked':''} ${state.busy?'disabled':''}> Qwen tóm tắt hội thoại dài</label><label><input type="checkbox" id="team-proposals" ${state.allowProposals?'checked':''} ${state.busy?'disabled':''}> Cho phép lưu đề xuất chờ duyệt</label></div></div>
+ ${active&&!team?.ready?'<div class="notice">Đội agent chưa sẵn sàng. Kiểm tra Groq/Gemini và cài <code>requirements-agent.txt</code>. Bạn vẫn có thể dùng Trợ lý thường.</div>':''}
+ <div class="chat-messages" id="chat-messages">${state.history.length?state.history.map(x=>userHTML(x.question)+responseHTML(x.response)).join(''):welcome()}</div>
+ <form class="chat-composer" id="chat-form"><div class="composer-input"><textarea name="question" id="chat-input" rows="2" maxlength="2000" required placeholder="Đặt một câu hỏi về dữ liệu của bạn…" aria-label="Câu hỏi cho trợ lý"></textarea><button class="button" type="submit" ${state.busy?'disabled':''} aria-label="Gửi câu hỏi">${icon('send')}</button></div><p class="composer-note">Enter để gửi · Shift + Enter để xuống dòng · Khoảng ngày: ${esc(scopeText())}</p></form></section>
+ <aside class="chat-aside"><div class="panel side-card"><h3>Đội agent</h3><ul class="tool-list">${roles.map(r=>`<li>${icon(r.role==='bi'?'chart':r.role==='erp'?'layers':r.role==='knowledge'?'book':'spark')}<span>${esc(r.label)}${r.optional?' · tùy chọn':''}<small>${r.configured?esc(r.provider)+' / '+esc(r.model):'Chưa cấu hình '+esc(r.provider)}</small></span></li>`).join('')}</ul></div><div class="panel side-card"><h3>Cách làm việc</h3><p>Chỉ gọi agent cần cho câu hỏi. Số liệu lấy từ công cụ; tài liệu có nguồn để đối chiếu.</p><p>Tối đa hai agent chạy cùng lúc, một vòng bổ sung bằng chứng. Báo giá vẫn cần duyệt riêng ở ERP.</p><p>Qwen chỉ tóm tắt khi bật và lịch sử đủ dài. Groq/Gemini vẫn nhận ngữ cảnh cần dùng.</p></div></aside></div>`;
+}
+async function streamTeam(payload){
+ const response=await fetch('/agent/team/stream',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Olist-Request':'1'},body:JSON.stringify(payload)});
+ if(!response.ok){if(response.status===401)showConnect();const error=await response.json();throw new Error(readableError(error.detail));}
+ const reader=response.body.getReader(),decoder=new TextDecoder(),steps=[];
+ let buffer='',result=null;
+ function receive(line){
+  if(!line.trim())return;
+  const event=JSON.parse(line);
+  if(event.type==='step'){steps.push(event);const target=$('#team-progress');if(target)target.innerHTML=teamTrace(steps.slice(-8));}
+  if(event.type==='error')throw new Error(event.message);
+  if(event.type==='result')result=event.result;
+ }
+ try{while(true){const {value,done}=await reader.read();if(done){buffer+=decoder.decode();break;}buffer+=decoder.decode(value,{stream:true});let pos;while((pos=buffer.indexOf('\n'))>=0){receive(buffer.slice(0,pos));buffer=buffer.slice(pos+1);}}receive(buffer);}
+ finally{await reader.cancel();reader.releaseLock();}
+ if(!result)throw new Error('Kết nối bị ngắt. Lấy lại lượt vừa gửi để kiểm tra kết quả; xem ERP trước khi tạo đề xuất khác.');
+ return result;
+}
+async function sendQuestion(question,retry=null){
  if(state.busy||!question.trim())return;
  if(state.page!=='assistant'){state.pendingQuestion=question;await navigate('assistant');return;}
- state.busy=true;$('#chat-input').value='';$('#chat-messages .chat-welcome')?.remove();
- const box=$('#chat-messages');box.insertAdjacentHTML('beforeend',userHTML(question)+'<div id="chat-wait" class="small-text muted"><span class="spinner"></span>Đang tìm căn cứ trong dữ liệu…</div>');
- $('#chat-form button').disabled=true;box.scrollTop=box.scrollHeight;
- try{const response=await api('/agent/chat',{method:'POST',body:{question,filters:state.filters}});state.history.push({question,response});if(state.history.length>12)state.history.shift();$('#chat-wait')?.remove();if(state.page==='assistant'){$('#chat-messages').insertAdjacentHTML('beforeend',responseHTML(response));$('#chat-messages').scrollTop=$('#chat-messages').scrollHeight;}}
- catch(e){$('#chat-wait')?.remove();if(state.page==='assistant')$('#chat-messages').insertAdjacentHTML('beforeend',`<div class="notice error">${esc(e.message)}</div>`);}
- finally{state.busy=false;const button=$('#chat-form button');if(button)button.disabled=false;}
+ state.busy=true;$('#chat-input').value='';$('#chat-messages .chat-welcome')?.remove();$('#team-error')?.remove();
+ const box=$('#chat-messages'),team=retry||state.chatMode==='team',thread=state.teamThread;
+ const payload=retry||{question,filters:{...state.filters},thread_id:thread,run_id:crypto.randomUUID().replaceAll('-',''),local_summary:state.localSummary,allow_proposals:state.allowProposals};
+ box.insertAdjacentHTML('beforeend',(retry?'':userHTML(question))+'<div id="chat-wait" class="small-text muted"><span class="spinner"></span>Đang tìm căn cứ trong dữ liệu…<div id="team-progress" aria-live="polite"></div></div>');
+ for(const el of document.querySelectorAll('#chat-form button,#chat-mode,#team-local,#team-proposals,#clear-chat'))el.disabled=true;
+ box.scrollTop=box.scrollHeight;
+ try{
+  const response=team?await streamTeam(payload):await api('/agent/chat',{method:'POST',body:{question,filters:payload.filters}});
+  state.teamRetry=null;
+  if(thread===state.teamThread){state.history.push({question,response});if(state.history.length>12)state.history.shift();$('#chat-wait')?.remove();if(state.page==='assistant'){$('#chat-messages').insertAdjacentHTML('beforeend',responseHTML(response));$('#chat-messages').scrollTop=$('#chat-messages').scrollHeight;}}
+ }catch(e){
+  if(team)state.teamRetry=payload;
+  $('#chat-wait')?.remove();
+  if(state.page==='assistant')$('#chat-messages').insertAdjacentHTML('beforeend',`<div id="team-error" class="notice error">${esc(e.message)}${team?'<p><button class="button secondary small" id="retry-team">Lấy lại lượt vừa gửi</button></p>':''}</div>`);
+ }finally{
+  state.busy=false;
+  for(const el of document.querySelectorAll('#chat-form button,#chat-mode,#team-local,#team-proposals,#clear-chat'))el.disabled=false;
+ }
 }
 async function knowledge(){return `<div class="page-enter"><div class="doc-grid">${[['kpi','chart','Từ điển KPI','GMV, AOV, giao trễ và mẫu số'],['data','layers','Từ điển dữ liệu','Schema, grain và giới hạn nguồn'],['erp','folder','Quy trình ERP','Nhập demo và duyệt báo giá'],['model','spark','Agent & mô hình','RAG, API và đánh giá ML']].map(([key,name,title,desc])=>`<button class="doc-card" data-doc="${key}"><span class="doc-icon">${icon(name)}</span><h3>${title}</h3><p>${desc}</p></button>`).join('')}</div><form class="knowledge-search" id="knowledge-form">${icon('search')}<input id="knowledge-query" aria-label="Tìm trong kho tri thức" maxlength="2000" required placeholder="Ví dụ: AOV và GMV khác nhau thế nào?"><button class="button" type="submit">Tra cứu</button></form><div class="notice">Tài liệu do dự án biên soạn từ nguồn công khai và quy trình demo. Không phải tài liệu nội bộ của Olist. Phương pháp mặc định: truy xuất lexical TF-IDF.</div><div id="knowledge-results">${empty('Tìm câu trả lời từ tài liệu','Chọn một chủ đề hoặc nhập câu hỏi để xem các đoạn trích có nguồn.')}</div></div>`;}
 async function searchKnowledge(question){const target=$('#knowledge-results');target.innerHTML='<div class="loading-state"><span class="spinner"></span>Đang tìm tài liệu…</div>';try{const r=await api('/rag/search',{method:'POST',body:{question}});target.innerHTML=r.sources.length?`<div class="status-banner"><span>${r.sources.length} đoạn tài liệu liên quan</span><span>${esc(r.method)}</span></div>`+r.sources.map(s=>`<article class="panel document-result"><div class="doc-meta">${esc(s.source)} · ${esc(s.id)} · điểm ${s.score}</div><h3>${esc(s.section)}</h3><div class="doc-text">${basicMarkdown(s.text.replace(/^#+[^\n]*\n/,''))}</div></article>`).join(''):empty('Chưa tìm thấy nguồn phù hợp','Hãy thử cụm từ cụ thể hơn: GMV, ngày giao trễ, Odoo hoặc chia tập ML.');}catch(e){target.innerHTML=`<div class="notice error">${esc(e.message)}</div>`;}}
@@ -172,7 +226,8 @@ document.addEventListener('click',async e=>{
  if(b.dataset.chart){state.chart=b.dataset.chart;document.querySelectorAll('[data-chart]').forEach(x=>{const active=x.dataset.chart===state.chart;x.classList.toggle('active',active);x.setAttribute('aria-pressed',String(active));});$('#main-chart').innerHTML=areaChart(state.cache.monthly);$('#chart-series-label').textContent=state.chart==='gmv'?'GMV hàng hóa (BRL)':'Tỷ lệ giao trễ (%)';$('#main-chart').parentElement.querySelector('.chart-note').textContent=state.chart==='gmv'?'Chỉ tính giá hàng hóa của đơn delivered, không gồm phí vận chuyển.':'Chỉ tính đơn delivered có đủ ngày giao thực tế và ngày hẹn.';return;}
  if(b.dataset.table){state.table=b.dataset.table;state.search='';if($('#table-search'))$('#table-search').value='';updateTable();return;}
  if(b.dataset.doc){const queries={kpi:'GMV AOV tỷ lệ giao trễ công thức',data:'Nguồn dữ liệu schema CSV timezone giá trị thiếu',erp:'Odoo Community import duyệt tạo báo giá',model:'Agent RAG dự báo giao trễ chia tập ML'};$('#knowledge-query').value=queries[b.dataset.doc];await searchKnowledge(queries[b.dataset.doc]);return;}
- if(b.id==='clear-chat'){state.history=[];await navigate('assistant');return;}
+ if(b.id==='clear-chat'){if(state.busy)return;state.history=[];state.teamRetry=null;state.teamThread=crypto.randomUUID().replaceAll('-','');await navigate('assistant');return;}
+ if(b.id==='retry-team'&&state.teamRetry){await sendQuestion(state.teamRetry.question,state.teamRetry);return;}
  if(b.id==='mobile-menu'){setMenu(true);return;}
  if(b.id==='close-menu'||b.id==='sidebar-backdrop'){setMenu(false,{restoreFocus:true});return;}
  if(b.id==='export-button'){exportCSV();return;}
@@ -216,3 +271,9 @@ async function init(){
  try{await loadStatus();await navigate(state.page);}catch(err){if(!$('#connect-dialog').open){$('#view').innerHTML=empty('Không kết nối được backend',err.message);}}
 }
 init();
+
+document.addEventListener('change',async e=>{
+ if(e.target.id==='chat-mode'){state.chatMode=e.target.value;await navigate('assistant');}
+ if(e.target.id==='team-local')state.localSummary=e.target.checked;
+ if(e.target.id==='team-proposals')state.allowProposals=e.target.checked;
+});

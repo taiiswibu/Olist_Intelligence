@@ -88,6 +88,25 @@ Cài Ollama từ https://ollama.com/download. Có thể bắt đầu bằng `oll
 
 Corpus nằm trong `docs/knowledge/`, do dự án biên soạn; không phải tài liệu nội bộ Olist. Mặc định truy xuất **lexical TF-IDF** có bỏ dấu tiếng Việt. Có thể bật hybrid qua Ollama embedding: đặt `EMBED_MODEL`, chạy `python manage.py embed`, đặt `RAG_MODE=hybrid`. Chế độ model embedding thật chưa được xác minh trong môi trường phát hành.
 
+## Đội agent
+
+Trong **Trợ lý dữ liệu**, chọn **Đội agent**. Groq điều phối, phân tích BI và đọc Odoo; Gemini tra tài liệu, kiểm tra và tổng hợp. Mở các mục bằng chứng để xem số liệu gốc và nguồn.
+
+Cài phần phụ thuộc một lần:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-agent.txt
+.\.venv\Scripts\python.exe manage.py agent-team
+```
+
+CLI nhận thêm `--thread ID` để tiếp tục hội thoại, `--local-summary` để bật Qwen, `--allow-proposals` để cho phép lưu đề xuất. Trên web có các ô chọn tương ứng. `OLLAMA_MODEL` phải khớp tên trong `ollama list`; máy hiện tại dùng `qwen3:4b-instruct-2507-q4_K_M`.
+
+Qwen chỉ tóm tắt khi bật và lịch sử đủ dài. Groq/Gemini vẫn nhận ngữ cảnh cần dùng. Mỗi lượt tối đa 12 lần gọi model, 12 công cụ, 120 giây, hai agent cùng lúc và một vòng sửa. Phạm vi BI theo bộ lọc; chưa hỗ trợ so sánh nhiều kỳ trong một câu hỏi.
+
+Muốn tạo đề xuất, bật quyền rồi ghi rõ: `Tạo đề xuất báo giá partner_id=1 product_id=2 quantity=3 unit_price=10`. Thay ID bằng bản ghi DEMO thật, giá theo BRL. Đề xuất chỉ ở trạng thái pending; xem và duyệt riêng trong ERP. Chat không xác nhận đơn hoặc lập hóa đơn.
+
+Nếu mất kết nối, bấm **Lấy lại lượt vừa gửi** để lấy kết quả cùng mã, tránh tạo lại đề xuất. Hội thoại mới tạo thread riêng; lịch sử lưu local trong SQLite và không đưa lên Git. Bộ kiểm tra nguồn/số không bảo đảm mọi diễn giải của model đều đúng; cần đối chiếu bằng chứng.
+
 ## Odoo Community local
 
 Hướng dẫn kết nối từ đầu và Agent đa công cụ tùy chọn: **[docs/ODOO_AGENT_GUIDE_VI.md](docs/ODOO_AGENT_GUIDE_VI.md)**. Có thêm `python manage.py odoo-check` để kiểm tra kết nối chỉ đọc. Agent Lab chạy CLI riêng, không thay Assistant web; cần cài `requirements-agent.txt`.

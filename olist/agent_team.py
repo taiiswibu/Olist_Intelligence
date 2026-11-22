@@ -211,8 +211,13 @@ class Context:
         if tools:
             # GPT-OSS does not support parallel tool calls in a single model response.
             model = model.bind_tools(tools, parallel_tool_calls=False)
-        async with asyncio.timeout(timeout):
-            result = await model.ainvoke([SystemMessage(content="Trả lời tiếng Việt. Không tiết lộ bí mật."), *messages])
+        try:
+            async with asyncio.timeout(timeout):
+                result = await model.ainvoke([SystemMessage(content="Trả lời tiếng Việt. Không tiết lộ bí mật."), *messages])
+        except Exception as exc:
+            self.event(role, "failed", error=type(exc).__name__,
+                       http_status=getattr(getattr(exc, "response", None), "status_code", None))
+            raise
         usage = result.usage_metadata or {}
         self.event(role, "done", tokens=usage.get("total_tokens"))
         return result
@@ -298,6 +303,27 @@ def _review_valid(review, evidence):
     return review.status != "complete" or bool(known and review.evidence_ids and cited)
 
 
+def _facts(evidence):
+    """Render numeric facts directly from tool values, independent of model prose."""
+    lines = []
+    for item in evidence:
+        result, ref = item["result"], "[" + item["id"] + "]"
+        if item["tool"] == "business_kpis":
+            v = result["values"]
+            rate = "chưa đủ dữ liệu" if v["late_delivery_rate"] is None else f"{100*v['late_delivery_rate']:.2f}%"
+            lines.append(f"GMV hàng hóa: R$ {v['product_gmv']:,.2f}; {v['orders']:,} đơn, "
+                         f"{v['delivered_orders']:,} đơn đã giao. Giao trễ: {rate} trên {v['late_eligible']:,} đơn đủ ngày. {ref}")
+        elif item["tool"] == "business_breakdown":
+            lines.append(f"Bảng phân tích có {len(result['rows'])} dòng; xem dữ liệu và truy vấn bên dưới. {ref}")
+        elif item["tool"] == "odoo_demo_catalog":
+            lines.append(f"Đã đọc {len(result['partners'])} khách và {len(result['products'])} sản phẩm DEMO từ Odoo. {ref}")
+        elif item["tool"] == "odoo_demo_quotations":
+            lines.append(f"Đã đọc {len(result['rows'])} báo giá Odoo; đây là danh sách có giới hạn. {ref}")
+        elif item["tool"] == "lookup_historical_order":
+            lines.append(f"Tra được {len(result['rows'])} đơn lịch sử theo mã đã cung cấp. {ref}")
+    return "\n\n".join(dict.fromkeys(lines))
+
+
 async def _graph(ctx, history):
     from langchain_core.messages import HumanMessage, SystemMessage
     from langgraph.graph import StateGraph, START, END
@@ -369,6 +395,14 @@ async def _graph(ctx, history):
             "question": ctx.clean(ctx.request.question), "filters": ctx.filters.model_dump(mode="json"),
             "reports": state["reports"], "evidence": ctx.evidence, "repair_used": state["repaired"]}, ensure_ascii=False, default=str))])
         result = Review.model_validate(llm.json_object(_text(response)))
+        known = {e["id"] for e in ctx.evidence}
+        cited = set(re.findall(r"\[(E\d+)\]", result.answer))
+        if (cited and cited <= known and set(result.evidence_ids) <= known
+                and re.search(r"\d", re.sub(r"\[E\d+\]", "", result.answer))):
+            # Discard generated numeric prose; exact figures will come from _facts.
+            ctx.event("reviewer", "numeric_prose_replaced")
+            lead = "Kết quả từ công cụ được trình bày dưới đây." if result.status == "complete" else "Còn phần chưa đủ bằng chứng."
+            result.answer = lead + " " + " ".join("[" + ident + "]" for ident in sorted(cited))
         repaired = state["repaired"]
         if not _review_valid(result, ctx.evidence) and not repaired:
             ctx.event("reviewer", "validation_failed")
@@ -431,6 +465,9 @@ async def ask(request, emit=None):
             state = await _graph(ctx, _history(request.thread_id))
             review = state["review"]
             result.update(status=review["status"], answer=review["answer"])
+            facts = _facts(ctx.evidence)
+            if facts:
+                result["answer"] += "\n\n" + facts
             if proposal and review["status"] == "complete":
                 from .agent_lab import build_tools
                 tool = next(t for t in build_tools(True) if t.name == "prepare_quotation")
@@ -447,6 +484,9 @@ async def ask(request, emit=None):
         ctx.event("coordinator", "failed", error=type(exc).__name__)
         result.update(status="incomplete", answer="Chưa hoàn tất lượt chạy (" + type(exc).__name__ +
                       "). Kiểm tra trạng thái từng agent và bằng chứng đã lấy.")
+        facts = _facts(ctx.evidence)
+        if facts:
+            result["answer"] += "\n\n" + facts
     finally:
         result.setdefault("status", "interrupted")
         result.setdefault("answer", "Lượt chạy bị ngắt. Kiểm tra ERP trước khi thử lại.")

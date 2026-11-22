@@ -36,9 +36,18 @@ class TeamModel:
         base = self.provider.base + "/v1" if self.provider.name == "ollama" else self.provider.base
         headers = {"Authorization": "Bearer " + (self.provider.key or "ollama")}
         async with httpx.AsyncClient(timeout=self.timeout, trust_env=self.provider.name != "ollama") as client:
-            response = await client.post(base + "/chat/completions", json=payload, headers=headers)
+            if self.provider.name == "ollama" and not self.tools:
+                response = await client.post(self.provider.base + "/api/chat", json={
+                    "model": self.provider.model, "messages": wire, "think": False, "stream": False,
+                    "options": {"temperature": 0, "num_predict": 256, "num_ctx": 4096}})
+            else:
+                response = await client.post(base + "/chat/completions", json=payload, headers=headers)
             response.raise_for_status()
             data = response.json()
+        if self.provider.name == "ollama" and not self.tools:
+            data = {"choices": [{"message": data["message"]}], "usage": {
+                "prompt_tokens": data.get("prompt_eval_count", 0), "completion_tokens": data.get("eval_count", 0),
+                "total_tokens": data.get("prompt_eval_count", 0) + data.get("eval_count", 0)}}
         raw = data["choices"][0]["message"]
         saved = {k: raw[k] for k in ("role", "content", "tool_calls") if k in raw}
         calls = [{"id": call["id"], "name": call["function"]["name"],

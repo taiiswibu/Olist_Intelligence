@@ -79,7 +79,7 @@ def test_threads_persist_and_are_isolated(db, models):
     models.clear()
     run(thread_id=thread)
     coordinator = next(messages for _, messages, tools in models if not tools)
-    assert first["answer"] in json.loads(coordinator[-1].content)["history"]
+    assert first["answer"] == json.loads(json.loads(coordinator[-1].content)["history"])[-1]["answer"]
     models.clear()
     run(thread_id="b" * 32)
     coordinator = next(messages for _, messages, tools in models if not tools)
@@ -153,6 +153,7 @@ def test_provider_failure_is_sanitized_and_other_evidence_kept(db, models, monke
     monkeypatch.setattr(team, "make_model", factory)
     result = run()
     assert result["status"] == "incomplete" and result["evidence"]
+    assert "R$ 70.00" in result["answer"]
     assert "secret-never-expose" not in json.dumps(result)
 
 
@@ -290,3 +291,94 @@ def test_request_storage_does_not_keep_credentials(db, models):
         saved = conn.execute("SELECT request,result FROM team_runs WHERE run_id=?", (request.run_id,)).fetchone()
         question = conn.execute("SELECT question FROM team_turns WHERE run_id=?", (request.run_id,)).fetchone()[0]
     assert "secret-never-expose" not in str(tuple(saved)) + question
+
+
+def test_numeric_answer_comes_from_tools_instead_of_generated_prose(db, models, monkeypatch):
+    original = team.make_model
+    def factory(p, timeout):
+        model = original(p, timeout)
+        invoke = model.ainvoke
+        async def wrong_number(messages):
+            if "Kiểm tra bằng chứng" in messages[1].content:
+                return message({"status": "complete", "answer": "GMV là 999 BRL. [E1] [E2]",
+                                "evidence_ids": ["E1", "E2"], "repair_agents": []})
+            return await invoke(messages)
+        model.ainvoke = wrong_number
+        return model
+    monkeypatch.setattr(team, "make_model", factory)
+    result = run()
+    assert result["status"] == "complete" and "999" not in result["answer"]
+    assert "R$ 70.00" in result["answer"]
+
+
+def test_local_summary_failure_keeps_cloud_workflow_available(db, models, monkeypatch):
+    thread = "9" * 32
+    with team._storage() as conn:
+        conn.execute("INSERT INTO team_turns VALUES (?,?,?,?,?,?)", ("8" * 32, thread, "hội thoại " * 400,
+                     "câu trả lời", "{}", "2000-01-01"))
+    original = team.make_model
+    def factory(p, timeout):
+        if p.name == "ollama":
+            raise RuntimeError("secret-never-expose")
+        return original(p, timeout)
+    monkeypatch.setattr(team, "make_model", factory)
+    result = run(thread_id=thread, local_summary=True)
+    assert result["status"] == "complete"
+    assert any(e["agent"] == "summary" and e["status"] == "failed" for e in result["trace"])
+    assert "secret-never-expose" not in json.dumps(result)
+
+
+def test_invalid_demo_record_does_not_create_team_proposal(db, models, monkeypatch):
+    class Missing:
+        def call(self, model, method, args):
+            assert method == "search"
+            return []
+    monkeypatch.setattr(erp, "Odoo", Missing)
+    request = team.TeamRequest(question="Tạo đề xuất báo giá partner_id=99 product_id=98 quantity=3 unit_price=10",
+                               allow_proposals=True)
+    result = asyncio.run(team.ask(request))
+    assert result["status"] == "incomplete" and "proposal" not in result
+    assert erp.list_actions() == []
+
+
+def test_at_most_two_specialists_run_concurrently(db, models, monkeypatch):
+    active = peak = 0
+    original = team.make_model
+    def factory(p, timeout):
+        model = original(p, timeout)
+        invoke = model.ainvoke
+        async def dispatch(messages):
+            if "Chọn các agent" in messages[1].content:
+                return message({"agents": ["bi", "knowledge", "erp"], "clarification": ""})
+            return await invoke(messages)
+        model.ainvoke = dispatch
+        return model
+    async def worker(ctx, role, task, tools):
+        nonlocal active, peak
+        active += 1
+        peak = max(peak, active)
+        await asyncio.sleep(.02)
+        active -= 1
+        ctx.evidence.append({"id": "E" + str(len(ctx.evidence) + 1), "agent": role, "tool": "test_fixture", "result": {}})
+        return {"agent": role, "report": "Đã có bằng chứng."}
+    monkeypatch.setattr(team, "make_model", factory)
+    monkeypatch.setattr(team, "_specialist", worker)
+    assert run()["status"] == "complete"
+    assert peak == 2
+
+
+def test_qwen_summary_disables_thinking_and_bounds_context(monkeypatch):
+    import httpx
+    from langchain_core.messages import HumanMessage
+    from olist.team_model import TeamModel
+    def handler(request):
+        payload = json.loads(request.content)
+        assert request.url.path == "/api/chat" and payload["think"] is False
+        assert payload["options"]["num_predict"] == 256 and payload["options"]["num_ctx"] == 4096
+        return httpx.Response(200, json={"message": {"role": "assistant", "content": "Tóm tắt."},
+                                       "eval_count": 4, "prompt_eval_count": 8})
+    client = httpx.AsyncClient
+    monkeypatch.setattr(httpx, "AsyncClient", lambda **kw: client(transport=httpx.MockTransport(handler), **kw))
+    model = TeamModel(SimpleNamespace(name="ollama", model="test", key="", base="http://localhost:11434"), 1)
+    result = asyncio.run(model.ainvoke([HumanMessage(content="Tóm tắt hội thoại.")]))
+    assert result.content == "Tóm tắt." and result.usage_metadata["total_tokens"] == 12
