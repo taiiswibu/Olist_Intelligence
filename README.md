@@ -125,7 +125,11 @@ Xem **docs/ODOO_WINDOWS.md**. Compose chạy Odoo Community 19 và PostgreSQL; B
 
 Luồng: nhập demo bằng `manage.py odoo-seed --limit 10` → đọc catalog qua RPC → lưu đề xuất trong ứng dụng → người dùng xem payload và duyệt → tạo `sale.order` draft → audit. Không xác nhận đơn, xuất kho, lập hóa đơn hoặc thu tiền.
 
-Trong **ERP & Phê duyệt**, bấm **Đọc lại Odoo**, tìm khách/sản phẩm theo tên hoặc mã DEMO và mở chi tiết bản ghi. Chọn khách, thêm tối đa 20 dòng hàng, nhập số lượng và đơn giá BRL → **Đối soát đề xuất** → **Lưu đề xuất chờ duyệt**. Số lượng và đơn giá tối đa hai chữ số thập phân. Bản này không áp thuế hoặc chiết khấu; giá trên thẻ sản phẩm giữ tiền tệ gốc và không tự dùng làm đơn giá BRL.
+Trong **ERP & Phê duyệt**, bấm **Đọc lại Odoo**, tìm khách/sản phẩm theo tên hoặc mã DEMO và mở chi tiết bản ghi. Chọn khách, thêm tối đa 20 dòng hàng, nhập số lượng, đơn giá BRL, chiết khấu 0–100% và chọn thuế → **Đối soát đề xuất** → **Lưu đề xuất chờ duyệt**. Các số nhập tối đa hai chữ số thập phân. Giá trên thẻ sản phẩm giữ tiền tệ gốc và không tự dùng làm đơn giá BRL.
+
+Danh mục thuế lấy từ thuế bán hàng đang hoạt động của công ty kết nối Odoo. Ứng dụng dùng Odoo tính thử trên bản ghi trong bộ nhớ, không lưu báo giá khi đối soát. Bảng hiển thị tiền hàng trước giảm, tiền giảm (đều chưa thuế), tiền sau giảm, thuế và tổng thanh toán. Thuế đã gồm trong đơn giá và cách làm tròn dùng đúng cấu hình Odoo; nếu làm tròn theo tổng chứng từ, tổng thanh toán có thể lệch vài xu so với cộng các dòng và được ghi rõ. Đây là cấu hình hiện có của công ty, không tự đặt thuế theo tiền tệ BRL.
+
+Khi duyệt, ứng dụng kiểm tra lại cấu hình và nội dung đã lưu rồi mới tạo bản nháp, sau đó đọc lại từng dòng và tổng tiền để đối chiếu. Cấu hình thay đổi thì cần lập đề xuất mới. Đề xuất cũ không có thuế/chiết khấu vẫn dùng được.
 
 Đề xuất đã lưu giữ nguyên khách, từng dòng hàng và tổng tiền để duyệt riêng. Sửa nội dung trên form sẽ yêu cầu đối soát lại. Nếu thông tin Odoo thay đổi trước lúc duyệt, lượt ghi bị chặn để kiểm tra lại. Mất kết nối sau khi tạo báo giá thì thử lại cùng mã để tìm theo origin và đối chiếu từng dòng trước khi nhận kết quả. Luồng một sản phẩm từ chat vẫn được giữ.
 

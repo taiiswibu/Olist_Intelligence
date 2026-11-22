@@ -1,11 +1,11 @@
 {
   "checked_at_utc": "2026-11-22T10:13:52.512405+00:00",
   "app_version": "0.2.0",
-  "branch": "feat/erp-ban-hang",
+  "branch": "feat/erp-thue-chiet-khau",
   "platform": "Windows",
   "python": "3.12.2",
   "browser": "Microsoft Edge via Playwright",
-  "unit_tests_passed": 108,
+  "unit_tests_passed": 123,
   "checks": {
     "default_runtime": {
       "url": "http://127.0.0.1:8000/",
@@ -369,6 +369,74 @@
         "report_page_still_loads": true,
         "javascript_errors": []
       }
+    },
+    "erp_sales_discount_tax": {
+      "checked_at_utc": "2026-11-22T15:27:10.365154+00:00",
+      "checks": {
+        "native_odoo_pricing": {
+          "company_scoped_catalog": true,
+          "discounts_and_taxes": true,
+          "global_rounding_explained": true,
+          "no_persisted_preview": true
+        },
+        "connection": {
+          "passed": true,
+          "real_catalog": true
+        },
+        "search_and_review": {
+          "customer_search": true,
+          "product_search": true,
+          "master_details": true,
+          "price_not_assumed_brl": true,
+          "two_lines_from_existing_odoo_quote": true,
+          "per_line_and_total_match": true,
+          "edit_invalidates_review": true
+        },
+        "proposal_and_approval_gate": {
+          "pending_snapshot_preserved": true,
+          "same_request_same_action": true,
+          "unchecked_approval_disabled": true,
+          "checkbox_enables_approval": true,
+          "no_order_before_approval": true,
+          "rejection_recorded_in_history": true,
+          "real_approval_not_sent": true
+        },
+        "order_detail": {
+          "real_existing_quote": true,
+          "all_order_lines": true,
+          "tax_subtotal_total_and_currency": true
+        },
+        "recovery_and_navigation": {
+          "failed_refresh_keeps_labelled_cache": true,
+          "no_navigation_jump": true
+        },
+        "safety": {
+          "new_odoo_orders": false,
+          "confirm_or_invoice_called": false,
+          "javascript_errors": [],
+          "desktop_mobile": true
+        }
+      },
+      "source_base_commit": "b753b420c47c4e3b59c306bbce63bfc9abd0a8e0",
+      "live_odoo_read_and_native_preview": true,
+      "discount_tax_write_tests": "mock Odoo only",
+      "price_included_and_excluded_tax_tests": true,
+      "document_rounding_not_sum_of_lines": true,
+      "tax_and_child_configuration_changes_block_write": true,
+      "company_and_fiscal_position_validated": true,
+      "immutable_review_and_idempotent_recovery": true,
+      "legacy_zero_discount_zero_tax_compatible": true,
+      "qa_local_proposal_cleaned_up": true,
+      "default_runtime": {
+        "url": "http://127.0.0.1:8000",
+        "health": "ok",
+        "live_preview_matches": true,
+        "existing_order_and_legacy_history": true,
+        "report_page_still_loads": true,
+        "narrow_desktop_review_all_columns_visible": true,
+        "mobile_no_overflow": true,
+        "javascript_errors": []
+      }
     }
   },
   "fixed": [
@@ -387,5 +455,5 @@
     "Lượt bật Qwen đã lấy đúng KPI phạm vi mới nhưng chưa hoàn tất tổng hợp do Gemini trả HTTP 503; không coi là lượt hoàn tất.",
     "Bộ lọc từ chối cụm thời gian tương đối và từ ngoài phạm vi kể cả trong một số câu giải thích/phủ định; kịch bản demo dùng câu hỏi và ngày cụ thể."
   ],
-  "updated_at_utc": "2026-11-22T14:39:38.947307+00:00"
+  "updated_at_utc": "2026-11-22T15:30:27.598063+00:00"
 }
