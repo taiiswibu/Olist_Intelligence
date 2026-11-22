@@ -158,6 +158,7 @@ class Context:
     filters: analytics.Filters
     providers: dict
     emit: object = None
+    proposal: dict | None = None
     started: float = field(default_factory=time.monotonic)
     model_calls: int = 0
     tool_calls: int = 0
@@ -358,6 +359,9 @@ async def _graph(ctx, history):
             "history": state["context"]}, ensure_ascii=False))])
         dispatch = Dispatch.model_validate(llm.json_object(_text(response)))
         dispatch.agents = list(dict.fromkeys(dispatch.agents))
+        if ctx.proposal and "erp" not in dispatch.agents:
+            dispatch.agents.append("erp")
+            dispatch.clarification = ""
         return {"dispatch": dispatch.model_dump(), "repaired": False}
 
     async def work(state):
@@ -367,8 +371,14 @@ async def _graph(ctx, history):
         async def run(role):
             async with semaphore:
                 try:
-                    task = json.dumps({"question": ctx.clean(ctx.request.question),
-                        "filters": ctx.filters.model_dump(mode="json"), "history": state["context"],
+                    validation = role == "erp" and ctx.proposal is not None
+                    question = ("Đọc catalog Odoo DEMO bằng công cụ để đối soát partner_id và product_id trong "
+                                "payload được giao. Chỉ kiểm tra bản ghi, không tạo báo giá hoặc đề xuất. "
+                                "Backend sẽ lưu pending ở bước riêng sau khi kiểm tra. Nêu rõ ID nào tồn tại, "
+                                "ID nào không thấy trong danh sách giới hạn." if validation else ctx.request.question)
+                    task = json.dumps({"question": ctx.clean(question),
+                        "filters": ctx.filters.model_dump(mode="json"), "history": "[]" if validation else state["context"],
+                        "proposal_to_validate": ctx.proposal if validation else None,
                         "feedback": state.get("review", {}).get("answer", "")}, ensure_ascii=False)
                     return await _specialist(ctx, role, task, tools)
                 except Exception as exc:
@@ -391,9 +401,15 @@ async def _graph(ctx, history):
             "Sau vòng sửa vẫn thiếu thì incomplete. Không khẳng định đã tạo báo giá, đó là bước riêng sau kiểm tra. "
             "Olist là dữ liệu lịch sử, Odoo là DEMO hiện có; không gộp hai nguồn thành một tổng. "
             "GMV không phải lợi nhuận; top số đơn trễ không phải top tỷ lệ trễ.")
+        if ctx.proposal:
+            prompt += (" Đây là giai đoạn đối soát để chuẩn bị đề xuất pending, chưa phải tạo báo giá trong Odoo. "
+                       "Đánh giá ID khách/sản phẩm DEMO có bằng chứng và payload đủ trường. Việc chưa có báo giá "
+                       "mới hoặc agent không có quyền ghi không phải lý do yêu cầu tạo báo giá ở bước này. "
+                       "Nếu ID không có bằng chứng thì nói rõ chưa đủ dữ liệu; không tự chọn ID hay giá khác.")
         response = await ctx.model("reviewer", [SystemMessage(content=prompt), HumanMessage(content=json.dumps({
             "question": ctx.clean(ctx.request.question), "filters": ctx.filters.model_dump(mode="json"),
-            "reports": state["reports"], "evidence": ctx.evidence, "repair_used": state["repaired"]}, ensure_ascii=False, default=str))])
+            "reports": state["reports"], "evidence": ctx.evidence, "repair_used": state["repaired"],
+            "proposal_to_validate": ctx.proposal}, ensure_ascii=False, default=str))])
         result = Review.model_validate(llm.json_object(_text(response)))
         known = {e["id"] for e in ctx.evidence}
         cited = set(re.findall(r"\[(E\d+)\]", result.answer))
@@ -457,7 +473,7 @@ async def ask(request, emit=None):
     previous = _claim(request)
     if previous:
         return previous
-    ctx = Context(request, filters, {p.name: p for p in llm.providers()}, emit)
+    ctx = Context(request, filters, {p.name: p for p in llm.providers()}, emit, proposal=proposal)
     result = {"tool": "team", "thread_id": request.thread_id, "run_id": request.run_id,
               "filters": filters.model_dump(mode="json"), "routing": {"mode": "agent_team"}, "sources": []}
     try:

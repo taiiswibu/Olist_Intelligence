@@ -40,8 +40,14 @@ def models(monkeypatch):
             if self.tools:
                 if isinstance(messages[-1], ToolMessage):
                     return AIMessage(content="Đã lấy bằng chứng từ công cụ.")
-                name = "business_kpis" if self.provider.name == "groq" else "search_business_docs"
-                args = {} if name == "business_kpis" else {"query": "GMV và AOV là gì?"}
+                if "odoo_demo_catalog" in [t.name for t in self.tools]:
+                    task = json.loads(messages[-1].content)
+                    if task["question"].startswith("Tạo"):
+                        return AIMessage(content="Agent chỉ có quyền đọc, không tạo báo giá.")
+                    name = "odoo_demo_catalog"
+                else:
+                    name = "business_kpis" if self.provider.name == "groq" else "search_business_docs"
+                args = {"query": "GMV và AOV là gì?"} if name == "search_business_docs" else {}
                 return AIMessage(content="", tool_calls=[{"name": name, "args": args, "id": "tool-1", "type": "tool_call"}])
             prompt = messages[1].content
             if "Chọn các agent" in prompt:
@@ -175,9 +181,18 @@ def test_proposal_requires_explicit_current_fields():
         team.explicit_proposal("Tạo báo giá partner_id=1 product_id=2 quantity=0 unit_price=10")
 
 
+def test_proposal_permission_off_never_creates_action(db, models):
+    request = team.TeamRequest(question="Tạo đề xuất báo giá partner_id=1 product_id=2 quantity=3 unit_price=10")
+    result = asyncio.run(team.ask(request))
+    assert "proposal" not in result and erp.list_actions() == []
+
+
 def test_proposal_pending_and_retry_does_not_repeat_it(db, models, monkeypatch):
     calls = []
     class ReadOdoo:
+        def catalog(self):
+            return {"partners": [{"id": 1, "ref": "OLIST-DEMO:customer"}],
+                    "products": [{"id": 2, "default_code": "OLIST-DEMO:product"}]}
         def call(self, model, method, args):
             calls.append(method)
             assert method == "search"
@@ -187,6 +202,11 @@ def test_proposal_pending_and_retry_does_not_repeat_it(db, models, monkeypatch):
                                allow_proposals=True)
     first = asyncio.run(team.ask(request))
     assert first["proposal"]["state"] == "pending" and calls == ["search", "search"]
+    assert any(e["agent"] == "erp" and e["tool"] == "odoo_demo_catalog" for e in first["evidence"])
+    erp_task = next(json.loads(messages[-1].content) for _, messages, tools in models
+                    if "odoo_demo_catalog" in tools and not isinstance(messages[-1], ToolMessage))
+    assert erp_task["proposal_to_validate"] == first["proposal"]["payload"]
+    assert erp_task["history"] == "[]"
     assert len(erp.list_actions()) == 1
     assert asyncio.run(team.ask(request)) == first
     assert len(erp.list_actions()) == 1
@@ -330,6 +350,8 @@ def test_local_summary_failure_keeps_cloud_workflow_available(db, models, monkey
 
 def test_invalid_demo_record_does_not_create_team_proposal(db, models, monkeypatch):
     class Missing:
+        def catalog(self):
+            return {"partners": [], "products": []}
         def call(self, model, method, args):
             assert method == "search"
             return []
