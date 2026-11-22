@@ -125,6 +125,12 @@ Xem **docs/ODOO_WINDOWS.md**. Compose chạy Odoo Community 19 và PostgreSQL; B
 
 Luồng: nhập demo bằng `manage.py odoo-seed --limit 10` → đọc catalog qua RPC → lưu đề xuất trong ứng dụng → người dùng xem payload và duyệt → tạo `sale.order` draft → audit. Không xác nhận đơn, xuất kho, lập hóa đơn hoặc thu tiền.
 
+Trong **ERP & Phê duyệt**, bấm **Đọc lại Odoo**, tìm khách/sản phẩm theo tên hoặc mã DEMO và mở chi tiết bản ghi. Chọn khách, thêm tối đa 20 dòng hàng, nhập số lượng và đơn giá BRL → **Đối soát đề xuất** → **Lưu đề xuất chờ duyệt**. Số lượng và đơn giá tối đa hai chữ số thập phân. Bản này không áp thuế hoặc chiết khấu; giá trên thẻ sản phẩm giữ tiền tệ gốc và không tự dùng làm đơn giá BRL.
+
+Đề xuất đã lưu giữ nguyên khách, từng dòng hàng và tổng tiền để duyệt riêng. Sửa nội dung trên form sẽ yêu cầu đối soát lại. Nếu thông tin Odoo thay đổi trước lúc duyệt, lượt ghi bị chặn để kiểm tra lại. Mất kết nối sau khi tạo báo giá thì thử lại cùng mã để tìm theo origin và đối chiếu từng dòng trước khi nhận kết quả. Luồng một sản phẩm từ chat vẫn được giữ.
+
+**Chi tiết & lịch sử** hiển thị các lần lưu, duyệt, lỗi và từ chối. **Xem báo giá Odoo** đọc lại trạng thái, từng dòng, thuế và tổng tiền từ Odoo. “Đã ghi bản nháp” là trạng thái xử lý đề xuất trong ứng dụng; trạng thái chứng từ hiển thị riêng theo Odoo.
+
 Luồng tạo báo giá nháp đã được kiểm tra với Odoo local thật, có đối chiếu payload và chặn tạo trùng; xem `reports/web_browser_qa.json`. Phạm vi kiểm tra chỉ gồm dữ liệu DEMO và báo giá nháp. Bản local một operator, chưa có RBAC doanh nghiệp. Không mở port ứng dụng ra Internet.
 
 ## ML giao trễ thử nghiệm

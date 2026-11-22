@@ -1,11 +1,11 @@
 {
   "checked_at_utc": "2026-11-22T10:13:52.512405+00:00",
   "app_version": "0.2.0",
-  "branch": "feat/bao-cao",
+  "branch": "feat/erp-ban-hang",
   "platform": "Windows",
   "python": "3.12.2",
   "browser": "Microsoft Edge via Playwright",
-  "unit_tests_passed": 94,
+  "unit_tests_passed": 108,
   "checks": {
     "default_runtime": {
       "url": "http://127.0.0.1:8000/",
@@ -308,6 +308,67 @@
       "snapshot_preserved_on_note_edit": true,
       "client_supplied_figures_rejected": true,
       "conflict_recovery_preserves_edits_until_user_discards": true
+    },
+    "erp_sales_multi_line": {
+      "checked_at_utc": "2026-11-22T14:32:57.243880+00:00",
+      "source_base_commit": "634b5f1fb5d861e3b88f4e2e24952636cf566a16",
+      "connection": {
+        "passed": true,
+        "real_catalog": true
+      },
+      "search_and_review": {
+        "customer_search": true,
+        "product_search": true,
+        "master_details": true,
+        "price_not_assumed_brl": true,
+        "two_lines_from_existing_odoo_quote": true,
+        "per_line_and_total_match": true,
+        "edit_invalidates_review": true
+      },
+      "proposal_and_approval_gate": {
+        "pending_snapshot_preserved": true,
+        "same_request_same_action": true,
+        "unchecked_approval_disabled": true,
+        "checkbox_enables_approval": true,
+        "no_order_before_approval": true,
+        "rejection_recorded_in_history": true,
+        "real_approval_not_sent": true
+      },
+      "order_detail": {
+        "real_existing_quote": true,
+        "all_order_lines": true,
+        "tax_subtotal_total_and_currency": true
+      },
+      "recovery_and_navigation": {
+        "failed_refresh_keeps_labelled_cache": true,
+        "no_navigation_jump": true
+      },
+      "safety": {
+        "new_odoo_orders": false,
+        "confirm_or_invoice_called": false,
+        "javascript_errors": [],
+        "desktop_mobile": true
+      },
+      "mobile_review": {
+        "quantity_price_subtotal_visible": true,
+        "no_horizontal_page_overflow": true
+      },
+      "live_odoo_read_and_preview": true,
+      "multi_line_write_tests": "mock Odoo only",
+      "approved_payload_immutable": true,
+      "line_totals_round_half_up_in_brl": true,
+      "timeout_recovery_validates_existing_order": true,
+      "changed_master_data_blocks_write": true,
+      "legacy_single_line_tests_pass": true,
+      "qa_local_proposal_cleaned_up": true,
+      "default_runtime": {
+        "url": "http://127.0.0.1:8000",
+        "health": "ok",
+        "live_preview_matches": true,
+        "existing_order_and_legacy_history": true,
+        "report_page_still_loads": true,
+        "javascript_errors": []
+      }
     }
   },
   "fixed": [
@@ -326,5 +387,5 @@
     "Lượt bật Qwen đã lấy đúng KPI phạm vi mới nhưng chưa hoàn tất tổng hợp do Gemini trả HTTP 503; không coi là lượt hoàn tất.",
     "Bộ lọc từ chối cụm thời gian tương đối và từ ngoài phạm vi kể cả trong một số câu giải thích/phủ định; kịch bản demo dùng câu hỏi và ngày cụ thể."
   ],
-  "updated_at_utc": "2026-11-22T13:33:07.419987+00:00"
+  "updated_at_utc": "2026-11-22T14:39:38.947307+00:00"
 }
