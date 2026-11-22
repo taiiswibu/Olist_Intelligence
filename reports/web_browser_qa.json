@@ -5,7 +5,7 @@
   "platform": "Windows",
   "python": "3.12.2",
   "browser": "Microsoft Edge via Playwright",
-  "unit_tests_passed": 74,
+  "unit_tests_passed": 75,
   "checks": {
     "default_runtime": {
       "url": "http://127.0.0.1:8000/",
@@ -83,17 +83,42 @@
       "desktop": true,
       "mobile": true,
       "javascript_errors": []
+    },
+    "odoo_quotation_end_to_end": {
+      "checked_at_utc": "2026-11-22T11:22:39.139856+00:00",
+      "live_models_and_odoo": true,
+      "proposal_created_from_chat": true,
+      "model_calls": 4,
+      "tool_calls": 2,
+      "reviewed_payload_approved_by_user": true,
+      "approval_via_web_checkbox_and_button": true,
+      "state": "draft",
+      "currency": "BRL",
+      "partner_product_quantity_price_total_match": true,
+      "taxes_empty": true,
+      "retry_same_run_same_action": true,
+      "duplicate_approval_rejected": true,
+      "orders_for_origin": 1,
+      "invoice_count": 0,
+      "done_action_persisted_after_backend_reload": true,
+      "javascript_errors": [],
+      "backend_source_commit": "597685a7b9e69f48c08a7d90403dd23890cb9dc1",
+      "quotation_table_preserves_cents": true,
+      "currency_matches": true,
+      "dashboard_unchanged": true
     }
   },
   "fixed": [
     "Giữ câu hỏi và tiến trình khi chuyển trang trong lúc chat.",
     "Giữ lỗi và lấy lại cùng lượt chạy sau mất kết nối.",
     "Hiển thị đúng trạng thái Odoo, ghi rõ dữ liệu cũ khi kết nối lại thất bại.",
-    "Không chuyển ngược về ERP khi kết nối hoàn tất sau khi người dùng đổi trang."
+    "Không chuyển ngược về ERP khi kết nối hoàn tất sau khi người dùng đổi trang.",
+    "Bảng báo giá giữ hai chữ số thập phân và dùng đúng tiền tệ từ Odoo."
   ],
   "limits": [
     "Có lượt cloud trả HTTP 503 hoặc lỗi kết nối/timeout; ứng dụng giữ bằng chứng đã lấy và báo chưa hoàn tất.",
-    "Không duyệt hoặc ghi báo giá sang Odoo trong lần kiểm tra này.",
-    "Qwen tóm tắt hội thoại dài chưa được chạy lại trong lần kiểm tra web này."
-  ]
+    "Qwen tóm tắt hội thoại dài chưa được chạy lại trong lần kiểm tra web này.",
+    "Chỉ kiểm tra tạo báo giá DEMO ở trạng thái nháp; không xác nhận đơn, xuất kho hoặc lập hóa đơn."
+  ],
+  "updated_at_utc": "2026-11-22T11:26:38.383597+00:00"
 }
