@@ -109,6 +109,14 @@ Nếu mất kết nối, bấm **Lấy lại lượt vừa gửi** để lấy k
 
 Kịch bản kiểm tra BI, Gemini, Qwen và cách xử lý lỗi: [docs/DEMO_AGENT_VI.md](docs/DEMO_AGENT_VI.md).
 
+## Báo cáo PDF / Excel
+
+Mở **Báo cáo → Tạo báo cáo**, chọn phạm vi, sửa nhận xét và chọn biểu đồ đường/cột. Có thể thêm, bỏ, đổi thứ tự tối đa sáu biểu đồ, kèm bảng chi tiết. Kết quả BI của Đội agent có nút **Đưa vào báo cáo** để lấy đúng bộ lọc, nhận xét và tài liệu nguồn.
+
+Bấm **Lưu bản nháp** để mở lại sau; **PDF / Excel** tự lưu thay đổi trước khi tải. PDF có font tiếng Việt, biểu đồ và nguồn; Excel có số liệu và biểu đồ gốc để chỉnh tiếp. Font PDF dùng Arial trên Windows hoặc DejaVu Sans/Liberation Sans trên Linux. Cập nhật thư viện bằng `python -m pip install -r requirements.txt`.
+
+Số liệu được chụp từ công cụ BI và lưu local trong `data/processed/operations.db`, không đưa lên Git. Sửa nhận xét không tự đổi số liệu; đổi bộ lọc hoặc thêm nguồn biểu đồ mới sẽ truy vấn lại khi lưu. Nhận xét là nội dung có thể sửa, cần rà soát khi đổi phạm vi hoặc chat nguồn chưa hoàn tất. Bản đầu hỗ trợ một kỳ mỗi báo cáo, chưa so sánh hai kỳ; lịch sử hiển thị 100 bản nháp gần nhất.
+
 ## Odoo Community local
 
 Hướng dẫn kết nối từ đầu và Agent đa công cụ tùy chọn: **[docs/ODOO_AGENT_GUIDE_VI.md](docs/ODOO_AGENT_GUIDE_VI.md)**. Có thêm `python manage.py odoo-check` để kiểm tra kết nối chỉ đọc. Agent Lab chạy CLI riêng, không thay Assistant web; cần cài `requirements-agent.txt`.

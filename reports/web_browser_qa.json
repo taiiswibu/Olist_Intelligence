@@ -1,11 +1,11 @@
 {
   "checked_at_utc": "2026-11-22T10:13:52.512405+00:00",
   "app_version": "0.2.0",
-  "branch": "feat/doi-agent",
+  "branch": "feat/bao-cao",
   "platform": "Windows",
   "python": "3.12.2",
   "browser": "Microsoft Edge via Playwright",
-  "unit_tests_passed": 82,
+  "unit_tests_passed": 94,
   "checks": {
     "default_runtime": {
       "url": "http://127.0.0.1:8000/",
@@ -244,6 +244,70 @@
       "summary_cannot_change_filters_or_authorize_erp": true,
       "shared_run_deadline_seconds": 120,
       "result_persisted_after_backend_reload": true
+    },
+    "report_builder": {
+      "checked_at_utc": "2026-11-22T13:29:46.785854+00:00",
+      "source_base_commit": "13268cfb706feb564dedfe1a5b233be396a06bf7",
+      "real_olist_data": true,
+      "create_edit_save": {
+        "passed": true,
+        "scope_matches": true,
+        "numbers_match_api": true,
+        "notes_saved": true
+      },
+      "charts": {
+        "line_and_bar_supported": true,
+        "metric_switch": true,
+        "add_reorder_remove": true,
+        "table_preview": true
+      },
+      "downloads": {
+        "pdf": true,
+        "xlsx": true,
+        "unicode": true,
+        "pdf_pages": 3,
+        "excel_native_charts": 2,
+        "percent_is_ratio_not_scaled_number": true
+      },
+      "persistence": {
+        "reload_and_reopen": true,
+        "charts_and_notes_preserved": true
+      },
+      "from_chat": {
+        "passed": true,
+        "stored_chat_scope_used": true,
+        "numbers_requeried": true,
+        "notes_imported": true,
+        "download_saves_edits": true
+      },
+      "web": {
+        "desktop": true,
+        "mobile": true,
+        "javascript_errors": []
+      },
+      "safety": {
+        "no_new_model_runs": true,
+        "no_erp_writes": true,
+        "source_data_real": true
+      },
+      "default_runtime": {
+        "checked_at_utc": "2026-11-22T13:29:46.785854+00:00",
+        "runtime_url": "http://127.0.0.1:8000",
+        "drafts_persist_after_reload": true,
+        "unsaved_notes_preserved_on_navigation": true,
+        "downloads_save_edits": true,
+        "pdf_unicode_and_layout": true,
+        "pdf_pages": 3,
+        "mobile_chart_resizes": true,
+        "no_horizontal_page_overflow": true,
+        "javascript_errors": [],
+        "saved_report_available_when_data_not_ready": true
+      },
+      "formula_like_notes_exported_as_text": true,
+      "stale_version_update_rejected": true,
+      "snapshot_preserved_on_note_edit": true,
+      "client_supplied_figures_rejected": true,
+      "conflict_recovery_preserves_edits_until_user_discards": true
     }
   },
   "fixed": [
@@ -262,5 +326,5 @@
     "Lượt bật Qwen đã lấy đúng KPI phạm vi mới nhưng chưa hoàn tất tổng hợp do Gemini trả HTTP 503; không coi là lượt hoàn tất.",
     "Bộ lọc từ chối cụm thời gian tương đối và từ ngoài phạm vi kể cả trong một số câu giải thích/phủ định; kịch bản demo dùng câu hỏi và ngày cụ thể."
   ],
-  "updated_at_utc": "2026-11-22T13:00:37.829760+00:00"
+  "updated_at_utc": "2026-11-22T13:33:07.419987+00:00"
 }
