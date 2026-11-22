@@ -1,0 +1,4 @@
+# Optional CLI Agent Lab; install requirements.txt first.
+langchain==1.5.2
+langchain-openai==1.8.5
+langgraph-checkpoint-sqlite==3.1.3

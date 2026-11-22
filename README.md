@@ -1,5 +1,7 @@
 # Olist Intelligence
 
+Nếu VS Code báo thiếu `uvicorn`, lỗi tiếng Việt cp1258 hoặc cổng 8000 đang được dùng, xem [hướng dẫn khởi động Windows](docs/WINDOWS_LAUNCH_FIX_VI.md). Launcher ưu tiên Python `.venv` của dự án và xuất UTF-8; không tự dừng tiến trình đang giữ cổng.
+
 Không gian dữ liệu thương mại chạy local: dashboard, hỏi bằng tiếng Việt, tra tài liệu có nguồn và tạo đề xuất báo giá trong Odoo Community.
 
 **v0.2 — HTML / CSS / JavaScript + FastAPI.** Frontend được phục vụ cùng backend trên một địa chỉ. Không cần Node, frontend build hoặc VPS để chạy trên Windows. Biểu đồ SVG lấy số liệu thật từ API; không dùng số liệu mẫu thay thế khi chưa có dữ liệu.
@@ -87,6 +89,8 @@ Cài Ollama từ https://ollama.com/download. Có thể bắt đầu bằng `oll
 Corpus nằm trong `docs/knowledge/`, do dự án biên soạn; không phải tài liệu nội bộ Olist. Mặc định truy xuất **lexical TF-IDF** có bỏ dấu tiếng Việt. Có thể bật hybrid qua Ollama embedding: đặt `EMBED_MODEL`, chạy `python manage.py embed`, đặt `RAG_MODE=hybrid`. Chế độ model embedding thật chưa được xác minh trong môi trường phát hành.
 
 ## Odoo Community local
+
+Hướng dẫn kết nối từ đầu và Agent đa công cụ tùy chọn: **[docs/ODOO_AGENT_GUIDE_VI.md](docs/ODOO_AGENT_GUIDE_VI.md)**. Có thêm `python manage.py odoo-check` để kiểm tra kết nối chỉ đọc. Agent Lab chạy CLI riêng, không thay Assistant web; cần cài `requirements-agent.txt`.
 
 Xem **docs/ODOO_WINDOWS.md**. Compose chạy Odoo Community 19 và PostgreSQL; BI mặc định dùng SQLite nên không cần Docker để mở dashboard.
 

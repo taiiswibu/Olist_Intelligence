@@ -6,9 +6,12 @@ from olist.config import init_env
 def main():
     init_env()
     parser = argparse.ArgumentParser(description="Olist Intelligence local management")
-    parser.add_argument("command", choices=["setup", "download", "ingest", "train", "status", "odoo-seed", "embed", "models"])
+    parser.add_argument("command", choices=["setup", "download", "ingest", "train", "status", "odoo-seed", "odoo-check", "embed", "models", "agent-lab"])
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--provider", default="groq")
+    parser.add_argument("--question")
+    parser.add_argument("--thread")
+    parser.add_argument("--allow-proposals", action="store_true")
     args = parser.parse_args()
     if args.command in {"setup", "download", "ingest"}:
         from olist.ingest import download, ingest
@@ -25,6 +28,18 @@ def main():
     elif args.command == "embed":
         from olist.rag import build_embeddings
         print(build_embeddings())
+    elif args.command == "odoo-check":
+        from scripts.check_odoo import check_odoo
+        result = check_odoo()
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        if not result["ok"]:
+            raise SystemExit(1)
+    elif args.command == "agent-lab":
+        try:
+            from olist.agent_lab import cli
+        except ModuleNotFoundError:
+            parser.exit(1, "Cần cài thêm: python -m pip install -r requirements-agent.txt\n")
+        cli(args.provider, args.question, args.thread, args.allow_proposals)
     elif args.command == "odoo-seed":
         from scripts.seed_odoo import seed
         if not 1 <= args.limit <= 50:

@@ -1,5 +1,17 @@
 # Xác minh bản 0.2
 
+## Bổ sung launcher Windows / Code Runner — 22/11/2026
+
+Launcher cấu hình stdout/stderr UTF-8 và chọn Python venv của dự án nếu có; batch đặt UTF-8 trước khi khởi động. Thông báo phân biệt cổng bận và lỗi quyền, không tự dừng tiến trình. Các regression tests giả lập pipe cp1258 nghiêm ngặt khi thiếu uvicorn, chuyển interpreter, tránh chuyển lặp và hai nhánh lỗi bind. Bộ kiểm thử sau bổ sung: **51 tests** khi đã cài dependencies Agent. Native Windows và cổng 8000 trên máy người dùng chưa được kiểm tra trực tiếp.
+
+## Bổ sung Odoo diagnostics và Agent Lab — 22/11/2026
+
+Agent Lab là CLI tùy chọn, không thay router của Assistant web. Kiểm thử framework thực thi qua LangChain/LangGraph với model giả, dữ liệu fixture và SQLite thật: nhiều lượt tool, khôi phục sau đóng/mở checkpoint, tách thread, schema sai, giới hạn model/tool, đề xuất chỉ pending và từ chối ID ngoài DEMO. Doctor kiểm tra các nhánh kết nối/xác thực/Sales bằng mock và không in lỗi chứa secret.
+
+Toàn bộ suite với dependencies Agent đã cài: **46 tests**. Luồng HTTP HTML/assets/cookie/chat và đối soát dữ liệu vẫn kiểm tra bằng `scripts/verify_release.py`. Những phép kiểm tra này không chứng minh chất lượng model cloud, tốc độ trên Windows, hoặc Odoo server thật. Chưa huấn luyện LLM, chưa kiểm tra Groq thật, chưa push GitHub.
+
+Dependencies Agent được tách trong `requirements-agent.txt`; app cơ bản vẫn không bắt buộc cài LangChain. Không có endpoint web mới cho Agent Lab trong lần bổ sung này.
+
 Ngày kiểm tra: 21/11/2026. Môi trường Linux, Python 3.12; không đồng nhất kết quả với laptop Windows của người dùng.
 
 ## Phần đã chạy

@@ -41,6 +41,7 @@ Khuyến nghị dùng API key/tài khoản tích hợp riêng sau khi luồng de
 Sau khi đã chạy SETUP_WINDOWS.bat:
 
 ```powershell
+.\.venv\Scripts\python.exe manage.py odoo-check
 .\.venv\Scripts\python.exe manage.py odoo-seed --limit 10
 ```
 
@@ -67,7 +68,7 @@ docker compose --profile postgres up -d analytics-db
 Sửa `.env`:
 
 ```dotenv
-DATABASE_URL=postgresql+psycopg://olist:olist_local_demo@127.0.0.1:5433/olist_analytics
+DATABASE_URL=postgresql+psycopg://olist:<ANALYTICS_PG_PASSWORD>@127.0.0.1:5433/olist_analytics
 ```
 
 Nếu đổi `ANALYTICS_PG_PASSWORD` hãy dùng password tương ứng trong URL (URL-encode ký tự đặc biệt). Sau đó:

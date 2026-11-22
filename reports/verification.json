@@ -1,8 +1,8 @@
 {
-  "verified_at_utc": "2026-11-21T17:01:58.122046+00:00",
+  "verified_at_utc": "2026-11-22T08:30:33.691903+00:00",
   "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
   "python": "3.12.14",
-  "unit_tests_passed": 34,
+  "unit_tests_passed": 51,
   "cloud_llm_tested": false,
   "odoo_server_tested": false,
   "postgres_server_tested": false,
@@ -218,8 +218,8 @@
     ]
   },
   "offline_agent_latency_ms": {
-    "p50": 100.19893150001735,
-    "p95": 432.6711427506779,
+    "p50": 94.87861449997581,
+    "p95": 407.0590264002931,
     "note": "local test environment, no LLM; not the user's laptop"
   }
 }
