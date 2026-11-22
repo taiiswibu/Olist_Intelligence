@@ -5,7 +5,7 @@
   "platform": "Windows",
   "python": "3.12.2",
   "browser": "Microsoft Edge via Playwright",
-  "unit_tests_passed": 75,
+  "unit_tests_passed": 82,
   "checks": {
     "default_runtime": {
       "url": "http://127.0.0.1:8000/",
@@ -106,6 +106,144 @@
       "quotation_table_preserves_cents": true,
       "currency_matches": true,
       "dashboard_unchanged": true
+    },
+    "multi_agent_long_conversation": {
+      "checked_at_utc": "2026-11-22T12:57:28.158659+00:00",
+      "source_base_commit": "b5d2f3a17cdd1620bddf8ffab83847335801b8cd",
+      "live_models": true,
+      "bi_and_knowledge": {
+        "live_turn_1": {
+          "status": "complete",
+          "numbers_match_parameterized_api": true,
+          "knowledge_sources_match_files": true,
+          "citations_valid": true,
+          "filters": {
+            "start": "2018-01-01",
+            "end": "2018-01-31",
+            "state": "SP"
+          },
+          "model_calls": 7,
+          "tool_calls": 3,
+          "errors": []
+        },
+        "live_turn_2": {
+          "status": "complete",
+          "numbers_match_parameterized_api": true,
+          "knowledge_sources_match_files": true,
+          "citations_valid": true,
+          "filters": {
+            "start": "2018-01-01",
+            "end": "2018-01-31",
+            "state": "SP"
+          },
+          "model_calls": 7,
+          "tool_calls": 3,
+          "errors": []
+        },
+        "live_turn_3": {
+          "status": "incomplete",
+          "numbers_match_parameterized_api": true,
+          "knowledge_sources_match_files": true,
+          "citations_valid": true,
+          "filters": {
+            "start": "2018-01-01",
+            "end": "2018-01-31",
+            "state": "SP"
+          },
+          "model_calls": 7,
+          "tool_calls": 3,
+          "errors": [
+            {
+              "agent": "bi",
+              "error": "TimeoutError",
+              "http_status": null
+            },
+            {
+              "agent": "bi",
+              "error": "TimeoutError",
+              "http_status": null
+            },
+            {
+              "agent": "reviewer",
+              "error": "TimeoutError",
+              "http_status": null
+            },
+            {
+              "agent": "coordinator",
+              "error": "TimeoutError",
+              "http_status": null
+            }
+          ]
+        }
+      },
+      "local_summary": {
+        "history_chars": 6139,
+        "summary_called": true,
+        "summary_chars": 64,
+        "forwarded_to_coordinator": true,
+        "current_filters_preserved": true,
+        "numbers_match_parameterized_api": true,
+        "model_calls": 9,
+        "tool_calls": 3,
+        "errors": [
+          {
+            "agent": "reviewer",
+            "error": "HTTPStatusError",
+            "http_status": 503
+          },
+          {
+            "agent": "coordinator",
+            "error": "HTTPStatusError",
+            "http_status": null
+          }
+        ],
+        "finish_reason": "stop",
+        "elapsed_ms": 42953,
+        "input_max_chars": 3000,
+        "output_max_tokens": 96,
+        "previous_scope": {
+          "state": "RJ",
+          "start": "2018-02-01",
+          "end": "2018-02-28"
+        },
+        "current_scope": {
+          "start": "2018-03-01",
+          "end": "2018-03-31",
+          "state": "MG"
+        },
+        "cpu_inference": true,
+        "run_status": "incomplete",
+        "summary_complete": true
+      },
+      "web_and_safety": {
+        "desktop": true,
+        "mobile": true,
+        "cached_result_same": true,
+        "new_erp_actions": false,
+        "javascript_errors": []
+      },
+      "timeout_and_recovery": {
+        "actual_cloud_timeout": true,
+        "partial_evidence_preserved": true,
+        "connection_loss_simulated": true,
+        "retry_same_run": true,
+        "replayed_status": "incomplete",
+        "no_duplicate_messages": true,
+        "no_new_model_runs": true,
+        "no_new_erp_actions": true,
+        "local_fallback_notice_visible": true,
+        "mobile": true,
+        "javascript_errors": []
+      },
+      "simulated_provider_failures": [
+        "HTTP 503",
+        "ReadTimeout",
+        "ConnectError"
+      ],
+      "empty_or_truncated_summary_keeps_original_history": true,
+      "summary_cannot_change_filters_or_authorize_erp": true,
+      "shared_run_deadline_seconds": 120,
+      "result_persisted_after_backend_reload": true
     }
   },
   "fixed": [
@@ -113,12 +251,16 @@
     "Giữ lỗi và lấy lại cùng lượt chạy sau mất kết nối.",
     "Hiển thị đúng trạng thái Odoo, ghi rõ dữ liệu cũ khi kết nối lại thất bại.",
     "Không chuyển ngược về ERP khi kết nối hoàn tất sau khi người dùng đổi trang.",
-    "Bảng báo giá giữ hai chữ số thập phân và dùng đúng tiền tệ từ Odoo."
+    "Bảng báo giá giữ hai chữ số thập phân và dùng đúng tiền tệ từ Odoo.",
+    "Giới hạn đầu vào/đầu ra Qwen và cho phép chờ riêng tối đa 60 giây trong tổng ngân sách 120 giây.",
+    "Giữ lịch sử gốc khi bản tóm tắt rỗng hoặc bị cắt; thông báo trên chat khi phải dùng lịch sử chưa nén."
   ],
   "limits": [
     "Có lượt cloud trả HTTP 503 hoặc lỗi kết nối/timeout; ứng dụng giữ bằng chứng đã lấy và báo chưa hoàn tất.",
-    "Qwen tóm tắt hội thoại dài chưa được chạy lại trong lần kiểm tra web này.",
-    "Chỉ kiểm tra tạo báo giá DEMO ở trạng thái nháp; không xác nhận đơn, xuất kho hoặc lập hóa đơn."
+    "Chỉ kiểm tra tạo báo giá DEMO ở trạng thái nháp; không xác nhận đơn, xuất kho hoặc lập hóa đơn.",
+    "Qwen local chạy bằng CPU; lượt tóm tắt hợp lệ mất khoảng 43 giây. Chỉ nén chủ đề/phạm vi trong phần lịch sử gần nhất, không dùng làm nguồn số liệu.",
+    "Lượt bật Qwen đã lấy đúng KPI phạm vi mới nhưng chưa hoàn tất tổng hợp do Gemini trả HTTP 503; không coi là lượt hoàn tất.",
+    "Bộ lọc từ chối cụm thời gian tương đối và từ ngoài phạm vi kể cả trong một số câu giải thích/phủ định; kịch bản demo dùng câu hỏi và ngày cụ thể."
   ],
-  "updated_at_utc": "2026-11-22T11:26:38.383597+00:00"
+  "updated_at_utc": "2026-11-22T13:00:37.829760+00:00"
 }

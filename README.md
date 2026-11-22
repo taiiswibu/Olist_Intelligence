@@ -107,6 +107,8 @@ Muốn tạo đề xuất, bật quyền rồi ghi rõ: `Tạo đề xuất báo
 
 Nếu mất kết nối, bấm **Lấy lại lượt vừa gửi** để lấy kết quả cùng mã, tránh tạo lại đề xuất. Hội thoại mới tạo thread riêng; lịch sử lưu local trong SQLite và không đưa lên Git. Bộ kiểm tra nguồn/số không bảo đảm mọi diễn giải của model đều đúng; cần đối chiếu bằng chứng.
 
+Kịch bản kiểm tra BI, Gemini, Qwen và cách xử lý lỗi: [docs/DEMO_AGENT_VI.md](docs/DEMO_AGENT_VI.md).
+
 ## Odoo Community local
 
 Hướng dẫn kết nối từ đầu và Agent đa công cụ tùy chọn: **[docs/ODOO_AGENT_GUIDE_VI.md](docs/ODOO_AGENT_GUIDE_VI.md)**. Có thêm `python manage.py odoo-check` để kiểm tra kết nối chỉ đọc. Agent Lab chạy CLI riêng, không thay Assistant web; cần cài `requirements-agent.txt`.
@@ -115,7 +117,7 @@ Xem **docs/ODOO_WINDOWS.md**. Compose chạy Odoo Community 19 và PostgreSQL; B
 
 Luồng: nhập demo bằng `manage.py odoo-seed --limit 10` → đọc catalog qua RPC → lưu đề xuất trong ứng dụng → người dùng xem payload và duyệt → tạo `sale.order` draft → audit. Không xác nhận đơn, xuất kho, lập hóa đơn hoặc thu tiền.
 
-Odoo/PostgreSQL server thật chưa được kiểm thử trong môi trường xây dựng; tests mock không được mô tả là đã tích hợp server thành công. Bản local một operator, chưa có RBAC doanh nghiệp. Không mở port ứng dụng ra Internet.
+Luồng tạo báo giá nháp đã được kiểm tra với Odoo local thật, có đối chiếu payload và chặn tạo trùng; xem `reports/web_browser_qa.json`. Phạm vi kiểm tra chỉ gồm dữ liệu DEMO và báo giá nháp. Bản local một operator, chưa có RBAC doanh nghiệp. Không mở port ứng dụng ra Internet.
 
 ## ML giao trễ thử nghiệm
 

@@ -110,6 +110,7 @@ function responseHTML(r){
  const route=r.routing||{},mode=r.tool==='team'?`Đội agent · ${r.status==='complete'?'Đã hoàn tất':'Chưa hoàn tất'} · ${r.model_calls} lượt model`:route.provider?`${route.provider} / ${route.model}`:'Quy tắc local · không dùng LLM định tuyến';
  const data=r.data?(Array.isArray(r.data)?r.data:[r.data]):null;
  let extra='';
+ if(r.tool==='team'&&r.trace?.some(e=>e.agent==='summary'&&e.status==='failed'))extra+='<div class="notice">Chưa tóm tắt được bằng model local; lượt này dùng lịch sử chưa nén.</div>';
  if(data?.length){const keys=Object.keys(data[0]);extra=`<details class="evidence"><summary>Xem ${data.length} dòng dữ liệu từ công cụ</summary><div class="table-scroll"><table class="data-table"><thead><tr>${keys.map(k=>`<th>${esc(k)}</th>`).join('')}</tr></thead><tbody>${data.map(row=>`<tr>${keys.map(k=>`<td>${esc(typeof row[k]==='number'?new Intl.NumberFormat('vi-VN',{maximumFractionDigits:3}).format(row[k]):row[k])}</td>`).join('')}</tr>`).join('')}</tbody></table></div></details>`;}
  if(r.sql)extra+=`<details class="evidence"><summary>SQL & phạm vi truy vấn</summary><div class="evidence-content"><p>${esc(scopeText(r.filters))}</p><pre>${esc(r.sql)}</pre></div></details>`;
  if(r.sources?.length)extra+=r.sources.map(s=>`<details class="evidence"><summary>${esc(s.section)} · ${esc(s.source)}</summary><div class="evidence-content">${basicMarkdown(s.text)}<p class="mono">Chunk ${esc(s.id)} · ${esc(r.retrieval)}</p></div></details>`).join('');
