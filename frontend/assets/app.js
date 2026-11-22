@@ -35,7 +35,7 @@ const meta = {
  erp:['ERP & Phê duyệt','TỪ GÓC NHÌN ĐẾN HÀNH ĐỘNG','Hành động có kiểm soát','Kết nối Odoo Community, xem đề xuất và duyệt từng thao tác.'],
  verification:['Kiểm chứng dữ liệu','TIN CẬY TỪ NHỮNG CHI TIẾT','Minh bạch từ dữ liệu gốc','Đối soát nguồn, kiểm tra hệ thống và theo dõi nhật ký.']
 };
-const state = {page:'overview', status:null, filters:{start:'2017-01-01',end:'2018-08-31'}, cache:{}, history:[], chart:'gmv', table:'seller', search:'', catalog:null, quotations:[], pendingQuestion:'', busy:false, chatMode:'team', teamConfig:null, teamThread:crypto.randomUUID().replaceAll('-',''), teamRetry:null, localSummary:false, allowProposals:false};
+const state = {page:'overview', status:null, filters:{start:'2017-01-01',end:'2018-08-31'}, cache:{}, history:[], chart:'gmv', table:'seller', search:'', catalog:null, quotations:[], odooConnection:'unknown', pendingQuestion:'', busy:false, chatMode:'team', teamConfig:null, teamThread:crypto.randomUUID().replaceAll('-',''), teamRetry:null, activeChat:null, chatFailure:null, localSummary:false, allowProposals:false};
 let renderSequence = 0, toastTimer;
 const chartObserver = new ResizeObserver(()=>{
  const target=$('#main-chart');
@@ -131,6 +131,17 @@ function teamEvidence(e){
  if(r?.sql)content+=`<details><summary>Truy vấn đã chạy</summary><pre>${esc(r.sql)}</pre></details>`;
  return `<details class="evidence"><summary>[${esc(e.id)}] ${esc(e.tool)}</summary><div class="evidence-content">${content}</div></details>`;
 }
+function chatWaiting(){return `<div id="chat-wait" class="small-text muted"><span class="spinner"></span>Đang tìm căn cứ trong dữ liệu…<div id="team-progress" aria-live="polite">${teamTrace((state.activeChat?.steps||[]).slice(-8))}</div></div>`;}
+function chatTranscript(){
+ let html=state.history.map(x=>userHTML(x.question)+responseHTML(x.response)).join('');
+ if(state.activeChat)html+=userHTML(state.activeChat.question)+chatWaiting();
+ else if(state.chatFailure)html+=userHTML(state.chatFailure.question)+`<div id="team-error" class="notice error">${esc(state.chatFailure.message)}${state.teamRetry?'<p><button class="button secondary small" id="retry-team">Lấy lại lượt vừa gửi</button></p>':''}</div>`;
+ return html||welcome();
+}
+function refreshChat(){
+ const box=$('#chat-messages');
+ if(state.page==='assistant'&&box){box.innerHTML=chatTranscript();box.scrollTop=box.scrollHeight;}
+}
 async function assistant(){
  try{state.teamConfig=await api('/agent/team');}catch{state.teamConfig=null;}
  const team=state.teamConfig,active=state.chatMode==='team';
@@ -139,7 +150,7 @@ async function assistant(){
  <div class="team-options"><label>Chế độ <select id="chat-mode" ${state.busy?'disabled':''}><option value="team" ${active?'selected':''}>Đội agent</option><option value="single" ${!active?'selected':''}>Trợ lý thường</option></select></label>
  <div id="team-options" ${active?'':'hidden'}><label><input type="checkbox" id="team-local" ${state.localSummary?'checked':''} ${state.busy?'disabled':''}> Qwen tóm tắt hội thoại dài</label><label><input type="checkbox" id="team-proposals" ${state.allowProposals?'checked':''} ${state.busy?'disabled':''}> Cho phép lưu đề xuất chờ duyệt</label></div></div>
  ${active&&!team?.ready?'<div class="notice">Đội agent chưa sẵn sàng. Kiểm tra Groq/Gemini và cài <code>requirements-agent.txt</code>. Bạn vẫn có thể dùng Trợ lý thường.</div>':''}
- <div class="chat-messages" id="chat-messages">${state.history.length?state.history.map(x=>userHTML(x.question)+responseHTML(x.response)).join(''):welcome()}</div>
+ <div class="chat-messages" id="chat-messages">${chatTranscript()}</div>
  <form class="chat-composer" id="chat-form"><div class="composer-input"><textarea name="question" id="chat-input" rows="2" maxlength="2000" required placeholder="Đặt một câu hỏi về dữ liệu của bạn…" aria-label="Câu hỏi cho trợ lý"></textarea><button class="button" type="submit" ${state.busy?'disabled':''} aria-label="Gửi câu hỏi">${icon('send')}</button></div><p class="composer-note">Enter để gửi · Shift + Enter để xuống dòng · Khoảng ngày: ${esc(scopeText())}</p></form></section>
  <aside class="chat-aside"><div class="panel side-card"><h3>Đội agent</h3><ul class="tool-list">${roles.map(r=>`<li>${icon(r.role==='bi'?'chart':r.role==='erp'?'layers':r.role==='knowledge'?'book':'spark')}<span>${esc(r.label)}${r.optional?' · tùy chọn':''}<small>${r.configured?esc(r.provider)+' / '+esc(r.model):'Chưa cấu hình '+esc(r.provider)}</small></span></li>`).join('')}</ul></div><div class="panel side-card"><h3>Cách làm việc</h3><p>Chỉ gọi agent cần cho câu hỏi. Số liệu lấy từ công cụ; tài liệu có nguồn để đối chiếu.</p><p>Tối đa hai agent chạy cùng lúc, một vòng bổ sung bằng chứng. Báo giá vẫn cần duyệt riêng ở ERP.</p><p>Qwen chỉ tóm tắt khi bật và lịch sử đủ dài. Groq/Gemini vẫn nhận ngữ cảnh cần dùng.</p></div></aside></div>`;
 }
@@ -151,7 +162,7 @@ async function streamTeam(payload){
  function receive(line){
   if(!line.trim())return;
   const event=JSON.parse(line);
-  if(event.type==='step'){steps.push(event);const target=$('#team-progress');if(target)target.innerHTML=teamTrace(steps.slice(-8));}
+  if(event.type==='step'){steps.push(event);if(state.activeChat?.payload.run_id===payload.run_id)state.activeChat.steps=steps;const target=$('#team-progress');if(target)target.innerHTML=teamTrace(steps.slice(-8));}
   if(event.type==='error')throw new Error(event.message);
   if(event.type==='result')result=event.result;
  }
@@ -163,22 +174,19 @@ async function streamTeam(payload){
 async function sendQuestion(question,retry=null){
  if(state.busy||!question.trim())return;
  if(state.page!=='assistant'){state.pendingQuestion=question;await navigate('assistant');return;}
- state.busy=true;$('#chat-input').value='';$('#chat-messages .chat-welcome')?.remove();$('#team-error')?.remove();
- const box=$('#chat-messages'),team=retry||state.chatMode==='team',thread=state.teamThread;
+ state.busy=true;$('#chat-input').value='';
+ const team=Boolean(retry)||state.chatMode==='team',thread=state.teamThread;
  const payload=retry||{question,filters:{...state.filters},thread_id:thread,run_id:crypto.randomUUID().replaceAll('-',''),local_summary:state.localSummary,allow_proposals:state.allowProposals};
- box.insertAdjacentHTML('beforeend',(retry?'':userHTML(question))+'<div id="chat-wait" class="small-text muted"><span class="spinner"></span>Đang tìm căn cứ trong dữ liệu…<div id="team-progress" aria-live="polite"></div></div>');
+ state.teamRetry=null;state.chatFailure=null;state.activeChat={question,payload,steps:[]};
+ refreshChat();
  for(const el of document.querySelectorAll('#chat-form button,#chat-mode,#team-local,#team-proposals,#clear-chat'))el.disabled=true;
- box.scrollTop=box.scrollHeight;
  try{
   const response=team?await streamTeam(payload):await api('/agent/chat',{method:'POST',body:{question,filters:payload.filters}});
-  state.teamRetry=null;
-  if(thread===state.teamThread){state.history.push({question,response});if(state.history.length>12)state.history.shift();$('#chat-wait')?.remove();if(state.page==='assistant'){$('#chat-messages').insertAdjacentHTML('beforeend',responseHTML(response));$('#chat-messages').scrollTop=$('#chat-messages').scrollHeight;}}
+  if(thread===state.teamThread){state.history.push({question,response});if(state.history.length>12)state.history.shift();}
  }catch(e){
-  if(team)state.teamRetry=payload;
-  $('#chat-wait')?.remove();
-  if(state.page==='assistant')$('#chat-messages').insertAdjacentHTML('beforeend',`<div id="team-error" class="notice error">${esc(e.message)}${team?'<p><button class="button secondary small" id="retry-team">Lấy lại lượt vừa gửi</button></p>':''}</div>`);
+  if(thread===state.teamThread){state.teamRetry=team?payload:null;state.chatFailure={question,message:e.message};}
  }finally{
-  state.busy=false;
+  state.activeChat=null;state.busy=false;refreshChat();
   for(const el of document.querySelectorAll('#chat-form button,#chat-mode,#team-local,#team-proposals,#clear-chat'))el.disabled=false;
  }
 }
@@ -192,7 +200,12 @@ async function delivery(){
 }
 async function predictRisk(orderId){const result=$('#risk-result');result.innerHTML='<div class="loading-state"><span class="spinner"></span>Đang tính điểm…</div>';try{const r=await api('/ml/order/'+encodeURIComponent(orderId),{method:'POST'});result.innerHTML=`<span class="tag warning">Kết quả thử nghiệm</span><h2 style="margin-top:20px">Điểm rủi ro giao trễ</h2><div class="risk-score">${r.risk_score.toFixed(3)}</div><span class="tag ${r.high_risk?'warning':'neutral'}">${r.high_risk?'Trên ngưỡng cảnh báo validation':'Dưới ngưỡng cảnh báo validation'}</span><div class="risk-meter"><span style="width:${Math.max(0,Math.min(100,r.risk_score*100))}%"></span></div><div class="risk-labels"><span>0</span><span>1</span></div><p class="small-text muted" style="margin-top:24px">Model ${esc(r.model)} · ngưỡng ${r.threshold.toFixed(2)}</p><p class="small-text muted">${esc(r.note)}</p>`;}catch(e){result.innerHTML=`<div class="notice error">${esc(e.message)}</div>`;}}
 function proposalCard(action){const p=action.payload;return `<article class="approval"><div class="approval-top"><span class="mono">${esc(action.id)}</span><span class="tag ${action.state==='done'?'done':action.state==='failed'?'warning':'neutral'}">${esc(action.state)}</span></div><div class="approval-body">Khách #${number(p.partner_id)} · Sản phẩm #${number(p.product_id)} · SL ${number(p.quantity)}<br>Tổng trước thuế: <strong>${esc(money(p.quantity*p.unit_price))}</strong></div><details class="evidence"><summary>Xem payload đầy đủ</summary><div class="evidence-content"><pre>${esc(JSON.stringify(p,null,2))}</pre></div></details>${['pending','failed'].includes(action.state)?`<div class="approval-controls"><label class="check-label"><input type="checkbox" data-approve-check="${action.id}">Tôi đã xem payload và đồng ý tạo báo giá nháp.</label><button class="button small" data-approve="${action.id}" disabled>Duyệt tạo trong Odoo</button>${action.state==='pending'?`<button class="button secondary small" data-reject="${action.id}">Từ chối</button>`:''}</div>`:action.result?`<p class="small-text muted">${action.result.odoo_id?'Odoo ID '+number(action.result.odoo_id):esc(JSON.stringify(action.result))}</p>`:''}</article>`;}
-async function erp(){const actions=await api('/actions');return `<div class="page-enter"><div class="status-banner"><span><span class="status-dot" style="background:${state.status.odoo_configured?'#6b9b6c':'#b5bdad'}"></span>${state.status.odoo_configured?'Đã cấu hình Odoo · cần kiểm tra kết nối':'Chưa cấu hình Odoo local'}</span><button class="button secondary small" id="connect-erp">${icon('refresh')}Kết nối Odoo</button></div><div class="notice">Chỉ thao tác với khách và sản phẩm có mã <code>OLIST-DEMO</code>. Mỗi thao tác cần duyệt; báo giá được tạo ở trạng thái nháp, chưa xác nhận đơn hay thu tiền.</div><div id="erp-notice"></div>${state.catalog?.partners?.length&&state.catalog?.products?.length?`<div class="split-layout"><section class="panel form-panel"><h2>Tạo đề xuất báo giá</h2><p>Đề xuất được lưu trong ứng dụng. Chỉ sau khi bạn duyệt, báo giá mới được ghi vào Odoo.</p><form id="quotation-form"><label class="field"><span>Khách hàng demo</span><select id="erp-partner" required>${state.catalog.partners.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></label><label class="field"><span>Sản phẩm demo</span><select id="erp-product" required>${state.catalog.products.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></label><div class="field-row"><label class="field"><span>Số lượng</span><input id="erp-quantity" type="number" min="1" max="1000" value="1" required></label><label class="field"><span>Đơn giá · BRL</span><input id="erp-price" type="number" min="0" max="100000" step="0.01" value="100" required></label></div><button class="button full">Lưu đề xuất</button></form></section><section class="panel form-panel"><h2>Phạm vi của bản demo</h2><p>Dữ liệu từ Olist được chuyển đổi thành các đối tượng demo. Không biểu diễn đây là ERP gốc hay tồn kho thực tế.</p><ul class="tool-list"><li>${icon('check')}Đọc khách hàng, sản phẩm và báo giá</li><li>${icon('lock')}Chỉ ghi sau bước duyệt riêng</li><li>${icon('shield')}Khôi phục theo origin khi lỗi mạng</li></ul></section></div>`:empty('Kết nối Odoo Community trên máy','Cấu hình ODOO_URL, ODOO_DB, ODOO_LOGIN và ODOO_PASSWORD trong .env, sau đó nhập dữ liệu demo. Hướng dẫn: docs/ODOO_WINDOWS.md.','docker compose up -d\npython manage.py odoo-seed --limit 10')}<div class="section-heading"><div><h2>Đề xuất & lịch sử phê duyệt</h2><p>Đối soát payload trước mỗi lần ghi</p></div><span class="tag neutral">${actions.length} đề xuất</span></div><section class="panel">${actions.length?actions.map(proposalCard).join(''):'<div class="empty-state">Chưa có đề xuất. Kết nối Odoo và chọn dữ liệu demo để bắt đầu.</div>'}</section>${state.quotations.length?`<div class="section-heading"><h2>Báo giá đã đọc từ Odoo</h2></div><section class="panel"><div class="table-scroll"><table class="data-table"><thead><tr><th>Báo giá</th><th>Khách hàng</th><th>Trạng thái</th><th>Tổng</th></tr></thead><tbody>${state.quotations.map(q=>`<tr><td>${esc(q.name)}</td><td>${esc(q.partner_id?.[1]||'')}</td><td>${esc(q.state)}</td><td>${esc(q.currency_id?.[1]||'')} ${number(q.amount_total)}</td></tr>`).join('')}</tbody></table></div></section>`:''}</div>`;}
+function odooStatusText(){
+ if(state.odooConnection==='ready')return 'Đã đọc dữ liệu từ Odoo';
+ if(state.odooConnection==='error')return state.catalog?'Lần kết nối mới thất bại · đang hiển thị dữ liệu đã đọc trước đó':'Chưa kết nối được Odoo';
+ return state.status.odoo_configured?'Đã cấu hình Odoo · cần kiểm tra kết nối':'Chưa cấu hình Odoo local';
+}
+async function erp(){const actions=await api('/actions');return `<div class="page-enter"><div class="status-banner"><span id="erp-status"><span class="status-dot" style="background:${state.odooConnection==='ready'?'#6b9b6c':'#b5bdad'}"></span>${esc(odooStatusText())}</span><button class="button secondary small" id="connect-erp">${icon('refresh')}Kết nối Odoo</button></div><div class="notice">Chỉ thao tác với khách và sản phẩm có mã <code>OLIST-DEMO</code>. Mỗi thao tác cần duyệt; báo giá được tạo ở trạng thái nháp, chưa xác nhận đơn hay thu tiền.</div><div id="erp-notice"></div>${state.catalog?.partners?.length&&state.catalog?.products?.length?`<div class="split-layout"><section class="panel form-panel"><h2>Tạo đề xuất báo giá</h2><p>Đề xuất được lưu trong ứng dụng. Chỉ sau khi bạn duyệt, báo giá mới được ghi vào Odoo.</p><form id="quotation-form"><label class="field"><span>Khách hàng demo</span><select id="erp-partner" required>${state.catalog.partners.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></label><label class="field"><span>Sản phẩm demo</span><select id="erp-product" required>${state.catalog.products.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></label><div class="field-row"><label class="field"><span>Số lượng</span><input id="erp-quantity" type="number" min="1" max="1000" value="1" required></label><label class="field"><span>Đơn giá · BRL</span><input id="erp-price" type="number" min="0" max="100000" step="0.01" value="100" required></label></div><button class="button full">Lưu đề xuất</button></form></section><section class="panel form-panel"><h2>Phạm vi của bản demo</h2><p>Dữ liệu từ Olist được chuyển đổi thành các đối tượng demo. Không biểu diễn đây là ERP gốc hay tồn kho thực tế.</p><ul class="tool-list"><li>${icon('check')}Đọc khách hàng, sản phẩm và báo giá</li><li>${icon('lock')}Chỉ ghi sau bước duyệt riêng</li><li>${icon('shield')}Khôi phục theo origin khi lỗi mạng</li></ul></section></div>`:empty('Kết nối Odoo Community trên máy','Cấu hình ODOO_URL, ODOO_DB, ODOO_LOGIN và ODOO_PASSWORD trong .env, sau đó nhập dữ liệu demo. Hướng dẫn: docs/ODOO_WINDOWS.md.','docker compose up -d\npython manage.py odoo-seed --limit 10')}<div class="section-heading"><div><h2>Đề xuất & lịch sử phê duyệt</h2><p>Đối soát payload trước mỗi lần ghi</p></div><span class="tag neutral">${actions.length} đề xuất</span></div><section class="panel">${actions.length?actions.map(proposalCard).join(''):'<div class="empty-state">Chưa có đề xuất. Kết nối Odoo và chọn dữ liệu demo để bắt đầu.</div>'}</section>${state.quotations.length?`<div class="section-heading"><h2>Báo giá đã đọc từ Odoo</h2></div><section class="panel"><div class="table-scroll"><table class="data-table"><thead><tr><th>Báo giá</th><th>Khách hàng</th><th>Trạng thái</th><th>Tổng</th></tr></thead><tbody>${state.quotations.map(q=>`<tr><td>${esc(q.name)}</td><td>${esc(q.partner_id?.[1]||'')}</td><td>${esc(q.state)}</td><td>${esc(q.currency_id?.[1]||'')} ${number(q.amount_total)}</td></tr>`).join('')}</tbody></table></div></section>`:''}</div>`;}
 async function verification(){const [quality,audit]=await Promise.all([api('/reports/data_quality'),api('/audit')]);let verification=null;try{verification=await api('/reports/verification');}catch{/* no prior verification is a valid state */}const checks=quality.checks;return `<div class="page-enter"><div class="summary-grid"><article class="panel summary-stat"><span>Đơn hàng nguồn</span><strong>${number(checks.orders)}</strong><small>order_id duy nhất: ${checks.order_id_unique?'đã kiểm tra':'cần kiểm tra'}</small></article><article class="panel summary-stat"><span>Dòng hàng nguồn</span><strong>${number(checks.items)}</strong><small>Đối soát tổng giá hàng hóa với CSV</small></article><article class="panel summary-stat"><span>Kiểm thử gần nhất</span><strong>${verification?number(verification.unit_tests_passed):'—'}</strong><small>${verification?'Kết quả trong báo cáo đã lưu':'Chưa có báo cáo kiểm thử'}</small></article></div><section class="panel"><div class="panel-header"><div><h2>Đối soát CSV & analytical facts</h2><p>Cùng dữ liệu, cùng tổng tiền sau biến đổi</p></div><span class="tag done">${Math.abs(checks.raw_item_gmv-checks.fact_item_gmv)<.01&&Math.abs(checks.raw_payments-checks.fact_payments)<.01?'Khớp tổng nguồn':'Cần kiểm tra'}</span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Chỉ tiêu toàn snapshot</th><th>CSV gốc</th><th>Order fact</th></tr></thead><tbody><tr><td>Giá hàng hóa · BRL</td><td>${money(checks.raw_item_gmv)}</td><td>${money(checks.fact_item_gmv)}</td></tr><tr><td>Thanh toán · BRL</td><td>${money(checks.raw_payments)}</td><td>${money(checks.fact_payments)}</td></tr></tbody></table></div><div class="panel-body small-text muted">Không đồng nhất các tổng toàn snapshot này với KPI delivered của khoảng ngày trên dashboard.</div></section><div class="section-heading"><h2>Dòng dữ liệu có nguồn gốc</h2><span class="tag neutral">9 CSV</span></div><section class="panel"><div class="table-scroll"><table class="data-table"><thead><tr><th>Tệp nguồn</th><th>Số dòng</th><th>SHA-256</th></tr></thead><tbody>${Object.entries(quality.files).map(([name,f])=>`<tr><td>${esc(name)}</td><td>${number(f.rows)}</td><td class="mono" title="${esc(f.sha256)}">${esc(f.sha256.slice(0,22))}…</td></tr>`).join('')}</tbody></table></div></section><div class="section-heading"><h2>Nhật ký thao tác</h2><span class="tag neutral">${audit.length} gần nhất</span></div><section class="panel"><div class="table-scroll"><table class="data-table"><thead><tr><th>Thời gian</th><th>Sự kiện</th><th>Chi tiết</th></tr></thead><tbody>${audit.slice(0,20).map(r=>`<tr><td>${esc(new Date(r.created_at).toLocaleString('vi-VN'))}</td><td>${esc(r.event)}</td><td class="mono">${esc(r.detail)}</td></tr>`).join('')}</tbody></table></div>${audit.length?'':'<div class="empty-state">Chưa có sự kiện.</div>'}</section></div>`;}
 const renderers={overview,assistant,knowledge,delivery,erp,verification};
 async function navigate(page, {replace=false}={}){
@@ -226,7 +239,7 @@ document.addEventListener('click',async e=>{
  if(b.dataset.chart){state.chart=b.dataset.chart;document.querySelectorAll('[data-chart]').forEach(x=>{const active=x.dataset.chart===state.chart;x.classList.toggle('active',active);x.setAttribute('aria-pressed',String(active));});$('#main-chart').innerHTML=areaChart(state.cache.monthly);$('#chart-series-label').textContent=state.chart==='gmv'?'GMV hàng hóa (BRL)':'Tỷ lệ giao trễ (%)';$('#main-chart').parentElement.querySelector('.chart-note').textContent=state.chart==='gmv'?'Chỉ tính giá hàng hóa của đơn delivered, không gồm phí vận chuyển.':'Chỉ tính đơn delivered có đủ ngày giao thực tế và ngày hẹn.';return;}
  if(b.dataset.table){state.table=b.dataset.table;state.search='';if($('#table-search'))$('#table-search').value='';updateTable();return;}
  if(b.dataset.doc){const queries={kpi:'GMV AOV tỷ lệ giao trễ công thức',data:'Nguồn dữ liệu schema CSV timezone giá trị thiếu',erp:'Odoo Community import duyệt tạo báo giá',model:'Agent RAG dự báo giao trễ chia tập ML'};$('#knowledge-query').value=queries[b.dataset.doc];await searchKnowledge(queries[b.dataset.doc]);return;}
- if(b.id==='clear-chat'){if(state.busy)return;state.history=[];state.teamRetry=null;state.teamThread=crypto.randomUUID().replaceAll('-','');await navigate('assistant');return;}
+ if(b.id==='clear-chat'){if(state.busy)return;state.history=[];state.teamRetry=null;state.chatFailure=null;state.teamThread=crypto.randomUUID().replaceAll('-','');await navigate('assistant');return;}
  if(b.id==='retry-team'&&state.teamRetry){await sendQuestion(state.teamRetry.question,state.teamRetry);return;}
  if(b.id==='mobile-menu'){setMenu(true);return;}
  if(b.id==='close-menu'||b.id==='sidebar-backdrop'){setMenu(false,{restoreFocus:true});return;}
@@ -235,7 +248,20 @@ document.addEventListener('click',async e=>{
  if(b.id==='refresh-button'){try{await loadStatus();await navigate(state.page);toast('Đã làm mới dữ liệu.');}catch(err){toast(err.message);}return;}
  if(b.id==='connection-button'){await connectionDetails();return;}
  if(b.id==='logout-button'){await api('/session',{method:'DELETE'});$('#status-dialog').close();showConnect();return;}
- if(b.id==='connect-erp'){b.disabled=true;try{const [catalog,quotations]=await Promise.all([api('/erp/catalog'),api('/erp/quotations')]);state.catalog=catalog;state.quotations=quotations;await navigate('erp');toast('Đã đọc dữ liệu từ Odoo.');}catch(err){$('#erp-notice').innerHTML=`<div class="notice error">${esc(err.message)}</div>`;b.disabled=false;}return;}
+ if(b.id==='connect-erp'){
+  b.disabled=true;
+  try{
+   const [catalog,quotations]=await Promise.all([api('/erp/catalog'),api('/erp/quotations')]);
+   state.catalog=catalog;state.quotations=quotations;state.odooConnection='ready';
+   if(state.page==='erp')await navigate('erp');
+   toast('Đã đọc dữ liệu từ Odoo.');
+  }catch(err){
+   state.odooConnection='error';
+   if(state.page==='erp'){await navigate('erp');const notice=$('#erp-notice');if(notice)notice.innerHTML=`<div class="notice error">${esc(err.message)}</div>`;}
+   else toast('Chưa kết nối được Odoo.');
+  }finally{if(b.isConnected)b.disabled=false;}
+  return;
+ }
  if(b.dataset.approve||b.dataset.reject){const id=b.dataset.approve||b.dataset.reject,action=b.dataset.approve?'approve':'reject';b.disabled=true;try{const r=await api(`/actions/${id}/${action}`,{method:'POST'});toast(action==='approve'?'Đã ghi báo giá nháp. Odoo ID '+r.odoo_id:'Đã từ chối đề xuất.');await navigate('erp');}catch(err){toast(err.message);b.disabled=false;}return;}
 });
 document.addEventListener('change',e=>{if(e.target.dataset.approveCheck){const id=e.target.dataset.approveCheck;document.querySelector(`[data-approve="${id}"]`).disabled=!e.target.checked;}if(e.target.id==='risk-sample')$('#risk-order').value=e.target.value;});

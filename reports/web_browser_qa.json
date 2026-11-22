@@ -1,35 +1,99 @@
 {
-  "checked_at_utc": "2026-11-21T17:03:39.340866+00:00",
+  "checked_at_utc": "2026-11-22T10:13:52.512405+00:00",
   "app_version": "0.2.0",
-  "browser": "Chrome via managed preview",
+  "branch": "feat/doi-agent",
+  "platform": "Windows",
+  "python": "3.12.2",
+  "browser": "Microsoft Edge via Playwright",
+  "unit_tests_passed": 74,
   "checks": {
-    "one_use_ticket_session": "passed; fragment removed after authentication",
-    "dashboard_real_data": "passed",
-    "state_filter_SP": {
-      "orders_rendered": "41.621",
-      "gmv_rendered": "R$ 5.055.587,13",
-      "late_rate_rendered": "4,5%"
+    "default_runtime": {
+      "url": "http://127.0.0.1:8000/",
+      "dashboard": true,
+      "team_controls": true,
+      "odoo_read": true,
+      "partners": 10,
+      "products": 11,
+      "javascript_errors": []
     },
-    "chart_switch_to_late_rate": "passed",
-    "bi_chat_2018_SP": {
-      "orders_rendered": "23,871",
-      "gmv_rendered": "R$ 2,919,328.17",
-      "route": "local_rules"
+    "dashboard_default": {
+      "passed": true,
+      "filters": {
+        "start": "2017-01-01",
+        "end": "2018-08-31"
+      },
+      "orders": 99092
     },
-    "rag_search": "passed; three source sections displayed",
-    "ml_form": {
-      "score_rendered": "0.084",
-      "model": "hist_gradient_boosting",
-      "threshold": 0.13
+    "dashboard_filtered": {
+      "passed": true,
+      "filters": {
+        "start": "2018-01-01",
+        "end": "2018-01-31",
+        "state": "SP"
+      },
+      "orders": 3052
     },
-    "odoo_missing_configuration": "clear ODOO_PASSWORD error; no fake connection",
-    "desktop_visual": "reviewed at browser viewport; no browser screenshots saved as deliverables"
+    "dashboard_chart_tables_export": {
+      "passed": true,
+      "chart": true,
+      "tables": true,
+      "export": true
+    },
+    "team_live_success": {
+      "status": "complete",
+      "providers": [
+        "gemini",
+        "groq"
+      ],
+      "tools": [
+        "business_kpis",
+        "search_business_docs",
+        "search_business_docs"
+      ],
+      "model_calls": 7,
+      "tool_calls": 3,
+      "numbers_matched_parameterized_api": true
+    },
+    "chat_navigation_and_recovery": {
+      "waiting_navigation": true,
+      "error_preserved_after_navigation": true,
+      "retry_same_run": true,
+      "no_duplicate_messages": true,
+      "no_new_model_calls": true,
+      "new_thread_clears_error": true,
+      "javascript_errors": []
+    },
+    "odoo_connection": {
+      "passed": true,
+      "partners": 10,
+      "products": 11,
+      "quotations": 10
+    },
+    "odoo_status_and_navigation": {
+      "successful_status": true,
+      "failed_refresh_status": true,
+      "cached_data_labelled": true,
+      "no_navigation_jump": true,
+      "button_reenabled": true,
+      "javascript_errors": [],
+      "writes_to_odoo": false
+    },
+    "desktop_mobile": {
+      "passed": true,
+      "desktop": true,
+      "mobile": true,
+      "javascript_errors": []
+    }
   },
-  "not_verified": [
-    "Windows runtime",
-    "Odoo live server",
-    "cloud model APIs",
-    "mobile browser viewport",
-    "GitHub remote CI"
+  "fixed": [
+    "Giữ câu hỏi và tiến trình khi chuyển trang trong lúc chat.",
+    "Giữ lỗi và lấy lại cùng lượt chạy sau mất kết nối.",
+    "Hiển thị đúng trạng thái Odoo, ghi rõ dữ liệu cũ khi kết nối lại thất bại.",
+    "Không chuyển ngược về ERP khi kết nối hoàn tất sau khi người dùng đổi trang."
+  ],
+  "limits": [
+    "Có lượt cloud trả HTTP 503 hoặc lỗi kết nối/timeout; ứng dụng giữ bằng chứng đã lấy và báo chưa hoàn tất.",
+    "Không duyệt hoặc ghi báo giá sang Odoo trong lần kiểm tra này.",
+    "Qwen tóm tắt hội thoại dài chưa được chạy lại trong lần kiểm tra web này."
   ]
 }
