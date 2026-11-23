@@ -17,6 +17,8 @@
                 <button name="action_poll" type="object" string="Lấy diễn giải" invisible="state != 'pending'"/>
                 <button name="action_recheck" type="object" string="Kiểm tra lại"/>
                 <button name="action_handle" type="object" string="Ghi nhận xử lý" invisible="stale"/>
+                <button name="action_risk_pdf" type="object" string="Tải báo cáo PDF"/>
+                <button name="action_risk_xlsx" type="object" string="Tải báo cáo Excel"/>
                 <field name="state" widget="olist_ai_status"/>
             </header>
             <sheet>

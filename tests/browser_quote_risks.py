@@ -1,12 +1,16 @@
 """Browser regression in a disposable database owned by the native test runner."""
 import argparse
+import io
 import json
 import re
 import secrets
 import xmlrpc.client
+import zipfile
 from pathlib import Path
+from xml.etree import ElementTree as ET
 
 from playwright.sync_api import sync_playwright
+from pypdf import PdfReader
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / ".openai/qa"
@@ -16,7 +20,7 @@ URL = "http://127.0.0.1:8069"
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--database", required=True)
-    parser.add_argument("--setup-log", choices=["risk-native-browser-setup.log", "risk-handling-native-setup.log"], default="risk-native-browser-setup.log")
+    parser.add_argument("--setup-log", choices=["risk-native-browser-setup.log", "risk-handling-native-setup.log", "risk-report-native-setup.log"], default="risk-native-browser-setup.log")
     args = parser.parse_args()
     assert re.fullmatch(r"olist_ai_test_[a-f0-9]{10}", args.database)
     assert "QA_DATABASE="+args.database in (OUT/args.setup_log).read_text(encoding="utf-8")
@@ -41,7 +45,7 @@ def main():
     quote = root("sale.order", "create", {"partner_id": partner, "user_id": user, "origin": "OLIST-TEST:browser-risk",
         "validity_date": False, "payment_term_id": False,
         "order_line": [[0, 0, {"product_id": product, "product_uom_qty": 1, "price_unit": 100, "discount": 10, "tax_ids": [[5, 0, 0]]}]]})
-    quote_fields = ["state", "write_date", "amount_total", "activity_ids", "invoice_ids", "order_line"]
+    quote_fields = ["name", "state", "write_date", "amount_total", "activity_ids", "invoice_ids", "order_line"]
     before = root("sale.order", "read", [quote], fields=quote_fields)[0]
     errors = []
     with sync_playwright() as p:
@@ -123,12 +127,52 @@ def main():
         reviews = rpc(user, password, "olist.ai.quote.risk.review", "search_read", [["order_id", "=", quote]], fields=["id", "job_started", "previous_review_id", "decision_ids"], order="id desc")
         assert len(reviews) == 2 and not any(r["job_started"] for r in reviews)
         assert reviews[0]["previous_review_id"][0] == review["id"] and not reviews[0]["decision_ids"]
+        page.set_viewport_size({"width": 1440, "height": 1000})
+        source_before_export = root("sale.order", "read", [quote], fields=quote_fields)[0]
+        with page.expect_download(timeout=60000) as pdf_download:
+            page.get_by_role("button", name="Tải báo cáo PDF", exact=True).click()
+        pdf_path = OUT/"risk-report-browser-fixture.pdf"
+        pdf_download.value.save_as(pdf_path)
+        assert pdf_path.read_bytes().startswith(b"%PDF")
+        reader = PdfReader(pdf_path)
+        pdf_text = " ".join(" ".join(p.extract_text() or "" for p in reader.pages).split())
+        for label in [before["name"], "Vẫn xuất hiện", "Mới xuất hiện", "Không còn xuất hiện", "Lịch sử ghi nhận", "Fixture:"]:
+            assert label in pdf_text, label
+        with page.expect_download(timeout=15000) as xlsx_download:
+            page.get_by_role("button", name="Tải báo cáo Excel", exact=True).click()
+        xlsx_path = OUT/"risk-report-browser-fixture.xlsx"
+        xlsx_download.value.save_as(xlsx_path)
+        with zipfile.ZipFile(io.BytesIO(xlsx_path.read_bytes())) as archive:
+            ns = {"s": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+            sheets = ET.fromstring(archive.read("xl/workbook.xml")).findall("s:sheets/s:sheet", ns)
+            assert [s.attrib["name"] for s in sheets] == ["Tổng quan", "Đối chiếu", "Lịch sử"]
+            strings = " ".join(ET.fromstring(archive.read("xl/sharedStrings.xml")).itertext())
+            for label in [before["name"], "Vẫn xuất hiện", "Không còn xuất hiện", "Fixture:"]:
+                assert label in strings
+        assert root("sale.order", "read", [quote], fields=quote_fields)[0] == source_before_export
+        anonymous = p.request.new_context()
+        response = anonymous.get(URL+f"/olist-sales-ai/risk/{reviews[0]['id']}/xlsx", max_redirects=0)
+        assert response.status in (302, 303, 401)
+        anonymous.dispose()
+        other_login = "qa_report_other_"+secrets.token_hex(5)
+        other = root("res.users", "create", {"name": "Other report fixture", "login": other_login, "password": password,
+            group_field: [[6, 0, [xmlid("sales_team.group_sale_salesman")]]]}, context={"no_reset_password": True})
+        other_context = browser.new_context()
+        auth = other_context.request.post(URL+"/web/session/authenticate", data={"jsonrpc": "2.0", "params": {
+            "db": args.database, "login": other_login, "password": password}}).json()
+        assert auth.get("result", {}).get("uid") == other
+        response = other_context.request.get(URL+f"/olist-sales-ai/risk/{reviews[0]['id']}/xlsx")
+        assert response.status == 404
+        response = other_context.request.get(URL+f"/report/pdf/olist_sales_ai.risk_report_document/{reviews[0]['id']}")
+        assert response.status in (403, 404)
+        other_context.close()
         assert not errors, errors
         context.close(); browser.close()
     report = {"kind": "automated_test_fixture_not_customer_data", "local_flags_visible": True,
         "quotation_unchanged_by_checks": True, "stale_source_warning": True, "recheck_preserves_history": True,
         "human_disposition_saved": True, "disposition_history_visible": True, "new_review_unacknowledged": True, "three_comparison_categories": True,
         "mobile_card_edit_saved": True,
+        "pdf_download_parsed": True, "pdf_pages": len(reader.pages), "xlsx_three_sheets_parsed": True, "export_access_checked": True,
         "desktop_mobile": True, "model_calls": 0, "javascript_errors": errors}
     (OUT/"risk-browser-qa.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps(report))

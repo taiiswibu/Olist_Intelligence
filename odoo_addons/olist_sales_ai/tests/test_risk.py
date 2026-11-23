@@ -1,4 +1,7 @@
 import json
+import io
+import zipfile
+from xml.etree import ElementTree as ET
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -256,3 +259,83 @@ class TestRisk(TransactionCase):
         self.assertNotIn("LOCAL_REASON_CANARY", json.dumps(calls))
         self.assertEqual(calls[0]["purpose"], "risk")
         self.assertEqual(set(calls[0]["risk_codes"]), self.codes(review))
+
+    def test_export_projection_uses_saved_source_and_separate_dispositions(self):
+        review = self.review()
+        self.decision(review, decision="intentional", reason="Fixture: đã kiểm tra ngoại lệ")
+        before = review._risk_report_data()
+        self.assertEqual(before["current_count"], 3)
+        self.assertEqual(before["attention_count"], 2)
+        self.assertFalse(before["stale"])
+        self.assertTrue(all(r["change"] == "Chưa có bản trước" for r in before["rows"]))
+        original = review.findings_json
+        self.quote.order_line.discount = 7
+        stale = review._risk_report_data()
+        self.assertTrue(stale["stale"])
+        self.assertNotIn("discount_present", {r["code"] for r in stale["rows"]})
+        new = self.env[review._name].with_user(self.staff).browse(review.action_recheck()["res_id"])
+        self.decision(new, code="discount_present", decision="manager")
+        report = new._risk_report_data()
+        tax = next(r for r in report["rows"] if r["code"] == "missing_tax")
+        self.assertEqual(tax["previous_decision"], "Đúng chủ đích")
+        self.assertEqual(tax["decision"], "Chưa ghi nhận")
+        self.assertEqual(tax["reason"], "")
+        self.assertEqual(report["attention_count"], 4)
+        self.assertEqual({r["review_id"] for r in report["history"]}, {review.id, new.id})
+        self.assertEqual(review.findings_json, original)
+
+    def test_xlsx_keeps_user_text_literal_and_does_not_mutate_quote(self):
+        review = self.review()
+        reason = '=HYPERLINK("https://example.invalid", "Fixture: chỉ là chữ")'
+        self.decision(review, reason=reason)
+        before = self.quote.read(["state", "write_date", "activity_ids", "invoice_ids", "amount_total"])
+        with patch.object(type(review), "_bridge", side_effect=AssertionError("Export must not call AI")):
+            content = review._risk_xlsx_bytes()
+        with zipfile.ZipFile(io.BytesIO(content)) as archive:
+            workbook = ET.fromstring(archive.read("xl/workbook.xml"))
+            ns = {"s": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+            self.assertEqual([e.attrib["name"] for e in workbook.findall("s:sheets/s:sheet", ns)], ["Tổng quan", "Đối chiếu", "Lịch sử"])
+            strings = ET.fromstring(archive.read("xl/sharedStrings.xml"))
+            values = ["".join(e.itertext()) for e in strings]
+            self.assertIn(reason, values)
+            self.assertIn("Đúng chủ đích", values)
+            for name in archive.namelist():
+                if name.startswith("xl/worksheets/sheet") and name.endswith(".xml"):
+                    sheet = ET.fromstring(archive.read(name))
+                    self.assertFalse(sheet.findall(".//s:f", ns))
+                    self.assertFalse(sheet.findall(".//s:hyperlink", ns))
+        self.assertEqual(self.quote.read(["state", "write_date", "activity_ids", "invoice_ids", "amount_total"]), before)
+        action = review.action_risk_xlsx()
+        self.assertEqual(action["url"], f"/olist-sales-ai/risk/{review.id}/xlsx")
+
+    def test_pdf_html_escapes_notes_and_rechecks_scope_at_render(self):
+        review = self.review()
+        self.decision(review, reason="<script>EXPORT_PRIVATE_CANARY</script>")
+        engine = self.env["ir.actions.report"].with_user(self.staff)
+        content, kind = engine._render_qweb_html("olist_sales_ai.risk_report_action", review.ids)
+        html = content.decode()
+        self.assertEqual(kind, "html")
+        for text in ["Báo cáo xử lý rủi ro", "EXPORT_PRIVATE_CANARY", "Lịch sử ghi nhận", "Điểm cần đối chiếu tiếp"]:
+            self.assertIn(text, html)
+        self.assertNotIn("<script>EXPORT_PRIVATE_CANARY</script>", html)
+        self.assertFalse(self.env.ref("olist_sales_ai.risk_report_action").attachment_use)
+        self.assertEqual(review.action_risk_pdf()["report_type"], "qweb-pdf")
+        with self.assertRaises(AccessError):
+            engine.with_user(self.other)._render_qweb_html("olist_sales_ai.risk_report_action", review.ids)
+
+    def test_export_empty_findings_and_staff_team_company_access(self):
+        term = self.env["account.payment.term"].create({"name": "Fixture export term"})
+        tax = self.env["account.tax"].create({"name": "Fixture export tax", "amount": 0, "type_tax_use": "sale"})
+        self.quote.write({"payment_term_id": term.id, "validity_date": fields.Date.today()+timedelta(days=7)})
+        self.quote.order_line.tax_ids = [Command.set(tax.ids)]
+        review = self.review()
+        data = review._risk_report_data()
+        self.assertEqual(data["current_count"], 0)
+        self.assertEqual(data["attention_count"], 0)
+        self.assertEqual(data["rows"], [])
+        review.with_user(self.manager)._risk_xlsx_bytes()
+        for method in ["_risk_report_data", "_risk_xlsx_bytes", "action_risk_pdf", "action_risk_xlsx"]:
+            with self.assertRaises(AccessError): getattr(review.with_user(self.other), method)()
+        company = self.env["res.company"].create({"name": "Fixture export company"})
+        self.manager.company_ids = [Command.link(company.id)]
+        with self.assertRaises(AccessError): review.with_user(self.manager).with_company(company)._risk_report_data()

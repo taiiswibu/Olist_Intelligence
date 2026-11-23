@@ -24,6 +24,14 @@ Mỗi thay đổi lưu người ghi, thời điểm server và lý do vào **L�
 
 Các lý do chỉ lưu trong model ghi nhận tại Odoo, không đưa vào prompt hoặc ghi chú gửi khách. Luồng này hoạt động khi không có API model. Mốc thời gian dùng truy vết, chưa phải thời gian lao động hoặc bằng chứng tiết kiệm thời gian. Chỉnh giá, thuế và điều khoản trên form Odoo rồi kiểm tra lại; module không tự sửa S00021 hay chứng từ khác.
 
+### Tải báo cáo xử lý rủi ro
+
+Mở một bản kiểm tra → **Tải báo cáo PDF** hoặc **Tải báo cáo Excel** (trên điện thoại có thể nằm trong menu dấu ba chấm). File lấy bằng chứng đã lưu của bản đang xem và bản trước được liên kết, kèm ghi nhận, lý do, người ghi, thời điểm và các điểm cần đối chiếu tiếp. Nhận xét bản trước được giữ riêng; bản mới chưa ghi nhận thì file cũng ghi đúng trạng thái đó. Mỗi mã chỉ đếm một cờ dù xuất hiện ở nhiều dòng hàng.
+
+Excel có ba trang **Tổng quan**, **Đối chiếu**, **Lịch sử**; nội dung nhập được lưu dưới dạng chữ, không chạy công thức/link. PDF dùng mẫu báo cáo Odoo, có thời điểm xuất và múi giờ. Khi nguồn đã đổi, file ghi cảnh báo và giữ bằng chứng cũ; xuất lại từ bản mới sau khi kiểm tra lại nếu cần đối chiếu dữ liệu hiện tại. Chưa có bản trước hoặc chưa có AI/ghi nhận thì hiển thị rõ, không tự bổ sung.
+
+Xuất file chỉ đọc dữ liệu theo quyền báo giá/công ty hiện có, không gọi model, tạo ghi nhận, sửa chứng từ hoặc gửi file cho người khác. Lịch sử trong file gồm đúng hai bản được đối chiếu, tối đa một nghìn ghi nhận; vượt giới hạn thì báo lỗi và chưa xuất một phần. Các file có lý do và tên người ghi chỉ được tải qua phiên đăng nhập Odoo, không đưa lên Git hoặc dịch vụ tạo báo cáo bên ngoài.
+
 Xem thêm [baseline và bảo vệ dữ liệu](AI_EVALUATION.md). Luồng chăm sóc mặc định chỉ gửi mã tạm, trạng thái và dấu hiệu nghiệp vụ; tên khách, số tiền và ghi chú giữ local. Có thể đặt `FOLLOWUP_AI_MODE=rules_only` rồi khởi động lại backend để không gọi API model cho luồng này.
 
 Addon Odoo Community 19 dùng Sales và Activities. Bản đầu chỉ đọc khách/báo giá Olist DEMO nháp hoặc đã gửi; không cần CRM/Project.

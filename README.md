@@ -125,6 +125,8 @@ Module chạy trong Odoo: **[AI hỗ trợ bán hàng](docs/ODOO_AI_FOLLOWUP.md)
 
 **Ghi nhận xử lý:** chọn cần sửa/đúng chủ đích/cần quản lý xem, lưu lý do và lịch sử tại Odoo; kiểm tra lại để xem bằng chứng trước/sau. Bản mới không tự kế thừa xác nhận cũ.
 
+**Tải báo cáo rủi ro PDF/Excel:** lấy bằng chứng và lịch sử của hai bản đối chiếu từ Odoo, có cảnh báo nguồn cũ và các điểm cần xem tiếp. Xuất file không gọi thêm model.
+
 Đánh giá và riêng tư: **[Baseline, benchmark và dữ liệu gửi model](docs/AI_EVALUATION.md)**. Luồng chăm sóc chỉ gửi mã tạm và dữ kiện tối thiểu; có chế độ quy tắc không gọi cloud. Kết quả tự động tách riêng phiếu chấm nội dung của người dùng.
 
 Hướng dẫn kết nối từ đầu và Agent đa công cụ tùy chọn: **[docs/ODOO_AGENT_GUIDE_VI.md](docs/ODOO_AGENT_GUIDE_VI.md)**. Có thêm `python manage.py odoo-check` để kiểm tra kết nối chỉ đọc. Agent Lab chạy CLI riêng, không thay Assistant web; cần cài `requirements-agent.txt`.
