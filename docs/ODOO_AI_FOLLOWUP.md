@@ -1,5 +1,17 @@
 # AI hỗ trợ bán hàng trong Odoo
 
+## Kiểm tra rủi ro báo giá
+
+Mở báo giá DEMO nháp/đã gửi → **Kiểm tra rủi ro**. Odoo đối chiếu hạn hiệu lực (sắp hết trong ba ngày), dòng sản phẩm, số lượng, đơn giá, chiết khấu, thuế đã chọn, trạng thái sản phẩm và điều khoản thanh toán. Mỗi cờ kèm bằng chứng tại máy và mức cần xem; đây chưa phải đánh giá tín dụng, lợi nhuận hoặc kết luận tuân thủ thuế.
+
+Chiết khấu dương, giá bằng không hoặc chưa chọn thuế có thể đúng chủ đích; cần người bán đối chiếu. Khoảng chiết khấu kỹ thuật là không đến một trăm phần trăm, chưa thay chính sách phê duyệt của công ty. Không tự tính lại thuế, tổng tiền hoặc dùng giá Olist lịch sử. Tối đa một trăm dòng sản phẩm; vượt giới hạn thì báo rõ và chưa kiểm tra một phần.
+
+**AI gợi ý câu hỏi đối chiếu** là bước tùy chọn: Groq soạn, Gemini kiểm tra từ danh mục mã cờ và mã tạm. Tên khách, sản phẩm, số tiền, ngày cụ thể và ghi chú không đi vào request model. Mỗi mã có đúng một câu hỏi; câu chứa số, liên hệ, nhiều câu hoặc mã ngoài danh sách bị chặn. Kiểm tra cấu trúc và reviewer chưa bảo đảm đúng ngữ nghĩa; bạn vẫn đọc lại trước khi dùng. API lỗi thì giữ nguyên cờ local, không tự thay bằng kết quả AI khác. `FOLLOWUP_AI_MODE=rules_only` trả câu hỏi mẫu và không gọi model.
+
+Bản kiểm tra giữ nguyên nguồn và lịch sử. Khi dòng hàng, hiệu lực, cấu hình được kiểm tra hoặc ngày đối chiếu thay đổi, màn hình báo **Nguồn đã đổi**; bấm **Kiểm tra lại** để tạo bản mới. Nhân viên xem báo giá của mình, quản lý xem nhóm mình, trong công ty đang chọn. Chức năng không tạo Activity, gửi tin, xác nhận đơn hay xuất hóa đơn. Mọi thay đổi chứng từ thực hiện và duyệt riêng trong Odoo.
+
+Kiểm thử riêng: `tests/test_quote_risks.py` kiểm tra tại HTTP của cả hai model; addon `tests/test_risk.py` kiểm tra quy tắc, nguồn cũ, quyền và không ghi nghiệp vụ. Browser runner `tests/browser_quote_risks.py` chỉ nhận database tạm có dấu sở hữu từ `scripts/test_odoo_ai.py --keep-database`; không đưa dữ liệu fixture vào database đang sử dụng. Chưa có kết quả người bán chấm hoặc bằng chứng AI phát hiện rủi ro tốt hơn quy tắc.
+
 Xem thêm [baseline và bảo vệ dữ liệu](AI_EVALUATION.md). Luồng chăm sóc mặc định chỉ gửi mã tạm, trạng thái và dấu hiệu nghiệp vụ; tên khách, số tiền và ghi chú giữ local. Có thể đặt `FOLLOWUP_AI_MODE=rules_only` rồi khởi động lại backend để không gọi API model cho luồng này.
 
 Addon Odoo Community 19 dùng Sales và Activities. Bản đầu chỉ đọc khách/báo giá Olist DEMO nháp hoặc đã gửi; không cần CRM/Project.

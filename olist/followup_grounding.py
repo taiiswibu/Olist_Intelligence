@@ -2,7 +2,7 @@
 import re
 import unicodedata
 
-VERSION = "followup-grounding-v1"
+VERSION = "followup-grounding-v2"
 
 
 def normalize(text):
@@ -20,15 +20,23 @@ def issues(draft, cases):
         fields = [normalize(getattr(item, key)) for key in ("summary", "note", "explanation")]
         codes = set()
         for text in fields:
-            if re.search(r"\b(?:da|chua|khong) (?:co |nhan (?:duoc )?)phan hoi\b", text) or re.search(
-                    r"\bkhach(?: hang)? (?:van )?(?:da|chua) (?:tra loi|phan hoi)\b", text):
-                codes.add("unknown_feedback_history")
             if case.quotation_state == "draft" and re.search(r"\bda (?:duoc )?gui\b|\bgui lai\b", text):
                 codes.add("unsupported_draft_send_history")
             if re.search(r"\b(?:hoat dong|cong viec|lich viec)(?: [a-z]+){0,3} da (?:duoc )?(?:thuc hien|hoan thanh)\b", text):
                 codes.add("unknown_activity_completion")
             if re.search(r"\bda co (?:lich viec|cong viec|hoat dong) tuong tu\b", text):
                 codes.add("unknown_activity_similarity")
+        # An explicit question about unknown feedback is not an assertion that it happened.
+        # Check each sentence separately so a later question cannot hide an earlier claim.
+        for original in (item.summary, item.note, item.explanation):
+            for match in re.finditer(r"([^.!?;\n]+)([.!?;\n]|$)", original):
+                text, ending = normalize(match[1]), match[2]
+                query = ending == "?" and bool(re.fullmatch(
+                    r"(?:(?:xin hoi )?(?:khach(?: hang)?|anh chi|anh|chi|minh) )?(?:da )?"
+                    r"(?:phan hoi|tra loi|nhan (?:duoc )?phan hoi) (?:chua|khong)(?: a)?", text))
+                if not query and (re.search(r"\b(?:da|chua|khong) (?:co |nhan (?:duoc )?)phan hoi\b", text) or
+                        re.search(r"\bkhach(?: hang)? (?:van )?(?:da|chua) (?:tra loi|phan hoi)\b", text)):
+                    codes.add("unknown_feedback_history")
         if item.action == "review_existing_activity":
             note = fields[1]
             if not (re.search(r"\b(?:ra soat|kiem tra|xem lai|doi chieu)\b", note) and

@@ -15,3 +15,4 @@ description: Kiểm tra bản nháp giao việc chăm sóc khách so với bản
 - Báo giá draft chưa chứng minh đã gửi cho khách. Không chấp nhận suy diễn thành đơn hàng đã chốt, việc giao hàng hoặc ký hợp đồng từ trạng thái này.
 - Không suy diễn tỷ lệ chốt, doanh thu tương lai hoặc mức giảm giá mới. Số liệu chỉ được hiển thị từ nguồn, không đưa số vào văn bản model soạn.
 - Trả valid=false và findings ngắn nếu thiếu căn cứ; không tự sửa dữ liệu nguồn hoặc thay phạm vi người dùng.
+- Với draft, cả "chuẩn bị gửi lại" cũng thiếu căn cứ về lịch sử gửi. Các trạng thái unknown là chưa biết, không phải chưa xảy ra. Câu hỏi như "Khách đã phản hồi chưa?" không khẳng định khách đã phản hồi; vẫn đối chiếu phần còn lại của câu với action.

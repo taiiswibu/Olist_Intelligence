@@ -67,6 +67,8 @@ def test_source_pii_and_notes_cannot_change_cloud_features_and_aliases_do_not_pe
     first, _ = p.project(original, f.facts);second, _ = p.project(other, f.facts)
     assert first[0].case_id != second[0].case_id
     assert first[0].model_dump(exclude={"case_id"}) == second[0].model_dump(exclude={"case_id"})
+    assert first[0].reply_status == first[0].activity_completion == first[0].activity_similarity == "unknown"
+    with pytest.raises(ValueError):p.CloudCase.model_validate({**first[0].model_dump(), "reply_status": "customer has replied"})
 
 
 def test_model_invented_contact_is_blocked_before_reviewer(monkeypatch):
@@ -131,7 +133,7 @@ def test_explicit_template_mode_never_calls_model_and_binds_idempotency(bridge, 
 def test_default_mode_preserves_legacy_fingerprint(bridge):
     import hashlib
     source = f.AnalysisRequest.model_validate(payload())
-    expected = hashlib.sha256(source.model_dump_json(exclude={"mode"}).encode()).hexdigest()
+    expected = hashlib.sha256(source.model_dump_json(exclude={"mode", "purpose", "risk_codes"}).encode()).hexdigest()
     f.claim(source)
     with f._connection() as conn:
         row = conn.execute("SELECT fingerprint FROM odoo_ai_jobs WHERE request_id=?", (source.request_id,)).fetchone()

@@ -1,0 +1,14 @@
+{
+  "expired": {"level": "attention", "label": "Báo giá đã hết hiệu lực", "question": "Có cần rà soát và cập nhật hiệu lực trước khi trao đổi tiếp không?"},
+  "expiring": {"level": "info", "label": "Báo giá sắp hết hiệu lực", "question": "Có cần kiểm tra thời hạn và sắp xếp bước trao đổi tiếp theo không?"},
+  "missing_validity": {"level": "attention", "label": "Chưa đặt hạn hiệu lực", "question": "Có cần bổ sung hạn hiệu lực phù hợp trước khi gửi báo giá không?"},
+  "empty_lines": {"level": "high", "label": "Chưa có dòng sản phẩm", "question": "Đã kiểm tra đủ sản phẩm và nội dung cần chào giá chưa?"},
+  "nonpositive_quantity": {"level": "attention", "label": "Có số lượng không dương", "question": "Số lượng này có đúng chủ đích nghiệp vụ hay cần sửa lại không?"},
+  "negative_price": {"level": "attention", "label": "Có đơn giá âm", "question": "Dòng giảm trừ này có đúng chủ đích và đã được đối chiếu chưa?"},
+  "zero_price": {"level": "info", "label": "Có đơn giá bằng không", "question": "Đã xác minh đây là dòng miễn phí hoặc ưu đãi có chủ đích chưa?"},
+  "invalid_discount": {"level": "high", "label": "Chiết khấu ngoài khoảng đối chiếu kỹ thuật", "question": "Mức chiết khấu này có cần đối chiếu và xác nhận lại trước khi dùng không?"},
+  "discount_present": {"level": "attention", "label": "Có chiết khấu cần đối chiếu", "question": "Chiết khấu đã được đối chiếu với chính sách và người có thẩm quyền chưa?"},
+  "missing_tax": {"level": "attention", "label": "Có dòng chưa chọn thuế", "question": "Việc chưa chọn thuế có đúng chủ đích và cấu hình áp dụng cho dòng hàng này không?"},
+  "inactive_product": {"level": "high", "label": "Có sản phẩm đã lưu trữ", "question": "Có cần kiểm tra lại sản phẩm đang chào và trạng thái sử dụng trước khi tiếp tục không?"},
+  "missing_payment_term": {"level": "attention", "label": "Chưa chọn điều khoản thanh toán", "question": "Đã xác minh điều khoản thanh toán phù hợp cho báo giá này chưa?"}
+}

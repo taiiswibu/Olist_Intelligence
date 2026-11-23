@@ -12,7 +12,7 @@ from decimal import Decimal
 
 import httpx
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, Request
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from . import agent_skills, database, llm, followup_privacy as privacy, followup_grounding as grounding, followup_transport as transport
 from .config import settings
@@ -55,6 +55,17 @@ class AnalysisRequest(Strict):
     today: date
     orders: list[Quote] = Field(min_length=1, max_length=20)
     mode: Literal["configured", "rules_only"] = "configured"
+    purpose: Literal["followup", "risk"] = "followup"
+    risk_codes: list[str] = Field(default_factory=list, max_length=12)
+
+    @model_validator(mode="after")
+    def check_purpose(self):
+        from .quote_risks import CATALOG
+        if self.purpose == "followup" and self.risk_codes:
+            raise ValueError("Không trộn cờ rủi ro vào lượt chăm sóc.")
+        if self.purpose == "risk" and (len(self.orders) != 1 or len(set(self.risk_codes)) != len(self.risk_codes) or not set(self.risk_codes) <= CATALOG.keys()):
+            raise ValueError("Lượt rủi ro cần đúng một báo giá và mã được hỗ trợ.")
+        return self
 
 
 class Suggestion(Strict):
@@ -83,10 +94,10 @@ class AnalysisFailure(ValueError):
         self.reason = reason
 
 
-async def _model_json(provider, messages, schema, trace, policy):
+async def _model_json(provider, messages, schema, trace, policy, *, guard_factory=None, privacy_version=None):
     for attempt in range(1, policy.max_attempts + 1):
         entry = {"provider": provider.name, "model": provider.model, "status": "queued", "attempt": attempt,
-                 "privacy": {"version": privacy.VERSION, "requests_checked": 0}}
+                 "privacy": {"version": privacy_version or privacy.VERSION, "requests_checked": 0}}
         trace.append(entry)
         started = time.monotonic()
         retry = False
@@ -96,7 +107,7 @@ async def _model_json(provider, messages, schema, trace, policy):
                 entry["status"] = "running"
                 try:
                     response = await TeamModel(provider, 30, json_mode=True, max_tokens=4000,
-                        outbound_guard=privacy.wire_guard(messages, entry["privacy"])).ainvoke(messages)
+                        outbound_guard=(guard_factory or privacy.wire_guard)(messages, entry["privacy"])).ainvoke(messages)
                 except httpx.HTTPStatusError as exc:
                     status = exc.response.status_code
                     entry["http_status"] = status
@@ -162,7 +173,9 @@ def claim(payload):
     if len({q.id for q in payload.orders}) != len(payload.orders) or any(len(n) > 1000 for q in payload.orders for n in q.notes):
         raise ValueError("Bản chụp có báo giá lặp hoặc ghi chú quá dài.")
     # Preserve fingerprints of requests created before the optional mode existed.
-    serialized = payload.model_dump_json(exclude={"mode"} if payload.mode == "configured" else set())
+    excluded = {"mode"} if payload.mode == "configured" else set()
+    if payload.purpose == "followup": excluded |= {"purpose", "risk_codes"}
+    serialized = payload.model_dump_json(exclude=excluded)
     fingerprint = hashlib.sha256(serialized.encode()).hexdigest()
     conn = _connection()
     try:
@@ -279,6 +292,9 @@ async def analyze(payload):
     mode = os.getenv("FOLLOWUP_AI_MODE", "cloud_minimized")
     if mode not in {"cloud_minimized", "rules_only"}:
         raise ValueError("FOLLOWUP_AI_MODE chưa hợp lệ; chưa gọi model.")
+    if payload.purpose == "risk":
+        from .quote_risks import analyze as risk_analyze
+        return _clean(await risk_analyze(payload, local_only=mode == "rules_only" or payload.mode == "rules_only"))
     return await analyze_strategy(payload, "rules" if mode == "rules_only" or payload.mode == "rules_only" else "pipeline")
 
 
