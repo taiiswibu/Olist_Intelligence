@@ -42,6 +42,8 @@ def test_observed_unsupported_claims_are_rejected(state, existing, field, text, 
     ("draft", False, "Kiểm tra nội dung trước khi chuẩn bị gửi cho khách."),
     ("sent", False, "Anh chị có thể phản hồi về báo giá đã gửi không?"),
     ("sent", False, "Xin hỏi anh chị đã nhận được báo giá chưa?"),
+    ("sent", False, "Khách đã phản hồi chưa?"),
+    ("sent", False, "Đã nhận được phản hồi chưa?"),
     ("sent", True, "Xem lại công việc đang hẹn để tránh tạo việc tương tự."),
     ("draft", True, "Đối chiếu hoạt động hiện có trước khi chuẩn bị liên hệ."),
 ])
@@ -49,6 +51,14 @@ def test_questions_and_supported_next_steps_remain_available(state, existing, no
     draft, case = draft_case(state, existing)
     draft.items[0].note = note
     assert not g.issues(draft, [case])
+
+
+@pytest.mark.parametrize("text", ["Khách đã phản hồi. Anh chị cần hỗ trợ thêm không?",
+    "Khách chưa trả lời; đã nhận được phản hồi chưa?", "Khách đã phản hồi và đồng ý mua, đúng không?"])
+def test_a_question_cannot_hide_an_unsupported_claim(text):
+    draft, case = draft_case("sent")
+    draft.items[0].note = text
+    assert "unknown_feedback_history" in g.issues(draft, [case])[0]["codes"]
 
 
 @pytest.mark.parametrize("strategy", ["groq", "gemini", "pipeline"])

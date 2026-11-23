@@ -73,6 +73,8 @@ Xem [số liệu, lỗi và nhận xét từng trường hợp](../reports/follo
 
 ## Chặn lỗi đã biết
 
+Bản `followup-minimized-v2` thêm ba trạng thái cố định `unknown` cho phản hồi, hoàn tất công việc và việc tương tự. Đây là thông tin chưa được cung cấp, không phải lịch sử khách mới gửi ra API. Skill soạn dùng ví dụ riêng theo action để tránh lặp từ "gửi lại" cho báo giá nháp. Bản `followup-grounding-v2` vẫn chặn lời khẳng định thiếu căn cứ, nhưng nhận diện một số câu hỏi rõ ràng như "Khách đã phản hồi chưa?"; câu hỏi ở cuối không che được lời khẳng định ở câu trước. Không dùng tập dự phòng để sửa các trường hợp này.
+
 `followup-grounding-v1` kiểm tra bản nháp của cả Groq, Gemini và pipeline trước khi trả về hoặc chuyển sang reviewer. Chặn các cách diễn đạt đã biết về lịch sử gửi của báo giá nháp, lịch sử phản hồi không có trong nguồn và việc đã hoàn tất/tương tự. Với `review_existing_activity`, note phải hướng dẫn xem lại công việc/hoạt động hiện có; chưa dùng note này để soạn lời liên hệ khách. Hai skill đã được cập nhật cùng phạm vi này.
 
 Đây là bộ lọc tiếng Việt theo mẫu, có thể bỏ sót cách diễn đạt khác hoặc chặn nhầm câu trích dẫn/giả định. `passed` chỉ nghĩa là qua bộ lọc đã biết, không phải được xác nhận đúng nghiệp vụ. Không tự sửa câu, thử lại nội dung hoặc thay bằng mẫu quy tắc khi bị chặn; lượt đó vẫn tính chưa hoàn tất.

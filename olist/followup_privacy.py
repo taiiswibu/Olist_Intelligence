@@ -5,7 +5,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-VERSION = "followup-minimized-v1"
+VERSION = "followup-minimized-v2"
 Reason = Literal["overdue_activity", "expired_quotation", "expiring_quotation", "no_activity", "waiting"]
 Action = Literal["review_quotation", "request_feedback", "review_existing_activity"]
 
@@ -20,6 +20,9 @@ class CloudCase(Strict):
     reason_codes: list[Reason] = Field(min_length=1, max_length=4)
     has_activity: bool
     allowed_actions: list[Action] = Field(min_length=1, max_length=1)
+    reply_status: Literal["unknown"] = "unknown"
+    activity_completion: Literal["unknown"] = "unknown"
+    activity_similarity: Literal["unknown"] = "unknown"
 
 
 class CloudItem(Strict):
