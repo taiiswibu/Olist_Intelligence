@@ -118,6 +118,12 @@ Phần đo và tự chấm một người đã có trong [addon Odoo](ODOO_AI_FO
 
 ## Ranh giới dữ liệu
 
+Lượt phát triển sau sửa bản nháp ở `4236c89` dùng mười họ, một lần lặp, cùng bộ v1 và chính sách hai lần gửi/cách mười hai giây: rules hoàn tất 10/10, Groq 4/10, Gemini 5/10, pipeline 3/10. Thực gửi 45 request, cả 45 qua kiểm tra riêng tư tại HTTP. Giữ cả lỗi API, bộ lọc và reviewer trong mẫu số; token/chi phí tổng chưa đầy đủ.
+
+Ba tình huống đầu trùng smoke trước: rules 3→3, Groq 0→2, Gemini 2→1, pipeline 0→0 trên mẫu số ba. Đây là đối chiếu phát triển nhỏ, tình trạng dịch vụ thay đổi; chưa quy chênh lệch cho bản sửa. Một assistant đọc 22 đầu ra hoàn tất (12 cloud), vẫn thấy pipeline suy ra hoạt động chưa hoàn thành và Groq suy ra lịch sử việc chưa thực hiện. Bộ lọc/reviewer còn bỏ sót; chưa có người chấm chất lượng và chưa chứng minh AI tốt hơn mẫu quy tắc. Không chạy tập dự phòng hoặc tự thay số liệu pilot người dùng. Xem [số liệu và giới hạn](../reports/followup_draft_v2_20261124.json).
+
+Chức năng [rủi ro báo giá](ODOO_AI_FOLLOWUP.md#kiểm-tra-rủi-ro-báo-giá) dùng bộ quy tắc local riêng làm nguồn cờ. Các test mới chứng minh hành vi/phạm vi dữ liệu, chưa chứng minh AI phát hiện rủi ro hoặc diễn giải tốt hơn câu hỏi mẫu. `quote-risk-minimized-v1` gửi mã tạm, mã cờ hữu hạn và bản nháp câu hỏi đã lọc cho reviewer; không gửi bản chụp báo giá. Chế độ quy tắc áp dụng cả hai luồng addon, không mở network model.
+
 `followup-minimized-v1` chỉ cho mã tạm mỗi lượt, draft/sent, mã lý do hữu hạn, có việc hay chưa và allowed_actions ra API. Tên, mã thật, số tiền/tiền tệ, ngày cụ thể, người phụ trách và ghi chú giữ local. Ghép kết quả với ID Odoo tại máy. JSON đã serialize được kiểm tra trước transport ở cả Groq và Gemini; trường ngoài danh sách bị chặn. Bản nháp có số, email/URL hoặc hành động ngoài phạm vi bị chặn trước khi chuyển model thứ hai.
 
 Canary test quan sát body HTTP với dữ liệu giả, không chỉ kiểm tra hàm tạo prompt. Đây là bằng chứng về tập kiểm thử/danh sách trường, không bảo đảm ẩn danh tuyệt đối. Backend bỏ payload tạm của lượt mới khi hoàn tất/lỗi/ngắt; Odoo vẫn giữ bản đối soát local. Lịch sử trước bản này không tự bị xóa. Log không lưu prompt/khóa.

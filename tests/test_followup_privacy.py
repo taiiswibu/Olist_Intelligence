@@ -133,7 +133,7 @@ def test_explicit_template_mode_never_calls_model_and_binds_idempotency(bridge, 
 def test_default_mode_preserves_legacy_fingerprint(bridge):
     import hashlib
     source = f.AnalysisRequest.model_validate(payload())
-    expected = hashlib.sha256(source.model_dump_json(exclude={"mode"}).encode()).hexdigest()
+    expected = hashlib.sha256(source.model_dump_json(exclude={"mode", "purpose", "risk_codes"}).encode()).hexdigest()
     f.claim(source)
     with f._connection() as conn:
         row = conn.execute("SELECT fingerprint FROM odoo_ai_jobs WHERE request_id=?", (source.request_id,)).fetchone()

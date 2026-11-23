@@ -70,19 +70,25 @@ def validate_draft(draft, cases):
 
 
 def wire_guard(messages, audit=None):
+    def validate(content):
+        envelope = CloudInput.model_validate_json(content)
+        if envelope.draft is not None:
+            validate_draft(envelope.draft, envelope.cases)
+    return pinned_guard(messages, validate, audit)
+
+
+def pinned_guard(messages, validate, audit=None):
     """Pin approved messages and validate their public schema at the actual HTTP boundary."""
     expected = [{"role": "system" if m.type == "system" else "user", "content": m.content} for m in messages]
     if [m["role"] for m in expected] != ["system", "user"]:
         raise ValueError("Luồng chăm sóc chỉ gửi một chỉ dẫn cố định và dữ kiện tối thiểu.")
-    envelope = CloudInput.model_validate_json(expected[1]["content"])
-    if envelope.draft is not None:
-        validate_draft(envelope.draft, envelope.cases)
+    validate(expected[1]["content"])
 
     def check(wire):
         allowed = {"model", "messages", "temperature", "max_tokens", "stream", "response_format", "reasoning_effort"}
         if set(wire) - allowed or wire.get("messages") != expected:
             raise ValueError("Chặn request model bị thay đổi sau bước lọc dữ liệu.")
-        CloudInput.model_validate_json(wire["messages"][1]["content"])
+        validate(wire["messages"][1]["content"])
         if audit is not None:
             audit["requests_checked"] += 1
     return check

@@ -1,0 +1,176 @@
+{
+  "kind": "synthetic_development_engineering_evaluation_not_human_pilot",
+  "source_commit": "4236c89dadfd59815a91748277165233320b51cc",
+  "worktree_dirty": false,
+  "suite_sha256": "fe652bdd8453a467f5db201ead16fac5822333f302c2c42c51945ba72af744b1",
+  "split": "dev",
+  "selected_case_ids": [
+    "draft_expires_today-v0",
+    "draft_future_activity-v0",
+    "sent_due_tomorrow-v0",
+    "draft_expiry_boundary-v0",
+    "draft_no_expiry-v0",
+    "draft_overdue_and_expired-v0",
+    "sent_activity_today-v0",
+    "sent_expired-v0",
+    "sent_outside_expiry_window-v0",
+    "sent_overdue_activity-v0"
+  ],
+  "seed": 41,
+  "request_policy": {
+    "version": "followup-request-policy-v1",
+    "max_attempts": 2,
+    "min_interval_seconds": 12.0,
+    "max_wait_seconds": 30
+  },
+  "models": {
+    "groq": "openai/gpt-oss-20b",
+    "gemini": "gemini-3.5-flash-lite"
+  },
+  "privacy_version": "followup-minimized-v2",
+  "grounding_version": "followup-grounding-v2",
+  "summary": {
+    "gemini": {
+      "cases": 10,
+      "completed": 5,
+      "completion_rate": 0.5,
+      "contract_pass_rate": 0.5,
+      "elapsed_p50_ms": 14656.5,
+      "elapsed_p95_ms": 26617.9,
+      "model_calls": 17,
+      "trace_entries": 17,
+      "http_requests_privacy_checked": 17,
+      "tokens_reported": null,
+      "estimated_cost": null,
+      "failures": {
+        "HTTPStatusError": 4,
+        "ConnectError": 1
+      },
+      "http_status_counts": {
+        "503": 11
+      },
+      "http_errors_without_status": 0,
+      "retries": 7,
+      "human_quality": "not_scored"
+    },
+    "groq": {
+      "cases": 10,
+      "completed": 4,
+      "completion_rate": 0.4,
+      "contract_pass_rate": 0.4,
+      "elapsed_p50_ms": 2578.0,
+      "elapsed_p95_ms": 13180.25,
+      "model_calls": 10,
+      "trace_entries": 10,
+      "http_requests_privacy_checked": 10,
+      "tokens_reported": null,
+      "estimated_cost": null,
+      "failures": {
+        "GroundingRejected": 5,
+        "ConnectError": 1
+      },
+      "http_status_counts": {},
+      "http_errors_without_status": 0,
+      "retries": 0,
+      "human_quality": "not_scored"
+    },
+    "pipeline": {
+      "cases": 10,
+      "completed": 3,
+      "completion_rate": 0.3,
+      "contract_pass_rate": 0.3,
+      "elapsed_p50_ms": 12758.0,
+      "elapsed_p95_ms": 51712.2,
+      "model_calls": 18,
+      "trace_entries": 18,
+      "http_requests_privacy_checked": 18,
+      "tokens_reported": null,
+      "estimated_cost": null,
+      "failures": {
+        "HTTPStatusError": 1,
+        "GroundingRejected": 4,
+        "ReadTimeout": 1,
+        "ReviewRejected": 1
+      },
+      "http_status_counts": {
+        "503": 3
+      },
+      "http_errors_without_status": 0,
+      "retries": 2,
+      "human_quality": "not_scored"
+    },
+    "rules": {
+      "cases": 10,
+      "completed": 10,
+      "completion_rate": 1,
+      "contract_pass_rate": 1,
+      "elapsed_p50_ms": 15.5,
+      "elapsed_p95_ms": 41.85,
+      "model_calls": 0,
+      "trace_entries": 0,
+      "http_requests_privacy_checked": 0,
+      "tokens_reported": 0,
+      "estimated_cost": 0,
+      "failures": {},
+      "http_status_counts": {},
+      "http_errors_without_status": 0,
+      "retries": 0,
+      "human_quality": "not_scored"
+    }
+  },
+  "prior_three_case_subset": {
+    "before_commit": "355ec193384524b9248b5e07e8cf322890462476",
+    "same_seed_and_policy": true,
+    "case_ids": [
+      "draft_expires_today-v0",
+      "draft_future_activity-v0",
+      "sent_due_tomorrow-v0"
+    ],
+    "before_completed": {
+      "gemini": 2,
+      "groq": 0,
+      "pipeline": 0,
+      "rules": 3
+    },
+    "after_completed": {
+      "rules": 3,
+      "groq": 2,
+      "gemini": 1,
+      "pipeline": 0
+    },
+    "denominator_per_strategy": 3,
+    "limits": "Prespecified first three cases only; service availability differs; not causal evidence."
+  },
+  "assistant_content_read": {
+    "blinded": false,
+    "human_ratings": 0,
+    "completed_outputs_read": 22,
+    "cloud_outputs_read": 12,
+    "concerns": [
+      {
+        "case": "draft_overdue_and_expired-v0",
+        "strategy": "pipeline",
+        "issue": "Explains the existing activity as not completed although completion is unknown; passes the current pattern filter and reviewer."
+      },
+      {
+        "case": "sent_due_tomorrow-v0 and sent_expired-v0",
+        "strategy": "groq",
+        "issue": "No scheduled activity is phrased as no appointment ever performed; source does not establish history."
+      }
+    ],
+    "conclusion": "Contract completion is not semantic approval. Pattern guard and reviewer still miss wording; human review remains required."
+  },
+  "diagnostic": {
+    "fixture": "draft_expires_today-v0",
+    "before": "GroundingRejected: draft suggested preparing to resend",
+    "after": "completed: review before sending",
+    "calls_per_version": 1,
+    "limits": "A single development diagnostic is not a paired quality study."
+  },
+  "limits": [
+    "Ten development families, one variant and repeat; not independent business outcomes.",
+    "Failures remain in every denominator; no content retry or hidden fallback.",
+    "No holdout or real user pilot rerun; no independent human quality scores.",
+    "Cannot claim AI superiority, reduced human time, sales lift or production readiness."
+  ]
+}

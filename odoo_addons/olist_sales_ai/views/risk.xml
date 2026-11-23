@@ -1,0 +1,37 @@
+<odoo>
+    <record id="risk_quote_button" model="ir.ui.view">
+        <field name="name">sale.order.olist.risk</field><field name="model">sale.order</field><field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml"><xpath expr="//header" position="inside">
+            <button name="action_olist_check_risks" type="object" string="Kiểm tra rủi ro" invisible="not olist_ai_demo" groups="sales_team.group_sale_salesman"/>
+        </xpath></field>
+    </record>
+    <record id="risk_list" model="ir.ui.view">
+        <field name="name">olist.quote.risk.list</field><field name="model">olist.ai.quote.risk.review</field>
+        <field name="arch" type="xml"><list create="false" edit="false" delete="false"><field name="order_id"/><field name="owner_id"/><field name="checked_at"/><field name="state"/></list></field>
+    </record>
+    <record id="risk_form" model="ir.ui.view">
+        <field name="name">olist.quote.risk.form</field><field name="model">olist.ai.quote.risk.review</field>
+        <field name="arch" type="xml"><form create="false" edit="false" delete="false" duplicate="false">
+            <header>
+                <button name="action_explain" type="object" string="AI gợi ý câu hỏi đối chiếu" class="btn-primary" invisible="job_started or stale"/>
+                <button name="action_poll" type="object" string="Lấy diễn giải" invisible="state != 'pending'"/>
+                <button name="action_recheck" type="object" string="Kiểm tra lại"/>
+                <field name="state" widget="olist_ai_status"/>
+            </header>
+            <sheet>
+                <field name="job_started" invisible="True"/><field name="stale" invisible="True"/>
+                <div class="alert alert-warning" invisible="not stale">Nguồn đã đổi. Bản này giữ dữ liệu tại thời điểm kiểm tra; hãy kiểm tra lại trước khi sử dụng.</div>
+                <div class="alert alert-info">Các cờ nhắc bạn đối chiếu, không phải kết luận vi phạm hoặc dự báo chốt đơn. Số liệu và kiểm tra quy tắc ở Odoo; AI chỉ nhận mã cảnh báo và gợi ý câu hỏi. Chưa có thay đổi nào lên báo giá.</div>
+                <group><field name="order_id"/><field name="owner_id"/><field name="checked_at"/></group>
+                <field name="findings_html" nolabel="1"/>
+                <field name="error" invisible="not error"/>
+                <group string="Câu hỏi đối chiếu"><field name="explanation" nolabel="1"/></group>
+                <notebook><page string="Lịch sử model"><field name="trace" nolabel="1"/></page></notebook>
+            </sheet>
+        </form></field>
+    </record>
+    <record id="risk_action" model="ir.actions.act_window">
+        <field name="name">Rủi ro báo giá</field><field name="res_model">olist.ai.quote.risk.review</field><field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="risk_menu" name="Rủi ro báo giá" parent="root_menu" action="risk_action" sequence="45"/>
+</odoo>
