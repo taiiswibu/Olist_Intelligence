@@ -64,7 +64,7 @@ class RiskReportExport(models.Model):
 
     def action_risk_pdf(self):
         self.ensure_one(); self._check_scope()
-        return self.env.ref("olist_sales_ai.risk_report_action").report_action(self)
+        return self.env.ref("olist_sales_ai.risk_report_action").report_action(self, config=False)
 
     def action_risk_xlsx(self):
         self.ensure_one(); self._check_scope()

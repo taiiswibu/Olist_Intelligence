@@ -152,7 +152,8 @@ def main():
         assert root("sale.order", "read", [quote], fields=quote_fields)[0] == source_before_export
         anonymous = p.request.new_context()
         response = anonymous.get(URL+f"/olist-sales-ai/risk/{reviews[0]['id']}/xlsx", max_redirects=0)
-        assert response.status in (302, 303, 401)
+        assert response.status in (302, 303, 401, 404)
+        assert not response.body().startswith(b"PK")
         anonymous.dispose()
         other_login = "qa_report_other_"+secrets.token_hex(5)
         other = root("res.users", "create", {"name": "Other report fixture", "login": other_login, "password": password,

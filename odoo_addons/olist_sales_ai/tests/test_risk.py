@@ -320,6 +320,9 @@ class TestRisk(TransactionCase):
         self.assertNotIn("<script>EXPORT_PRIVATE_CANARY</script>", html)
         self.assertFalse(self.env.ref("olist_sales_ai.risk_report_action").attachment_use)
         self.assertEqual(review.action_risk_pdf()["report_type"], "qweb-pdf")
+        self.staff.write({"group_ids": [Command.link(self.env.ref("base.group_system").id)]})
+        self.env.company.external_report_layout_id = False
+        self.assertEqual(review.action_risk_pdf()["report_type"], "qweb-pdf")
         with self.assertRaises(AccessError):
             engine.with_user(self.other)._render_qweb_html("olist_sales_ai.risk_report_action", review.ids)
 

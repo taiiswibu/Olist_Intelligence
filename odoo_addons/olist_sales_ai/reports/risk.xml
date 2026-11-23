@@ -1,14 +1,21 @@
 <odoo>
+    <record id="risk_report_paperformat" model="report.paperformat">
+        <field name="name">Olist đối chiếu rủi ro A4</field><field name="format">A4</field><field name="orientation">Portrait</field>
+        <field name="margin_top">12</field><field name="margin_bottom">12</field><field name="margin_left">12</field><field name="margin_right">12</field>
+        <field name="header_line" eval="False"/><field name="header_spacing">6</field><field name="dpi">90</field>
+    </record>
     <record id="risk_report_action" model="ir.actions.report">
         <field name="name">Báo cáo xử lý rủi ro</field><field name="model">olist.ai.quote.risk.review</field>
         <field name="report_type">qweb-pdf</field><field name="report_name">olist_sales_ai.risk_report_document</field>
         <field name="report_file">olist_sales_ai.risk_report_document</field>
         <field name="print_report_name">'Olist-rui-ro-%s' % object.id</field>
         <field name="attachment_use" eval="False"/>
+        <field name="paperformat_id" ref="risk_report_paperformat"/>
     </record>
     <template id="risk_report_document">
-        <t t-call="web.html_container"><t t-foreach="docs" t-as="o"><t t-call="web.external_layout">
-            <div class="page" style="font-family: 'DejaVu Sans', sans-serif; font-size: 11px;">
+        <t t-call="web.html_container"><t t-foreach="docs" t-as="o">
+            <div class="article" t-att-data-oe-model="o._name" t-att-data-oe-id="o.id" t-att-data-oe-lang="o.env.context.get('lang')">
+            <div class="page" style="font-family: 'DejaVu Sans', sans-serif; font-size: 12px;">
                 <style>.risk-report-row { page-break-inside: avoid; margin-bottom: 14px; } .risk-text { white-space: pre-wrap; overflow-wrap: anywhere; } .risk-label { color: #415473; }</style>
                 <h2>Báo cáo xử lý rủi ro báo giá</h2>
                 <p><strong>Báo giá: </strong><span t-out="report['quote']"/> · Bản kiểm tra <span t-out="report['review_id']"/></p>
@@ -45,6 +52,8 @@
                 <p t-if="report['ai_error']" class="risk-text" t-out="report['ai_error']"/>
                 <p t-out="report['notice']"/>
             </div>
-        </t></t></t>
+            </div>
+            <div class="footer" style="font-family: 'DejaVu Sans', sans-serif; font-size: 10px; text-align: right;">Olist Intelligence · Trang <span class="page"/> / <span class="topage"/></div>
+        </t></t>
     </template>
 </odoo>
