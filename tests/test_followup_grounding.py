@@ -83,7 +83,8 @@ def test_http_diagnostics_preserve_status_without_provider_secrets(monkeypatch, 
     monkeypatch.setattr(httpx, "AsyncClient", lambda **kw: client(transport=httpx.MockTransport(handle), **kw))
     monkeypatch.setattr(f.llm, "providers", lambda: [SimpleNamespace(name="groq", model="fixture", key="SECRET_KEY", base="https://example.invalid")])
     with pytest.raises(f.AnalysisFailure) as caught:
-        asyncio.run(f.analyze_strategy(f.AnalysisRequest.model_validate(payload()), "groq"))
+        asyncio.run(f.analyze_strategy(f.AnalysisRequest.model_validate(payload()), "groq",
+            request_policy=f.transport.Policy(max_attempts=1, min_interval_seconds=0)))
     trace = caught.value.trace
     assert caught.value.reason == "HTTPStatusError"
     assert len(seen) == 1  # No hidden retry.

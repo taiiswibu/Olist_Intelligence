@@ -25,6 +25,8 @@ def main():
     run.add_argument("--seed", type=int, default=41)
     run.add_argument("--pricing", type=Path)
     run.add_argument("--out", type=Path)
+    run.add_argument("--max-attempts", type=int, choices=[1, 2, 3], default=1)
+    run.add_argument("--request-interval", type=float, default=0)
     score = commands.add_parser("score")
     score.add_argument("--run", type=Path, required=True);score.add_argument("--ratings", type=Path, required=True)
     compare = commands.add_parser("compare")
@@ -34,7 +36,8 @@ def main():
         if args.command == "run":
             out = args.out or ROOT / "data/processed/followup_evaluations" / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
             result = asyncio.run(evaluation.run(out, tuple(args.strategies.split(",")), args.split, args.limit, args.repeats,
-                args.live, args.max_model_calls, args.seed, json.loads(args.pricing.read_text()) if args.pricing else None))
+                args.live, args.max_model_calls, args.seed, json.loads(args.pricing.read_text()) if args.pricing else None,
+                evaluation.followup_transport.Policy(args.max_attempts, args.request_interval)))
         elif args.command == "score":
             result = evaluation.score(args.run, args.ratings)
         else:

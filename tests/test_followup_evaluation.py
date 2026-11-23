@@ -76,10 +76,10 @@ def test_failures_stay_in_denominator_and_partial_runs_cannot_be_scored(tmp_path
     from olist import followups
     original = followups.analyze_strategy
     monkeypatch.setattr(e.llm, "providers", lambda: [SimpleNamespace(name="groq", model="fixture")])
-    async def fake(payload, strategy):
+    async def fake(payload, strategy, **kwargs):
         if strategy == "groq":
             raise followups.AnalysisFailure([{"provider": "groq", "model": "fixture", "status": "failed", "usage": None}], "FixtureFailure")
-        return await original(payload, strategy)
+        return await original(payload, strategy, **kwargs)
     monkeypatch.setattr(followups, "analyze_strategy", fake)
     output = tmp_path/"failure"
     result = asyncio.run(e.run(output, ("rules", "groq"), live=True, limit=2))

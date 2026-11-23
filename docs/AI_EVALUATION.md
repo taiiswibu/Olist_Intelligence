@@ -73,7 +73,7 @@ Xem [số liệu, lỗi và nhận xét từng trường hợp](../reports/follo
 
 `followup-grounding-v1` kiểm tra bản nháp của cả Groq, Gemini và pipeline trước khi trả về hoặc chuyển sang reviewer. Chặn các cách diễn đạt đã biết về lịch sử gửi của báo giá nháp, lịch sử phản hồi không có trong nguồn và việc đã hoàn tất/tương tự. Với `review_existing_activity`, note phải hướng dẫn xem lại công việc/hoạt động hiện có; chưa dùng note này để soạn lời liên hệ khách. Hai skill đã được cập nhật cùng phạm vi này.
 
-Đây là bộ lọc tiếng Việt theo mẫu, có thể bỏ sót cách diễn đạt khác hoặc chặn nhầm câu trích dẫn/giả định. `passed` chỉ nghĩa là qua bộ lọc đã biết, không phải được xác nhận đúng nghiệp vụ. Không tự sửa câu, thử lại hoặc thay bằng mẫu quy tắc khi bị chặn; lượt đó vẫn tính chưa hoàn tất.
+Đây là bộ lọc tiếng Việt theo mẫu, có thể bỏ sót cách diễn đạt khác hoặc chặn nhầm câu trích dẫn/giả định. `passed` chỉ nghĩa là qua bộ lọc đã biết, không phải được xác nhận đúng nghiệp vụ. Không tự sửa câu, thử lại nội dung hoặc thay bằng mẫu quy tắc khi bị chặn; lượt đó vẫn tính chưa hoàn tất.
 
 Trace mới giữ HTTP status và nhóm lỗi (`rate_limited`, `request_rejected`, `provider_error`), không giữ body/header/URL lỗi nhà cung cấp. Lỗi 429 được ghi nhận là giới hạn tần suất/hạn mức từ dịch vụ, không tự kết luận cần mua thêm quota. Các lượt cũ thiếu status vẫn được báo là chưa phân loại. Manifest giữ phiên bản/hash bộ lọc; compare hiển thị phiên bản trước/sau vì bộ lọc chặt hơn có thể làm tỷ lệ hoàn tất giảm.
 
@@ -91,6 +91,22 @@ Lượt mới có 13 `GroundingRejected`, 6 HTTP 503, 5 HTTP 429 và một timeo
 **Đã có bằng chứng chặn lỗi đã biết; chưa có bằng chứng AI tốt hơn hoặc người bán làm nhanh hơn.** Bộ lọc chặt hơn và tình trạng dịch vụ đều khác lượt trước, nên không quy toàn bộ thay đổi cho prompt/model. Xem [bằng chứng và giới hạn của lượt sửa](../reports/followup_grounding_20261123.json). Kết quả cũ được giữ nguyên, không tự thử lại hoặc chọn lượt đẹp hơn.
 
 Trước khi chạy tập dự phòng, cần ổn định truy cập dịch vụ và khóa bản phát triển. Sau đó hai người chấm riêng phiếu mù; đo thêm thời gian người bán từ mở báo giá đến duyệt xong trong Odoo, cả thời gian đọc/sửa/lỗi/chờ. So với thao tác thủ công và mẫu quy tắc, phân công thứ tự khác nhau giữa người tham gia để giảm ảnh hưởng học lại tình huống. Chốt tiêu chí trước lượt đo: giảm tổng thời gian mà không tăng lỗi nghiệp vụ; pilot chỉ để ước lượng biến động và chọn cỡ mẫu tiếp theo, không suy ra hiệu quả từ một vài người dùng. `edit_seconds` trong phiếu nội dung chỉ là thời gian đọc/sửa để chuẩn bị duyệt, không thay cho tổng thời gian làm việc trong Odoo.
+
+## Hàng chờ và thử lại có giới hạn
+
+`followup-request-policy-v1` chỉ áp dụng cho luồng chăm sóc đọc bản chụp. Mỗi provider/model trong một tiến trình được gọi nối tiếp. Mặc định ứng dụng cách nhau ít nhất mười hai giây giữa hai lần bắt đầu gọi cùng model, tối đa hai lần gửi cho mỗi bước. Chỉ thử lại HTTP 429/502/503/504, giữ nguyên payload đã lọc. Không thử lại lỗi nội dung/JSON, lỗi 400/401/403 hoặc timeout chưa rõ đã xử lý hay chưa.
+
+Tôn trọng `Retry-After` dạng số giây hoặc HTTP-date; thiếu/sai thì dùng backoff có jitter. Nếu cần chờ quá ba mươi giây thì dừng lượt hiện tại, giữ cooldown cho lượt sau và báo `ProviderCooldown` thay vì gửi dồn. Tổng phân tích gồm hàng chờ vẫn bị giới hạn chín mươi giây. Đây không phải bảo đảm dịch vụ luôn sẵn sàng hoặc kiểm soát các ứng dụng khác dùng chung tài khoản. Cách xử lý dựa trên [giới hạn và header của Groq](https://console.groq.com/docs/rate-limits) và [hướng dẫn retry của Gemini](https://ai.google.dev/gemini-api/docs/troubleshooting).
+
+Cấu hình ứng dụng bằng `FOLLOWUP_MAX_ATTEMPTS` (một đến ba), `FOLLOWUP_REQUEST_INTERVAL_SECONDS` (không đến sáu mươi). Mỗi attempt và lần chờ đều có trace; mọi request thực gửi vẫn phải qua kiểm tra riêng tư ở HTTP. Trace bị ngắt được giữ khi hết deadline. Không lưu body lỗi hay header tùy ý.
+
+Benchmark mặc định vẫn một lần gửi, khoảng cách cấu hình bằng không; cooldown từ nhà cung cấp vẫn được tôn trọng. Muốn đo cả chính sách ứng dụng:
+
+```powershell
+.venv\Scripts\python.exe scripts/benchmark_followup.py run --live --strategies rules,groq,gemini,pipeline --limit 3 --max-attempts 2 --request-interval 12 --max-model-calls 24
+```
+
+Ngân sách tính cả số lần có thể thử lại trước khi gọi API. Summary đếm request thực gửi, retry và tác vụ chờ riêng; manifest/compare ghi chính sách từng lượt. So hai chính sách khác nhau chỉ là đối chiếu cả hệ thống, không được quy chênh lệch cho riêng model hoặc prompt.
 
 ## Ranh giới dữ liệu
 
