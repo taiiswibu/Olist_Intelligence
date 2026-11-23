@@ -59,6 +59,16 @@ Compare yêu cầu cùng SHA bộ tình huống, tập, mẫu, số lặp và ba
 
 Giữ bằng chứng cũ, đo phần thay đổi; không làm lại từ đầu và không suy ra tăng doanh thu từ điểm benchmark.
 
+## Kết quả đọc thử ngày 23/11/2026
+
+Lượt `dev-review-20261123` dùng mười họ phát triển, mỗi họ một biến thể và một lần chạy. Số lượt hoàn tất: rules 10/10, Gemini 9/10, Groq 6/10, pipeline 3/10. Cả lượt lỗi HTTP và lượt bị reviewer từ chối đều giữ trong mẫu số; không suy đoán nguyên nhân HTTP khi trace chưa có status code.
+
+Một assistant đã đọc đủ 40 kết quả, thấy lỗi nội dung mà kiểm tra cấu trúc chưa phát hiện: báo giá nháp lại nói đã gửi; không có lịch việc lại suy ra chưa có phản hồi; action rà việc hiện có nhưng văn bản chủ yếu rà báo giá. Reviewer cũng để lọt một số câu cần sửa. Chưa có căn cứ khẳng định hai model tốt hơn một.
+
+Đây là **nhận xét của một assistant có thấy tên phương án**, không phải hai người chấm mù hoặc xác nhận của chuyên gia. Điểm người chấm và thời gian sửa thực tế vẫn trống. Không đổi prompt, fixture hay cấu hình ứng dụng theo lượt này; tập dự phòng chưa chạy.
+
+Xem [số liệu, lỗi và nhận xét từng trường hợp](../reports/followup_review_20261123.json). File đọc chi tiết ở `data/processed/followup_evaluations/dev-review-20261123/assistant_review.csv`; phiếu người chấm riêng vẫn là `ratings.csv`. Các file dữ liệu này chỉ lưu local.
+
 ## Ranh giới dữ liệu
 
 `followup-minimized-v1` chỉ cho mã tạm mỗi lượt, draft/sent, mã lý do hữu hạn, có việc hay chưa và allowed_actions ra API. Tên, mã thật, số tiền/tiền tệ, ngày cụ thể, người phụ trách và ghi chú giữ local. Ghép kết quả với ID Odoo tại máy. JSON đã serialize được kiểm tra trước transport ở cả Groq và Gemini; trường ngoài danh sách bị chặn. Bản nháp có số, email/URL hoặc hành động ngoài phạm vi bị chặn trước khi chuyển model thứ hai.
