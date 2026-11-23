@@ -1,5 +1,7 @@
 # AI hỗ trợ bán hàng trong Odoo
 
+Xem thêm [baseline và bảo vệ dữ liệu](AI_EVALUATION.md). Luồng chăm sóc mặc định chỉ gửi mã tạm, trạng thái và dấu hiệu nghiệp vụ; tên khách, số tiền và ghi chú giữ local. Có thể đặt `FOLLOWUP_AI_MODE=rules_only` rồi khởi động lại backend để không gọi API model cho luồng này.
+
 Addon Odoo Community 19 dùng Sales và Activities. Bản đầu chỉ đọc khách/báo giá Olist DEMO nháp hoặc đã gửi; không cần CRM/Project.
 
 ## Cài đặt
