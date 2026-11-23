@@ -22,8 +22,8 @@ def model_transport(monkeypatch, canaries, malicious=False):
         if envelope.draft is None:
             case = envelope.cases[0]
             result = {"items": [{"case_id": case.case_id, "reason_codes": case.reason_codes, "action": case.allowed_actions[0],
-                "activity_type": "todo", "summary": "Rà soát báo giá", "note": "Kiểm tra nội dung trước khi liên hệ khách.",
-                "explanation": "Chưa có lịch chăm sóc."}]}
+                "activity_type": "todo", "summary": "Rà soát bước tiếp theo", "note": "Kiểm tra công việc hiện có trước khi liên hệ khách." if case.has_activity else "Kiểm tra nội dung trước khi liên hệ khách.",
+                "explanation": "Đề xuất theo trạng thái và lịch việc."}]}
             if malicious:result["items"][0]["note"] = "Contact canary@example.invalid"
         else:
             assert envelope.draft is not None

@@ -69,6 +69,14 @@ Một assistant đã đọc đủ 40 kết quả, thấy lỗi nội dung mà ki
 
 Xem [số liệu, lỗi và nhận xét từng trường hợp](../reports/followup_review_20261123.json). File đọc chi tiết ở `data/processed/followup_evaluations/dev-review-20261123/assistant_review.csv`; phiếu người chấm riêng vẫn là `ratings.csv`. Các file dữ liệu này chỉ lưu local.
 
+## Chặn lỗi đã biết
+
+`followup-grounding-v1` kiểm tra bản nháp của cả Groq, Gemini và pipeline trước khi trả về hoặc chuyển sang reviewer. Chặn các cách diễn đạt đã biết về lịch sử gửi của báo giá nháp, lịch sử phản hồi không có trong nguồn và việc đã hoàn tất/tương tự. Với `review_existing_activity`, note phải hướng dẫn xem lại công việc/hoạt động hiện có; chưa dùng note này để soạn lời liên hệ khách. Hai skill đã được cập nhật cùng phạm vi này.
+
+Đây là bộ lọc tiếng Việt theo mẫu, có thể bỏ sót cách diễn đạt khác hoặc chặn nhầm câu trích dẫn/giả định. `passed` chỉ nghĩa là qua bộ lọc đã biết, không phải được xác nhận đúng nghiệp vụ. Không tự sửa câu, thử lại hoặc thay bằng mẫu quy tắc khi bị chặn; lượt đó vẫn tính chưa hoàn tất.
+
+Trace mới giữ HTTP status và nhóm lỗi (`rate_limited`, `request_rejected`, `provider_error`), không giữ body/header/URL lỗi nhà cung cấp. Lỗi 429 được ghi nhận là giới hạn tần suất/hạn mức từ dịch vụ, không tự kết luận cần mua thêm quota. Các lượt cũ thiếu status vẫn được báo là chưa phân loại. Manifest giữ phiên bản/hash bộ lọc; compare hiển thị phiên bản trước/sau vì bộ lọc chặt hơn có thể làm tỷ lệ hoàn tất giảm.
+
 ## Ranh giới dữ liệu
 
 `followup-minimized-v1` chỉ cho mã tạm mỗi lượt, draft/sent, mã lý do hữu hạn, có việc hay chưa và allowed_actions ra API. Tên, mã thật, số tiền/tiền tệ, ngày cụ thể, người phụ trách và ghi chú giữ local. Ghép kết quả với ID Odoo tại máy. JSON đã serialize được kiểm tra trước transport ở cả Groq và Gemini; trường ngoài danh sách bị chặn. Bản nháp có số, email/URL hoặc hành động ngoài phạm vi bị chặn trước khi chuyển model thứ hai.

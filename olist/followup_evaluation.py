@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from statistics import mean
 
-from . import agent_skills, followups, followup_privacy, llm
+from . import agent_skills, followups, followup_privacy, followup_grounding, llm
 from .config import ROOT
 
 VERSION = "followup-evaluation-v1"
@@ -67,6 +67,9 @@ def summarize(records):
             "model_calls": len(traces), "http_requests_privacy_checked": sum(t.get("privacy", {}).get("requests_checked", 0) for t in traces),
             "tokens_reported": sum(t["usage"]["total_tokens"] for t in traces) if usage_known else None,
             "estimated_cost": sum(r["estimated_cost"] for r in rows) if costs_known else None,
+            "failures": dict(Counter(r["error"] for r in rows if r.get("error"))),
+            "http_status_counts": dict(Counter(str(t["http_status"]) for t in traces if "http_status" in t)),
+            "http_errors_without_status": sum(r.get("error") == "HTTPStatusError" and not any("http_status" in t for t in r["trace"]) for r in rows),
             "human_quality": "not_scored"}
     return result
 
@@ -115,7 +118,7 @@ async def run(output, strategies=("rules",), split="dev", limit=None, repeats=1,
     if output.exists() and any(output.iterdir()):
         raise ValueError("Thư mục kết quả đã có dữ liệu; dùng thư mục mới để giữ lịch sử.")
     output.mkdir(parents=True, exist_ok=True)
-    code_files = [ROOT / "olist" / name for name in ["followups.py", "followup_privacy.py", "team_model.py", "followup_evaluation.py"]]
+    code_files = [ROOT / "olist" / name for name in ["followups.py", "followup_privacy.py", "followup_grounding.py", "team_model.py", "followup_evaluation.py"]]
     skill_files = [ROOT / ".agents/skills" / name / "SKILL.md" for name in agent_skills.FOLLOWUP_SKILLS]
     commit = subprocess.run(["git", "-c", "safe.directory="+ROOT.as_posix(), "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True)
     dirty = subprocess.run(["git", "-c", "safe.directory="+ROOT.as_posix(), "status", "--porcelain"], cwd=ROOT, capture_output=True, text=True)
@@ -124,6 +127,7 @@ async def run(output, strategies=("rules",), split="dev", limit=None, repeats=1,
         "rubric_version": "followup-rubric-v1",
         "label_status": suite["LABEL_STATUS"], "split": split, "selected_case_ids": [c["id"] for c in cases],
         "repeats": repeats, "strategies": strategies, "seed": seed, "privacy_version": followup_privacy.VERSION,
+        "grounding_version": followup_grounding.VERSION,
         "created_at_utc": datetime.now(timezone.utc).isoformat(), "source_commit": commit.stdout.strip(),
         "worktree_dirty": bool(dirty.stdout.strip()), "sampling": "cover_actions_then_variants-v1" if limit is not None else "all",
         "source_hashes": {p.relative_to(ROOT).as_posix(): digest(p) for p in code_files+skill_files},
@@ -250,6 +254,7 @@ def compare(before, after):
                 raise ValueError("Hai bộ phiếu dùng thang chấm khác phiên bản.")
             human = {s: {k: second["strategies"][s][k]-first["strategies"][s][k] for k in first["strategies"][s]} for s in a}
     return {"before": left["source_commit"], "after": right["source_commit"], "paired_cases": len(old), "human_deltas": human,
+        "grounding_versions": {"before": left.get("grounding_version"), "after": right.get("grounding_version")},
         "source_hashes_changed": left["source_hashes"] != right["source_hashes"],
         "deltas": {s: {k: b[s][k]-a[s][k] for k in ["completion_rate", "contract_pass_rate", "elapsed_p50_ms", "elapsed_p95_ms"]} for s in a},
         "note": "Fixture ratings and mechanical metrics, not observed sales improvement." if human else

@@ -45,6 +45,7 @@ def test_paired_comparison_and_human_ratings_validation(tmp_path):
     asyncio.run(e.run(first, limit=2));asyncio.run(e.run(second, limit=2))
     compared = e.compare(first, second)
     assert compared["paired_cases"] == 2 and compared["deltas"]["rules"]["contract_pass_rate"] == 0
+    assert compared["grounding_versions"] == {"before": e.followup_grounding.VERSION, "after": e.followup_grounding.VERSION}
     with (first/"ratings.csv").open(encoding="utf-8-sig") as stream:rows = list(csv.DictReader(stream))
     for row in rows:row.update(business_correct="1", grounded="1", usable="4", decision="edit", edit_seconds="12")
     def write():
@@ -84,6 +85,8 @@ def test_failures_stay_in_denominator_and_partial_runs_cannot_be_scored(tmp_path
     result = asyncio.run(e.run(output, ("rules", "groq"), live=True, limit=2))
     assert result["summary"]["groq"]["cases"] == 2 and result["summary"]["groq"]["completed"] == 0
     assert result["summary"]["groq"]["model_calls"] == 2 and result["summary"]["groq"]["tokens_reported"] is None
+    assert result["summary"]["groq"]["failures"] == {"FixtureFailure": 2}
+    assert result["summary"]["groq"]["http_status_counts"] == {}
     path = output/"results.jsonl"
     path.write_text('\n'.join(path.read_text(encoding="utf-8").splitlines()[:-1])+"\n", encoding="utf-8")
     with pytest.raises(ValueError):e.score(output, output/"ratings.csv")
