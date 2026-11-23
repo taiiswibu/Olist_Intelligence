@@ -110,6 +110,10 @@ Benchmark mặc định vẫn một lần gửi, khoảng cách cấu hình bằ
 
 Ngân sách tính cả số lần có thể thử lại trước khi gọi API. Summary đếm request thực gửi, retry và tác vụ chờ riêng; manifest/compare ghi chính sách từng lượt. So hai chính sách khác nhau chỉ là đối chiếu cả hệ thống, không được quy chênh lệch cho riêng model hoặc prompt.
 
+Smoke ở commit `355ec19` dùng ba tình huống, bốn baseline và tối đa 24 request: thực gửi mười request, có một request thử lại; cả mười qua kiểm tra riêng tư HTTP. Rules hoàn tất 3/3, Gemini 2/3, Groq và pipeline 0/3 do bộ chặn nội dung. Hai lần HTTP 503 thuộc cùng một lượt Gemini vẫn thất bại. Không có 429 ở mẫu nhỏ này không chứng minh đã hết vấn đề hạn mức. Xem [bằng chứng công cụ pilot và smoke](../reports/followup_measurement_readiness_20261123.json); báo cáo không chứa số liệu thao tác thật của người dùng.
+
+Phần đo và tự chấm một người đã có trong [addon Odoo](ODOO_AI_FOLLOWUP.md#đo-thao-tác-thực-tế). Mỗi kết quả tự chấm gắn với chính lượt thao tác và giữ thời điểm riêng; không dùng thời gian/điểm của browser test thay người tham gia. Báo cáo CSV luôn giữ trạng thái thăm dò, chưa đủ kết luận AI làm tốt hơn.
+
 ## Ranh giới dữ liệu
 
 `followup-minimized-v1` chỉ cho mã tạm mỗi lượt, draft/sent, mã lý do hữu hạn, có việc hay chưa và allowed_actions ra API. Tên, mã thật, số tiền/tiền tệ, ngày cụ thể, người phụ trách và ghi chú giữ local. Ghép kết quả với ID Odoo tại máy. JSON đã serialize được kiểm tra trước transport ở cả Groq và Gemini; trường ngoài danh sách bị chặn. Bản nháp có số, email/URL hoặc hành động ngoài phạm vi bị chặn trước khi chuyển model thứ hai.
