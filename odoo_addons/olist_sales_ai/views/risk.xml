@@ -46,9 +46,22 @@
         <field name="arch" type="xml"><form string="Ghi nhận xử lý">
             <div class="alert alert-info">Nhận xét áp dụng cho toàn bộ bằng chứng của từng cờ trong bản này. Nhập lý do khi đổi lựa chọn. Đúng chủ đích là ghi nhận của người bán; cờ quy tắc vẫn được giữ. Lý do chỉ lưu local.</div>
             <field name="review_id" invisible="True"/>
-            <field name="line_ids" nolabel="1"><list editable="bottom" create="false" delete="false">
+            <field name="line_ids" nolabel="1" mode="list,kanban"><list editable="bottom" create="false" delete="false">
                 <field name="code"/><field name="evidence"/><field name="decision"/><field name="reason" placeholder="Lý do đối chiếu"/>
-            </list></field>
+            </list>
+                <kanban create="false" delete="false" records_draggable="false">
+                    <templates><t t-name="card">
+                        <strong class="text-wrap"><field name="code"/></strong>
+                        <div class="text-wrap my-2"><field name="evidence"/></div>
+                        <div><field name="decision"/></div>
+                        <div class="text-wrap"><field name="reason"/></div>
+                        <span class="text-muted small">Chạm để ghi nhận</span>
+                    </t></templates>
+                </kanban>
+                <form string="Ghi nhận cảnh báo">
+                    <group><field name="code"/><field name="evidence"/><field name="decision"/><field name="reason" placeholder="Lý do đối chiếu"/></group>
+                </form>
+            </field>
             <footer><button name="action_save" type="object" string="Lưu ghi nhận" class="btn-primary"/><button string="Hủy" special="cancel"/></footer>
         </form></field>
     </record>

@@ -16,6 +16,8 @@ Kiểm thử riêng: `tests/test_quote_risks.py` kiểm tra tại HTTP của c�
 
 Bấm **Ghi nhận xử lý**, chọn **Cần sửa**, **Đúng chủ đích** hoặc **Cần quản lý xem** cho cờ cần xử lý và nhập lý do (tối đa một nghìn ký tự). Các cờ chưa chọn được giữ nguyên. Nhận xét áp dụng cho toàn bộ bằng chứng của mã cờ trong bản đang xem; người bán tự ghi nhận, quản lý xem theo quyền nhóm. **Đúng chủ đích** vẫn giữ cờ và chưa thay cho phê duyệt chứng từ. Bộ lọc **Cần quản lý xem** dùng lựa chọn mới nhất của từng cờ, không tạo Activity hoặc gửi thông báo.
 
+Desktop nhập trực tiếp trong bảng. Trên điện thoại, chạm thẻ cảnh báo để chọn trạng thái và nhập lý do, lưu thẻ rồi bấm **Lưu ghi nhận**. Nếu nút xử lý nằm trong menu dấu ba chấm trên thanh công cụ thì mở menu này để chọn.
+
 Mỗi thay đổi lưu người ghi, thời điểm server và lý do vào **Lịch sử xử lý**. Không sửa/xóa lịch sử; ghi lại cùng lựa chọn và lý do không tạo thêm dòng. Nếu có người vừa ghi nhận cùng cờ khi bạn đang nhập, cửa sổ yêu cầu mở lại để đối chiếu. Nguồn đã đổi thì phải kiểm tra lại trước khi ghi nhận.
 
 **Kiểm tra lại** liên kết bản mới với bản đang xem; kiểm tra từ báo giá liên kết với bản gần nhất được phép đọc. Tab **Trước/sau** hiển thị bằng chứng và ba nhóm: mới xuất hiện, vẫn xuất hiện, không còn xuất hiện. Sửa một phần dòng hàng mà cùng mã vẫn còn thì tiếp tục ghi là vẫn xuất hiện. Cờ biến mất có thể do dữ liệu/trạng thái thay đổi, chưa tự chứng minh nghiệp vụ đã đúng. Bản mới bắt đầu **Chưa ghi nhận**, không tự nhận lý do hay xác nhận từ bản cũ.
