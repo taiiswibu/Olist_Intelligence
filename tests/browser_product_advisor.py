@@ -6,7 +6,7 @@ import secrets
 import xmlrpc.client
 from pathlib import Path
 
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, expect
 
 ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'.openai/qa'
@@ -37,8 +37,13 @@ def main():
     partner=root('res.partner','create',{'name':partner_name,'ref':'OLIST-DEMO:advisor-browser'})
     currency=root('res.currency','search',[['name','=','BRL']],context={'active_test':False})[0]
     root('res.currency','write',[currency],{'active':True})
-    price_list=root('product.pricelist','create',{'name':'OLIST DEMO BRL','currency_id':currency})
-    tax=root('account.tax','create',{'name':'Advisor browser tax fixture','amount':10,'type_tax_use':'sale','price_include_override':'tax_excluded'})
+    previous_products=root('product.product','search',[['default_code','=like','OLIST-DEMO:advisor-browser-%']])
+    if previous_products:root('product.product','write',previous_products,{'active':False})
+    lists=root('product.pricelist','search',[['name','=','OLIST DEMO BRL']])
+    assert len(lists)<=1
+    price_list=lists[0] if lists else root('product.pricelist','create',{'name':'OLIST DEMO BRL','currency_id':currency})
+    taxes=root('account.tax','search',[['name','=','Advisor browser tax fixture']])
+    tax=taxes[0] if taxes else root('account.tax','create',{'name':'Advisor browser tax fixture','amount':10,'type_tax_use':'sale','price_include_override':'tax_excluded'})
     for index,price in enumerate([50,80,120,200]):
         product=root('product.product','create',{'name':f'DEMO health_beauty {index:08x}','default_code':f'OLIST-DEMO:advisor-browser-{index}',
             'type':'service','list_price':999,'taxes_id':[[6,0,[tax]]]})
@@ -61,9 +66,16 @@ def main():
         dialog.locator('[name=budget] input').fill('150')
         dialog.get_by_role('button',name='Xem phương án',exact=True).click()
         page.locator('.o_form_view [name=shown_option_ids]').wait_for(timeout=30000)
-        cards=page.locator('[name=shown_option_ids] .o_kanban_record')
-        assert cards.count()==3
+        cards=page.locator('[name=shown_option_ids] .o_kanban_record:not(.o_kanban_ghost)')
+        try:
+            expect(cards).to_have_count(3,timeout=15000)
+        except Exception:
+            page.screenshot(path=str(OUT/'product-advisor-debug.png'),full_page=True)
+            (OUT/'product-advisor-debug.html').write_text(page.content(),encoding='utf-8')
+            print(json.dumps({'javascript_errors':errors}))
+            raise
         page.get_by_role('button',name='Nhờ AI xếp hạng',exact=True).wait_for()
+        assert 'R$' in cards.first.inner_text()
         advice=call('olist.ai.product.advice','search_read',[['partner_id','=',partner]],fields=['id','shown_option_ids','job_started'])[0]
         options=call('olist.ai.product.option','read',advice['shown_option_ids'],fields=['unit_price','tax','total','remaining','state'])
         assert sorted(o['total'] for o in options)==[55,88,132]
