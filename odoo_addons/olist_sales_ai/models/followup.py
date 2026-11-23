@@ -172,6 +172,10 @@ class FollowupReview(models.Model):
     trial_finished_at = fields.Datetime("Kết thúc lượt đo", readonly=True, copy=False)
     trial_outcome = fields.Selection([("approved", "Đã duyệt"), ("failed", "Lỗi"), ("cancelled", "Bỏ qua")],
                                      string="Kết quả lượt đo", readonly=True, copy=False)
+    trial_rating = fields.Selection([("usable", "Dùng được"), ("needs_edit", "Cần sửa"), ("reject", "Không dùng được")],
+                                    string="Tự đánh giá", readonly=True, copy=False)
+    trial_rated_by = fields.Many2one("res.users", string="Người tự đánh giá", readonly=True, copy=False)
+    trial_rated_at = fields.Datetime("Thời điểm tự đánh giá", readonly=True, copy=False)
     trial_elapsed = fields.Float("Tổng thời gian (giây)", compute="_compute_trial_elapsed", digits=(16, 1))
 
     @api.depends("trial_started_at", "trial_finished_at")
@@ -232,14 +236,15 @@ class FollowupReview(models.Model):
             review._check_scope("read")
         stream = io.StringIO(newline="")
         columns = ["schema_version", "trial_id", "participant", "case", "sequence", "assignment_version", "method", "actual_strategy", "outcome",
-                   "started_at_utc", "ready_at_utc", "finished_at_utc", "total_seconds", "after_ready_seconds", "quotation_state", "has_activity"]
+                   "started_at_utc", "ready_at_utc", "finished_at_utc", "total_seconds", "after_ready_seconds", "quotation_state", "has_activity",
+                   "self_rating", "rated_at_utc", "rating_source"]
         writer = csv.DictWriter(stream, fieldnames=columns)
         writer.writeheader()
         for review in self.sorted("id"):
             detail = json.loads(review.trace or "{}")
             snapshot = json.loads(review.snapshot_json)
             finished = review.trial_finished_at
-            writer.writerow({"schema_version": "followup-task-times-v1", "trial_id": review.request_key, "participant": review.trial_participant,
+            writer.writerow({"schema_version": "followup-task-times-v2", "trial_id": review.request_key, "participant": review.trial_participant,
                 "case": review.trial_case, "sequence": review.trial_sequence, "assignment_version": "cyclic-v1",
                 "method": review.trial_method, "actual_strategy": detail.get("strategy", "unknown"),
                 "outcome": review.trial_outcome if finished else "unfinished",
@@ -248,11 +253,38 @@ class FollowupReview(models.Model):
                 "finished_at_utc": fields.Datetime.to_string(finished) if finished else "",
                 "total_seconds": (finished - review.trial_started_at).total_seconds() if finished else "",
                 "after_ready_seconds": (finished - review.trial_ready_at).total_seconds() if finished and review.trial_ready_at else "",
-                "quotation_state": snapshot["state"], "has_activity": bool(snapshot["activities"])})
+                "quotation_state": snapshot["state"], "has_activity": bool(snapshot["activities"]),
+                "self_rating": review.trial_rating or "", "rated_at_utc": fields.Datetime.to_string(review.trial_rated_at) if review.trial_rated_at else "",
+                "rating_source": "self" if review.trial_rated_at else ""})
         attachment = self.env["ir.attachment"].create({"name": "olist-luot-do.csv", "type": "binary",
             "datas": base64.b64encode(("\ufeff" + stream.getvalue()).encode("utf-8")), "mimetype": "text/csv",
             "public": False})  # Unlinked: only the exporter and administrators may read it.
         return {"type": "ir.actions.act_url", "url": f"/web/content/{attachment.id}?download=true", "target": "self"}
+
+    def _rate_trial(self, rating):
+        self.ensure_one()
+        self._check_scope("write")
+        self.env.cr.execute("SELECT id FROM olist_ai_followup_review WHERE id=%s FOR UPDATE", (self.id,))
+        self.invalidate_recordset()
+        if self.owner_id != self.env.user or not self.trial_finished_at:
+            raise UserError("Chỉ người thực hiện tự đánh giá sau khi lượt đo kết thúc.")
+        if self.trial_rated_at:
+            if self.trial_rating != rating:
+                raise UserError("Đã ghi tự đánh giá đầu tiên; không ghi đè kết quả cũ.")
+            return {"type": "ir.actions.client", "tag": "reload"}
+        if rating != "reject" and (not self.trial_ready_at or not self.summary or not self.note):
+            raise UserError("Lượt chưa có nội dung chỉ có thể đánh dấu không dùng được.")
+        self._set_internal({"trial_rating": rating, "trial_rated_by": self.env.uid, "trial_rated_at": fields.Datetime.now()})
+        return {"type": "ir.actions.client", "tag": "reload"}
+
+    def action_trial_usable(self):
+        return self._rate_trial("usable")
+
+    def action_trial_needs_edit(self):
+        return self._rate_trial("needs_edit")
+
+    def action_trial_reject(self):
+        return self._rate_trial("reject")
 
     @api.model
     def _snapshot(self, order):

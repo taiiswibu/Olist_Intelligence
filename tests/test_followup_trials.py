@@ -10,7 +10,7 @@ def row(n, method, outcome="approved", seconds=30):
     return dict(zip(t.FIELDS, [t.SCHEMA, f"{n:032x}", "P_0123456789ab", "T_0123456789ab", str(n), "cyclic-v1", method,
         "pipeline" if method == "ai" else method, outcome, "2026-11-23 10:00:00",
         "2026-11-23 10:00:10" if outcome == "approved" else "", finished,
-        str(seconds) if finished else "", str(seconds-10) if outcome == "approved" else "", "draft", "False"]))
+        str(seconds) if finished else "", str(seconds-10) if outcome == "approved" else "", "draft", "False", "", "", ""]))
 
 
 def write(path, rows):
@@ -60,3 +60,19 @@ def test_duplicate_id_or_participant_sequence_cannot_inflate_sample(tmp_path):
     for second in [row(1,"manual"), {**row(2,"rules"), "sequence":"1"}]:
         write(path,[row(1,"manual"),second])
         with pytest.raises(ValueError): t.summarize(path)
+
+
+def test_self_rating_is_separate_from_independent_validation_and_legacy_is_unrated(tmp_path):
+    path=tmp_path/"ratings.csv"
+    sample={**row(1,"manual"),"self_rating":"usable","rated_at_utc":"2026-11-23 10:01:00","rating_source":"self"}
+    write(path,[sample])
+    result=t.summarize(path)
+    assert result["human_business_ratings"] == "self_reported_not_independent"
+    assert result["methods"]["manual"]["usable_approved_count"] == 1 and not result["benefit_claim_ready"]
+    sample["rated_at_utc"]="2026-11-23 09:00:00"
+    write(path,[sample])
+    with pytest.raises(ValueError): t.summarize(path)
+    with path.open("w",encoding="utf-8-sig",newline="") as stream:
+        writer=csv.DictWriter(stream,fieldnames=t.LEGACY_FIELDS); writer.writeheader()
+        writer.writerow({k:("followup-task-times-v1" if k=="schema_version" else v) for k,v in row(1,"manual").items() if k in t.LEGACY_FIELDS})
+    assert t.summarize(path)["methods"]["manual"]["self_ratings"] == {"unrated":1}

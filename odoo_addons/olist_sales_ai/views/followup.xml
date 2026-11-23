@@ -38,6 +38,9 @@
                 <button name="action_approve" type="object" string="Duyệt tạo việc" class="btn-primary" invisible="state != 'ready'" confirm="Tạo công việc chăm sóc với nội dung, người phụ trách và ngày hẹn đã kiểm tra?"/>
                 <button name="action_poll" type="object" string="Lấy kết quả" invisible="state != 'pending'"/>
                 <button name="action_cancel" type="object" string="Bỏ qua" invisible="state in ('approved','cancelled')"/>
+                <button name="action_trial_usable" type="object" string="Tự chấm: Dùng được" invisible="not trial_finished_at or trial_rated_at" confirm="Ghi tự đánh giá dùng được? Đây là nhận xét của người thực hiện, không phải chấm độc lập."/>
+                <button name="action_trial_needs_edit" type="object" string="Tự chấm: Cần sửa" invisible="not trial_finished_at or trial_rated_at" confirm="Ghi tự đánh giá cần sửa? Kết quả đầu tiên được giữ để đối chiếu."/>
+                <button name="action_trial_reject" type="object" string="Tự chấm: Không dùng được" invisible="not trial_finished_at or trial_rated_at" confirm="Ghi tự đánh giá không dùng được? Kết quả đầu tiên được giữ để đối chiếu."/>
                 <field name="state" widget="olist_ai_status"/>
             </header>
             <sheet>
@@ -50,6 +53,8 @@
                     <field name="trial_method"/><field name="trial_sequence"/><field name="trial_started_at"/>
                     <field name="trial_ready_at"/><field name="trial_finished_at"/><field name="trial_elapsed" invisible="not trial_finished_at"/>
                     <field name="trial_outcome" invisible="not trial_finished_at"/>
+                    <div class="text-muted" colspan="2" invisible="not trial_finished_at">Tự chấm kết quả cuối sau khi đọc/sửa; chưa phải đánh giá độc lập hoặc độ đúng của bản nháp ban đầu.</div>
+                    <field name="trial_rating"/><field name="trial_rated_at"/>
                 </group>
                 <group string="Đối chiếu"><field name="evidence" nolabel="1" colspan="2"/><field name="explanation" nolabel="1" colspan="2"/></group>
                 <group string="Nội dung sẽ được duyệt">

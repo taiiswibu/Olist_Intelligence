@@ -90,6 +90,16 @@ def main():
         page.goto(URL + "/odoo/action-" + str(xmlid("olist_sales_ai.trials_action")))
         target = page.locator(".o_data_row").filter(has_text=quote_name).first
         target.wait_for(timeout=30000)
+        target.locator(".o_data_cell").first.click()
+        page.get_by_role("button",name="Tự chấm: Dùng được",exact=True).click()
+        page.locator(".modal-dialog").get_by_role("button",name="Ok",exact=True).click()
+        page.get_by_role("button",name="Tự chấm: Dùng được",exact=True).wait_for(state="hidden",timeout=15000)
+        rated = call("olist.ai.followup.review","read",[review["id"]],fields=["trial_rating","trial_rated_by","trial_finished_at"])[0]
+        assert rated["trial_rating"]=="usable" and rated["trial_rated_by"][0]==user
+        assert rated["trial_finished_at"]==approved["trial_finished_at"]
+        page.goto(URL + "/odoo/action-" + str(xmlid("olist_sales_ai.trials_action")))
+        target = page.locator(".o_data_row").filter(has_text=quote_name).first
+        target.wait_for(timeout=30000)
         target.locator(".o_list_record_selector input").check()
         with page.expect_download(timeout=15000) as download:
             page.get_by_role("button", name="Tải CSV lượt đo", exact=True).click()
@@ -98,12 +108,13 @@ def main():
         metrics = followup_trials.summarize(output)
         assert metrics["trials"] == 1 and metrics["methods"]["manual"]["outcomes"] == {"approved": 1}
         assert not metrics["benefit_claim_ready"]
+        assert metrics["methods"]["manual"]["self_ratings"]=={"usable":1}
         assert "Measurement test customer" not in output.read_text(encoding="utf-8-sig")
         assert not errors
         context.close(); browser.close()
     report = {"database": args.database, "kind": "automated_test_fixture_not_human_pilot", "manual_trial_browser": True,
         "resume_keeps_same_trial": True, "explicit_approval_creates_activity": True, "quotation_still_draft": True,
-        "private_csv_download_parsed": True, "customer_text_omitted": True, "desktop_mobile_screenshots": True,
+        "private_csv_download_parsed": True, "self_rating_flow": True, "customer_text_omitted": True, "desktop_mobile_screenshots": True,
         "javascript_errors": errors, "human_ratings_collected": 0}
     (OUT / "measurement-browser-qa.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps(report))

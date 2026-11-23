@@ -71,6 +71,24 @@ def test_cost_is_unknown_without_pricing_and_uses_only_matching_model_rates():
     assert e.estimate_cost(trace, pricing) is None
 
 
+def test_single_rater_is_explicit_exploratory_and_not_mixed_with_two_raters(tmp_path):
+    first, second = tmp_path/"one", tmp_path/"two"
+    for path in [first, second]:
+        asyncio.run(e.run(path, limit=1))
+        with (path/"ratings.csv").open(encoding="utf-8-sig") as stream: rows=list(csv.DictReader(stream))
+        for row in rows:
+            if path == second or row["rater"] == "rater_a":
+                row.update(business_correct="1", grounded="1", usable="4", decision="edit", edit_seconds="12")
+        with (path/"ratings.csv").open("w",encoding="utf-8-sig",newline="") as stream:
+            writer=csv.DictWriter(stream,fieldnames=e.RATING_FIELDS); writer.writeheader(); writer.writerows(rows)
+    one = e.score(first, first/"ratings.csv", expected_raters=1)
+    assert one["fully_rated"] and one["rating_mode"] == "single_rater_exploratory" and not one["quality_claim_ready"]
+    assert one["required_minimum_rows"] == 1
+    e.score(second, second/"ratings.csv")
+    with pytest.raises(ValueError,match="một người"): e.compare(first,second)
+    with pytest.raises(ValueError): e.score(second,second/"ratings.csv",expected_raters=1)
+
+
 def test_failures_stay_in_denominator_and_partial_runs_cannot_be_scored(tmp_path, monkeypatch):
     from types import SimpleNamespace
     from olist import followups

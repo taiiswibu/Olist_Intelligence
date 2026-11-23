@@ -201,7 +201,9 @@ def read_run(path):
     return manifest, rows
 
 
-def score(path, ratings):
+def score(path, ratings, expected_raters=2):
+    if type(expected_raters) is not int or expected_raters not in {1, 2}:
+        raise ValueError("Chọn một người chấm thăm dò hoặc hai người chấm độc lập.")
     manifest, records = read_run(path)
     known = {r["sample_id"]: r for r in records}; marks = {}; seen = set()
     with Path(ratings).open(encoding="utf-8-sig", newline="") as stream:
@@ -223,12 +225,13 @@ def score(path, ratings):
                 raise ValueError("Lượt không có kết quả phải được tính là không đạt và bị từ chối.")
             marks[ident, rater] = mark
     counts = Counter(ident for ident, _ in marks)
-    if any(n > 2 for n in counts.values()):
-        raise ValueError("Bản đánh giá này dùng đúng hai người chấm mỗi mẫu để giữ trọng số như nhau.")
-    complete = all(counts[sample] == 2 for sample in known)
+    if any(n > expected_raters for n in counts.values()) or expected_raters == 1 and len({rater for _,rater in marks}) > 1:
+        raise ValueError("Số phiếu/người chấm vượt chế độ đã chọn; không gộp trọng số khác nhau.")
+    complete = all(counts[sample] == expected_raters for sample in known)
     output = {"evaluation_version": VERSION, "ratings_sha256": digest(ratings), "fully_rated": complete,
               "rubric_version": manifest.get("rubric_version", "legacy"),
-              "rated_rows": len(marks), "required_minimum_rows": 2*len(records), "quality_claim_ready": False,
+              "rater_count_target": expected_raters, "rating_mode": "single_rater_exploratory" if expected_raters == 1 else "two_rater_review",
+              "rated_rows": len(marks), "required_minimum_rows": expected_raters*len(records), "quality_claim_ready": False,
               "fixture_comparison_ready": complete, "strategies": {}}
     for strategy in manifest["strategies"]:
         ids = {r["sample_id"] for r in records if r["strategy"] == strategy}
@@ -237,7 +240,7 @@ def score(path, ratings):
             output["strategies"][strategy] = {"business_correct": mean(m["business_correct"] for m in selected),
                 "grounded": mean(m["grounded"] for m in selected), "usable": mean(m["usable"] for m in selected),
                 "accept_without_edit": mean(m["decision"] == "accept" for m in selected), "edit_seconds": mean(m["edit_seconds"] for m in selected)}
-    output["note"] = "Engineering fixtures; full independent ratings and business validation are required before claiming benefit. Rater identities are user supplied."
+    output["note"] = ("Single-rater exploratory feedback, not independent validation. " if expected_raters == 1 else "") + "Engineering fixtures; independent business validation is required before claiming benefit. Rater identities are user supplied."
     (Path(path)/"human_scores.json").write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
     return output
 
@@ -250,15 +253,19 @@ def compare(before, after):
     if set(left["strategies"]) != set(right["strategies"]):
         raise ValueError("Hai lượt cần cùng các baseline.")
     a, b = summarize(old), summarize(new)
-    human = {}
+    human = {}; human_target = None
     if all((Path(p)/"human_scores.json").exists() for p in [before, after]):
         first = json.loads((Path(before)/"human_scores.json").read_text(encoding="utf-8"))
         second = json.loads((Path(after)/"human_scores.json").read_text(encoding="utf-8"))
         if first["fully_rated"] and second["fully_rated"]:
             if first.get("rubric_version") != second.get("rubric_version"):
                 raise ValueError("Hai bộ phiếu dùng thang chấm khác phiên bản.")
+            if first.get("rater_count_target", 2) != second.get("rater_count_target", 2):
+                raise ValueError("Không so phiếu một người với phiếu hai người như cùng chế độ đánh giá.")
+            human_target = first.get("rater_count_target", 2)
             human = {s: {k: second["strategies"][s][k]-first["strategies"][s][k] for k in first["strategies"][s]} for s in a}
     return {"before": left["source_commit"], "after": right["source_commit"], "paired_cases": len(old), "human_deltas": human,
+        "human_rater_count_target": human_target,
         "grounding_versions": {"before": left.get("grounding_version"), "after": right.get("grounding_version")},
         "request_policies": {"before": left.get("request_policy"), "after": right.get("request_policy")},
         "source_hashes_changed": left["source_hashes"] != right["source_hashes"],

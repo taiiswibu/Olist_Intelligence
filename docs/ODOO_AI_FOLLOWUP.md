@@ -31,7 +31,7 @@ Phân tích chỉ lập đề xuất; chưa tạo Activities, chưa gửi nội 
 
 ## Đo thao tác thực tế
 
-Sau khi nâng addon lên `19.0.1.1.0`, mở một báo giá DEMO và bấm **Bắt đầu lượt đo**. Server luân phiên soạn tay, mẫu quy tắc và AI theo cấu hình; lệch thứ tự khởi đầu giữa các tài khoản. Đây là lịch luân phiên để chạy pilot, chưa phải phân nhóm ngẫu nhiên hay bằng chứng nhân quả.
+Sau khi nâng addon lên `19.0.1.2.0`, mở một báo giá DEMO và bấm **Bắt đầu lượt đo**. Server luân phiên soạn tay, mẫu quy tắc và AI theo cấu hình; lệch thứ tự khởi đầu giữa các tài khoản. Đây là lịch luân phiên để chạy pilot, chưa phải phân nhóm ngẫu nhiên hay bằng chứng nhân quả.
 
 - **Soạn tay**: bản nháp trống, đối chiếu vẫn lấy từ Odoo; không gọi backend/model.
 - **Mẫu quy tắc**: yêu cầu riêng `rules_only`, không gọi API model dù ứng dụng đang bật AI.
@@ -41,6 +41,8 @@ Mỗi người chỉ có một lượt đang mở trong công ty hiện tại. B
 
 Mở **AI hỗ trợ bán hàng → Lượt đo thao tác**, chọn đủ các lượt cần so, gồm lỗi/bỏ qua/chưa xong → **Tải CSV lượt đo**. Bản tải riêng cho người xuất và quản trị viên, không chứa tên khách, tên nhân viên, mã báo giá, số tiền hoặc nội dung liên hệ. Dữ liệu chỉ lưu local; mã người tham gia/tình huống là mã ngẫu nhiên, không phải bảo đảm ẩn danh tuyệt đối. Thời gian của lượt chưa xong để trống, không thay bằng không. Lượt soạn tay/mẫu/AI vẫn dùng chung kiểm tra nguồn cũ, quyền và phê duyệt.
 
+Một người vẫn chạy được pilot: kết thúc lượt, mở lại dòng ở **Lượt đo thao tác**, chọn **Tự chấm: Dùng được / Cần sửa / Không dùng được** rồi xác nhận. Chỉ người thực hiện tự chấm, không sửa thời gian hoặc ghi đè lựa chọn đầu. Lượt chưa có nội dung chỉ được đánh dấu không dùng được. Chấm kết quả cuối sau khi đọc/sửa, không coi đó là độ đúng của bản nháp nguyên gốc từ model. Thời gian tự chấm sau lượt đo tách khỏi thời gian làm việc. Đây là tự báo cáo, chưa phải đánh giá độc lập.
+
 Đo trên tình huống đã thống nhất và chấm nghiệp vụ riêng. Sau khi tạo Activities, nguồn thay đổi; mã tình huống mới sẽ được cấp cho bản chụp khác. Không ghép hai bản chụp khác nhau thành cặp giống hệt. Chưa có người tham gia thì phiếu và thời gian thực tế vẫn là chưa thu thập; kiểm thử tự động không thay người dùng.
 
 Đối chiếu CSV đã tải, giữ cả lượt lỗi/chưa xong:
@@ -49,7 +51,7 @@ Mở **AI hỗ trợ bán hàng → Lượt đo thao tác**, chọn đủ các l
 .venv\Scripts\python.exe scripts/benchmark_followup.py trials --csv path_to_export.csv --out data/processed/trial-summary.json
 ```
 
-Lệnh kiểm tra mã lặp, thứ tự, thời điểm UTC và phép trừ thời gian trước khi tính. Báo riêng tỷ lệ duyệt, thời gian các lượt đã duyệt, tất cả lượt kết thúc và strategy thực chạy. Không điền thời gian cho lượt chưa xong; không ghi đè báo cáo đã có. Thời gian ngắn do lỗi không được coi là làm việc nhanh. Báo cáo chỉ mô tả pilot và luôn giữ `benefit_claim_ready=false` vì CSV chưa có điểm nghiệp vụ độc lập hoặc bằng chứng cỡ mẫu đủ để kết luận.
+Lệnh kiểm tra mã lặp, thứ tự, thời điểm UTC và phép trừ thời gian trước khi tính. Báo riêng tỷ lệ duyệt, thời gian các lượt đã duyệt, tất cả lượt kết thúc, tự chấm và strategy thực chạy. CSV v2 giữ nguồn đánh giá `self`; CSV v1 vẫn đọc được nhưng phần tự chấm để chưa có dữ liệu. Không điền thời gian cho lượt chưa xong; không ghi đè báo cáo đã có. Thời gian ngắn do lỗi không được coi là làm việc nhanh. Báo cáo chỉ mô tả pilot và luôn giữ `benefit_claim_ready=false` vì chưa có điểm nghiệp vụ độc lập hoặc bằng chứng cỡ mẫu đủ để kết luận.
 
 ## Kiểm tra và lỗi kết nối
 

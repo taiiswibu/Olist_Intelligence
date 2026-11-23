@@ -286,3 +286,32 @@ class TestFollowup(TransactionCase):
         review.action_cancel()
         self.assertEqual(review.trial_finished_at, finished)
         self.assertEqual(review.trial_outcome, "failed")
+
+    def test_self_rating_is_explicit_owned_and_keeps_first_judgment(self):
+        review = self.ready()
+        review._set_internal({"trial_started_at": fields.Datetime.now() - timedelta(seconds=10), "state": "ready"})
+        with self.assertRaises(UserError):
+            review.action_trial_usable()
+        review.action_cancel()
+        finished = review.trial_finished_at
+        with self.assertRaises(UserError):
+            review.with_user(self.manager).action_trial_usable()
+        with self.assertRaises(AccessError):
+            review.write({"trial_rating": "usable"})
+        review.action_trial_usable()
+        rated = review.trial_rated_at
+        self.assertEqual(review.trial_rating, "usable")
+        self.assertEqual(review.trial_rated_by, self.staff)
+        review.action_trial_usable()
+        self.assertEqual(review.trial_rated_at, rated)
+        self.assertEqual(review.trial_finished_at, finished)
+        with self.assertRaises(UserError):
+            review.action_trial_reject()
+
+    def test_trial_without_draft_cannot_receive_positive_rating(self):
+        review = self.env["olist.ai.followup.review"].with_user(self.staff).create({"order_id": self.quote.id})
+        review._set_internal({"trial_started_at": fields.Datetime.now(), "state": "failed"})
+        with self.assertRaises(UserError):
+            review.action_trial_usable()
+        review.action_trial_reject()
+        self.assertEqual(review.trial_rating, "reject")

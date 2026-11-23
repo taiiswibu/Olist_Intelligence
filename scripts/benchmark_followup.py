@@ -29,6 +29,7 @@ def main():
     run.add_argument("--request-interval", type=float, default=0)
     score = commands.add_parser("score")
     score.add_argument("--run", type=Path, required=True);score.add_argument("--ratings", type=Path, required=True)
+    score.add_argument("--raters", type=int, choices=[1, 2], default=2)
     compare = commands.add_parser("compare")
     compare.add_argument("--before", type=Path, required=True);compare.add_argument("--after", type=Path, required=True)
     trials = commands.add_parser("trials")
@@ -42,7 +43,7 @@ def main():
                 args.live, args.max_model_calls, args.seed, json.loads(args.pricing.read_text()) if args.pricing else None,
                 evaluation.followup_transport.Policy(args.max_attempts, args.request_interval)))
         elif args.command == "score":
-            result = evaluation.score(args.run, args.ratings)
+            result = evaluation.score(args.run, args.ratings, args.raters)
         elif args.command == "compare":
             result = evaluation.compare(args.before, args.after)
         else:

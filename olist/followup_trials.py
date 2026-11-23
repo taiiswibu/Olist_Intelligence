@@ -8,17 +8,19 @@ from datetime import datetime, timezone
 from pathlib import Path
 from statistics import median
 
-SCHEMA = "followup-task-times-v1"
-FIELDS = ["schema_version", "trial_id", "participant", "case", "sequence", "assignment_version", "method", "actual_strategy", "outcome",
+SCHEMA = "followup-task-times-v2"
+LEGACY_FIELDS = ["schema_version", "trial_id", "participant", "case", "sequence", "assignment_version", "method", "actual_strategy", "outcome",
           "started_at_utc", "ready_at_utc", "finished_at_utc", "total_seconds", "after_ready_seconds", "quotation_state", "has_activity"]
+FIELDS = LEGACY_FIELDS + ["self_rating", "rated_at_utc", "rating_source"]
 METHODS = ("manual", "rules", "ai")
 
 
 def read(path):
     with Path(path).open(encoding="utf-8-sig", newline="") as stream:
         reader = csv.DictReader(stream)
-        if reader.fieldnames != FIELDS:
+        if reader.fieldnames not in (FIELDS, LEGACY_FIELDS):
             raise ValueError("Dùng CSV nguyên bản từ Lượt đo thao tác; cột hoặc phiên bản chưa đúng.")
+        legacy = reader.fieldnames == LEGACY_FIELDS
         rows = list(reader)
     seen, sequences = set(), set()
     def date(value):
@@ -26,7 +28,8 @@ def read(path):
     for row in rows:
         try:
             if None in row or any(v is None for v in row.values()): raise ValueError()
-            if row["schema_version"] != SCHEMA or row["assignment_version"] != "cyclic-v1": raise ValueError()
+            if row["schema_version"] != ("followup-task-times-v1" if legacy else SCHEMA) or row["assignment_version"] != "cyclic-v1": raise ValueError()
+            if legacy: row.update(self_rating="", rated_at_utc="", rating_source="")
             if not re.fullmatch(r"[a-f0-9]{32}", row["trial_id"]) or row["trial_id"] in seen: raise ValueError()
             if not re.fullmatch(r"P_[a-f0-9]{12}", row["participant"]) or not re.fullmatch(r"T_[a-f0-9]{12}", row["case"]): raise ValueError()
             sequence = int(row["sequence"])
@@ -47,6 +50,11 @@ def read(path):
                     if not math.isfinite(value) or abs(value-expected) > .01: raise ValueError()
                     row[key] = value
             if row["outcome"] == "approved" and ready is None: raise ValueError()
+            rated = date(row["rated_at_utc"])
+            if row["self_rating"]:
+                if row["self_rating"] not in {"usable", "needs_edit", "reject"} or not end or not rated or rated < end or row["rating_source"] != "self": raise ValueError()
+                if not ready and row["self_rating"] != "reject": raise ValueError()
+            elif rated or row["rating_source"]: raise ValueError()
             seen.add(row["trial_id"]); sequences.add((row["participant"], sequence))
         except (ValueError, TypeError, KeyError):
             raise ValueError("CSV có lượt trùng, mã/thời gian/kết quả không hợp lệ; chưa tính báo cáo.") from None
@@ -68,11 +76,14 @@ def summarize(path):
             "approved_total_p50_seconds": median(r["total_seconds"] for r in approved) if approved else None,
             "all_finished_total_p50_seconds": median(completed_times) if completed_times else None,
             "actual_strategies": dict(Counter(r["actual_strategy"] for r in selected)),
+            "self_ratings": dict(Counter(r["self_rating"] or "unrated" for r in selected)),
+            "usable_approved_count": sum(r["self_rating"] == "usable" for r in approved),
             "approved_strategy_mismatches": sum(r["actual_strategy"] not in matching for r in approved)}
     return {"schema_version": SCHEMA, "source_sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest(),
         "trials": len(rows), "participants": len({r["participant"] for r in rows}),
         "participant_case_groups_with_all_methods": sum(m == set(METHODS) for m in paired.values()),
-        "methods": methods, "human_business_ratings": "not_in_timing_export", "benefit_claim_ready": False,
+        "methods": methods, "human_business_ratings": "self_reported_not_independent" if any(r["self_rating"] for r in rows) else "not_collected",
+        "benefit_claim_ready": False,
         "assessment": "awaiting_participants" if not rows else "descriptive_pilot_only",
         "limits": ["Exported selection only; cannot establish coverage of all assigned tasks.",
                    "Cyclic assignment, changing ERP sources and learning effects do not establish causality.",

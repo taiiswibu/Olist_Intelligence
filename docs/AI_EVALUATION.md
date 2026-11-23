@@ -38,6 +38,8 @@ Muốn ước tính tiền, dùng `--pricing file.json`: cần `currency=USD`, `
 
 Hai người chấm độc lập đọc `blind_samples.csv`, không xem `results.jsonl` vì file đó có tên phương án. Điền `ratings.csv`: đúng nghiệp vụ/có căn cứ (0/1), mức dùng được (1–5), accept/edit/reject và `edit_seconds` là thời gian thực đo để đọc, sửa, chuẩn bị duyệt. Không điền thời gian ước đoán.
 
+Nếu chỉ có một người, điền các dòng `rater_a`, giữ dòng `rater_b` trống và chạy `score ... --raters 1`. Đây là `single_rater_exploratory`, không phải hai người chấm độc lập. Không điền hai tên cho cùng một người. Mặc định vẫn cần hai phiếu; compare không trộn chế độ một người và hai người. Đủ phiếu một người chỉ cho phép đối chiếu nhận xét thăm dò, `quality_claim_ready` vẫn false.
+
 Lượt không có đầu ra phải tính không đạt, mức dùng được thấp nhất và reject. Phiếu trống vẫn là chưa chấm; không dùng model đang đánh giá tự chấm thay người. Mỗi mẫu cần đúng hai phiếu; danh tính/độc lập người chấm do người chạy khai báo. Đủ phiếu cho phép đối chiếu trên fixture, chưa chứng minh tác động doanh thu hoặc nhãn đã được chuyên gia xác nhận.
 
 ```powershell
