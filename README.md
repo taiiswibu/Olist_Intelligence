@@ -123,6 +123,8 @@ Module chạy trong Odoo: **[AI hỗ trợ bán hàng](docs/ODOO_AI_FOLLOWUP.md)
 
 **Kiểm tra rủi ro báo giá:** xem cờ hiệu lực, dòng hàng, chiết khấu, thuế và điều khoản ngay trên báo giá DEMO. AI chỉ nhận mã cờ để gợi ý câu hỏi đối chiếu; dữ liệu nguồn đổi thì cần kiểm tra lại. Chức năng không sửa báo giá.
 
+**Ghi nhận xử lý:** chọn cần sửa/đúng chủ đích/cần quản lý xem, lưu lý do và lịch sử tại Odoo; kiểm tra lại để xem bằng chứng trước/sau. Bản mới không tự kế thừa xác nhận cũ.
+
 Đánh giá và riêng tư: **[Baseline, benchmark và dữ liệu gửi model](docs/AI_EVALUATION.md)**. Luồng chăm sóc chỉ gửi mã tạm và dữ kiện tối thiểu; có chế độ quy tắc không gọi cloud. Kết quả tự động tách riêng phiếu chấm nội dung của người dùng.
 
 Hướng dẫn kết nối từ đầu và Agent đa công cụ tùy chọn: **[docs/ODOO_AGENT_GUIDE_VI.md](docs/ODOO_AGENT_GUIDE_VI.md)**. Có thêm `python manage.py odoo-check` để kiểm tra kết nối chỉ đọc. Agent Lab chạy CLI riêng, không thay Assistant web; cần cài `requirements-agent.txt`.

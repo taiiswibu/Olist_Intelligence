@@ -12,6 +12,16 @@ Bản kiểm tra giữ nguyên nguồn và lịch sử. Khi dòng hàng, hiệu 
 
 Kiểm thử riêng: `tests/test_quote_risks.py` kiểm tra tại HTTP của cả hai model; addon `tests/test_risk.py` kiểm tra quy tắc, nguồn cũ, quyền và không ghi nghiệp vụ. Browser runner `tests/browser_quote_risks.py` chỉ nhận database tạm có dấu sở hữu từ `scripts/test_odoo_ai.py --keep-database`; không đưa dữ liệu fixture vào database đang sử dụng. Chưa có kết quả người bán chấm hoặc bằng chứng AI phát hiện rủi ro tốt hơn quy tắc.
 
+### Ghi nhận và kiểm tra lại
+
+Bấm **Ghi nhận xử lý**, chọn **Cần sửa**, **Đúng chủ đích** hoặc **Cần quản lý xem** cho cờ cần xử lý và nhập lý do (tối đa một nghìn ký tự). Các cờ chưa chọn được giữ nguyên. Nhận xét áp dụng cho toàn bộ bằng chứng của mã cờ trong bản đang xem; người bán tự ghi nhận, quản lý xem theo quyền nhóm. **Đúng chủ đích** vẫn giữ cờ và chưa thay cho phê duyệt chứng từ. Bộ lọc **Cần quản lý xem** dùng lựa chọn mới nhất của từng cờ, không tạo Activity hoặc gửi thông báo.
+
+Mỗi thay đổi lưu người ghi, thời điểm server và lý do vào **Lịch sử xử lý**. Không sửa/xóa lịch sử; ghi lại cùng lựa chọn và lý do không tạo thêm dòng. Nếu có người vừa ghi nhận cùng cờ khi bạn đang nhập, cửa sổ yêu cầu mở lại để đối chiếu. Nguồn đã đổi thì phải kiểm tra lại trước khi ghi nhận.
+
+**Kiểm tra lại** liên kết bản mới với bản đang xem; kiểm tra từ báo giá liên kết với bản gần nhất được phép đọc. Tab **Trước/sau** hiển thị bằng chứng và ba nhóm: mới xuất hiện, vẫn xuất hiện, không còn xuất hiện. Sửa một phần dòng hàng mà cùng mã vẫn còn thì tiếp tục ghi là vẫn xuất hiện. Cờ biến mất có thể do dữ liệu/trạng thái thay đổi, chưa tự chứng minh nghiệp vụ đã đúng. Bản mới bắt đầu **Chưa ghi nhận**, không tự nhận lý do hay xác nhận từ bản cũ.
+
+Các lý do chỉ lưu trong model ghi nhận tại Odoo, không đưa vào prompt hoặc ghi chú gửi khách. Luồng này hoạt động khi không có API model. Mốc thời gian dùng truy vết, chưa phải thời gian lao động hoặc bằng chứng tiết kiệm thời gian. Chỉnh giá, thuế và điều khoản trên form Odoo rồi kiểm tra lại; module không tự sửa S00021 hay chứng từ khác.
+
 Xem thêm [baseline và bảo vệ dữ liệu](AI_EVALUATION.md). Luồng chăm sóc mặc định chỉ gửi mã tạm, trạng thái và dấu hiệu nghiệp vụ; tên khách, số tiền và ghi chú giữ local. Có thể đặt `FOLLOWUP_AI_MODE=rules_only` rồi khởi động lại backend để không gọi API model cho luồng này.
 
 Addon Odoo Community 19 dùng Sales và Activities. Bản đầu chỉ đọc khách/báo giá Olist DEMO nháp hoặc đã gửi; không cần CRM/Project.
