@@ -1,0 +1,278 @@
+{
+  "title": "Chặn lỗi đã biết và đo lại AI chăm sóc bán hàng",
+  "created_at_utc": "2026-11-23T15:22:15.296608+00:00",
+  "before_commit": "7ccf5cb2542c0d0c730b5bb55dba576033113ab8",
+  "tested_commit": "6b85ed0d28d19bb5d285e0bb3e57c42b1f770d94",
+  "worktree_dirty_at_run": false,
+  "grounding_version": "followup-grounding-v1",
+  "fixture_sha256": "fe652bdd8453a467f5db201ead16fac5822333f302c2c42c51945ba72af744b1",
+  "source_hashes": {
+    "olist/followups.py": "37e91294aeb51e45fea16cd2a83d994f15fd144ff09015253af939f7852f0b79",
+    "olist/followup_privacy.py": "e1c8e115d1428fe93d24b7491dae641142f74f60f746894f2fbede805d618786",
+    "olist/followup_grounding.py": "9a29eba2bb11d0dc4f564f8484d3fcaf09872e73347937658255f83c93360425",
+    "olist/team_model.py": "88ba725d47ea82ac50b4fdc624dd7c97dfb4c27757d47551c9ed1ff2da00b311",
+    "olist/followup_evaluation.py": "0200820821afd391a9288e97fff0dd67b6ac733896d6fb57442536eb5f08f887",
+    ".agents/skills/olist-customer-followup/SKILL.md": "4605ac8eb2a9c3e16e0f90695561bbe96cb89debfac21025e178c4556bb3ae82",
+    ".agents/skills/olist-followup-check/SKILL.md": "1ac82238a082691a36f8f11c094d14b817cdd32b7de0b760cb5e8f63870fa230"
+  },
+  "models": {
+    "groq": "openai/gpt-oss-20b",
+    "gemini": "gemini-3.5-flash-lite"
+  },
+  "split": "dev",
+  "families": 10,
+  "repeats": 1,
+  "paired_records": 40,
+  "before_summary": {
+    "gemini": {
+      "cases": 10,
+      "completed": 9,
+      "completion_rate": 0.9,
+      "contract_pass_rate": 0.9,
+      "elapsed_p50_ms": 1437.5,
+      "elapsed_p95_ms": 1855.05,
+      "model_calls": 10,
+      "http_requests_privacy_checked": 10,
+      "tokens_reported": null,
+      "estimated_cost": null,
+      "failures": {
+        "HTTPStatusError": 1
+      },
+      "http_status_counts": {},
+      "http_errors_without_status": 1,
+      "human_quality": "not_scored"
+    },
+    "groq": {
+      "cases": 10,
+      "completed": 6,
+      "completion_rate": 0.6,
+      "contract_pass_rate": 0.6,
+      "elapsed_p50_ms": 969.0,
+      "elapsed_p95_ms": 1883.15,
+      "model_calls": 10,
+      "http_requests_privacy_checked": 10,
+      "tokens_reported": null,
+      "estimated_cost": null,
+      "failures": {
+        "HTTPStatusError": 4
+      },
+      "http_status_counts": {},
+      "http_errors_without_status": 4,
+      "human_quality": "not_scored"
+    },
+    "pipeline": {
+      "cases": 10,
+      "completed": 3,
+      "completion_rate": 0.3,
+      "contract_pass_rate": 0.3,
+      "elapsed_p50_ms": 2125.0,
+      "elapsed_p95_ms": 2398.8,
+      "model_calls": 16,
+      "http_requests_privacy_checked": 16,
+      "tokens_reported": null,
+      "estimated_cost": null,
+      "failures": {
+        "ReviewRejected": 3,
+        "HTTPStatusError": 4
+      },
+      "http_status_counts": {},
+      "http_errors_without_status": 4,
+      "human_quality": "not_scored"
+    },
+    "rules": {
+      "cases": 10,
+      "completed": 10,
+      "completion_rate": 1,
+      "contract_pass_rate": 1,
+      "elapsed_p50_ms": 16.0,
+      "elapsed_p95_ms": 16.0,
+      "model_calls": 0,
+      "http_requests_privacy_checked": 0,
+      "tokens_reported": 0,
+      "estimated_cost": 0,
+      "failures": {},
+      "http_status_counts": {},
+      "http_errors_without_status": 0,
+      "human_quality": "not_scored"
+    }
+  },
+  "after_summary": {
+    "gemini": {
+      "cases": 10,
+      "completed": 2,
+      "completion_rate": 0.2,
+      "contract_pass_rate": 0.2,
+      "elapsed_p50_ms": 2008.0,
+      "elapsed_p95_ms": 21455.05,
+      "model_calls": 10,
+      "http_requests_privacy_checked": 10,
+      "tokens_reported": null,
+      "estimated_cost": null,
+      "failures": {
+        "HTTPStatusError": 6,
+        "GroundingRejected": 1,
+        "ReadTimeout": 1
+      },
+      "http_status_counts": {
+        "503": 6
+      },
+      "http_errors_without_status": 0,
+      "human_quality": "not_scored"
+    },
+    "groq": {
+      "cases": 10,
+      "completed": 2,
+      "completion_rate": 0.2,
+      "contract_pass_rate": 0.2,
+      "elapsed_p50_ms": 1187.5,
+      "elapsed_p95_ms": 1289.7,
+      "model_calls": 10,
+      "http_requests_privacy_checked": 10,
+      "tokens_reported": null,
+      "estimated_cost": null,
+      "failures": {
+        "GroundingRejected": 6,
+        "HTTPStatusError": 2
+      },
+      "http_status_counts": {
+        "429": 2
+      },
+      "http_errors_without_status": 0,
+      "human_quality": "not_scored"
+    },
+    "pipeline": {
+      "cases": 10,
+      "completed": 1,
+      "completion_rate": 0.1,
+      "contract_pass_rate": 0.1,
+      "elapsed_p50_ms": 1297.0,
+      "elapsed_p95_ms": 2269.75,
+      "model_calls": 11,
+      "http_requests_privacy_checked": 11,
+      "tokens_reported": null,
+      "estimated_cost": null,
+      "failures": {
+        "GroundingRejected": 6,
+        "HTTPStatusError": 3
+      },
+      "http_status_counts": {
+        "429": 3
+      },
+      "http_errors_without_status": 0,
+      "human_quality": "not_scored"
+    },
+    "rules": {
+      "cases": 10,
+      "completed": 10,
+      "completion_rate": 1,
+      "contract_pass_rate": 1,
+      "elapsed_p50_ms": 15.0,
+      "elapsed_p95_ms": 16.0,
+      "model_calls": 0,
+      "http_requests_privacy_checked": 0,
+      "tokens_reported": 0,
+      "estimated_cost": 0,
+      "failures": {},
+      "http_status_counts": {},
+      "http_errors_without_status": 0,
+      "human_quality": "not_scored"
+    }
+  },
+  "known_error_replay": {
+    "old_returned_drafts": 28,
+    "rejected_by_new_gate": 13,
+    "previously_flagged_by_assistant": 11,
+    "previously_flagged_rejected": 11,
+    "note": "Retrospective development regression, not unseen evaluation. Two additional rejections reflect the stricter existing-activity note requirement."
+  },
+  "comparison": {
+    "before": "7ccf5cb2542c0d0c730b5bb55dba576033113ab8",
+    "after": "6b85ed0d28d19bb5d285e0bb3e57c42b1f770d94",
+    "paired_cases": 40,
+    "human_deltas": {},
+    "grounding_versions": {
+      "before": null,
+      "after": "followup-grounding-v1"
+    },
+    "source_hashes_changed": true,
+    "deltas": {
+      "gemini": {
+        "completion_rate": -0.7,
+        "contract_pass_rate": -0.7,
+        "elapsed_p50_ms": 570.5,
+        "elapsed_p95_ms": 19600.0
+      },
+      "groq": {
+        "completion_rate": -0.39999999999999997,
+        "contract_pass_rate": -0.39999999999999997,
+        "elapsed_p50_ms": 218.5,
+        "elapsed_p95_ms": -593.45
+      },
+      "pipeline": {
+        "completion_rate": -0.19999999999999998,
+        "contract_pass_rate": -0.19999999999999998,
+        "elapsed_p50_ms": -828.0,
+        "elapsed_p95_ms": -129.05000000000018
+      },
+      "rules": {
+        "completion_rate": 0,
+        "contract_pass_rate": 0,
+        "elapsed_p50_ms": -1.0,
+        "elapsed_p95_ms": 0.0
+      }
+    },
+    "note": "Contract and latency changes only; this is not evidence of higher semantic quality or sales improvement."
+  },
+  "assistant_readback": {
+    "kind": "single_assistant_not_blinded",
+    "returned_drafts_read": 15,
+    "cloud_drafts_read": 5,
+    "human_raters": 0,
+    "human_quality": "not_scored",
+    "note": "No additional issue flagged in five returned cloud drafts in this reading. Strong selection by gate and transport failures; not a quality-rate estimate."
+  },
+  "assessment": "Known-error blocking verified; usability and business benefit remain unproven.",
+  "observed_failures": {
+    "HTTPStatusError": 11,
+    "GroundingRejected": 13,
+    "ReadTimeout": 1
+  },
+  "http_status_counts": {
+    "503": 6,
+    "429": 5
+  },
+  "http_requests_privacy_checked": 31,
+  "limits": [
+    "The stricter filter reduced completion; this is not evidence of a better end-user experience.",
+    "Provider availability and rate limits differ across runs; completion changes cannot isolate prompt/filter effects.",
+    "The gate uses finite Vietnamese patterns, may miss paraphrases or reject legitimate quoted/conditional text.",
+    "Development cases only, no reserved evaluation, no independent expert labels or user time measurements.",
+    "No hidden retry, automatic rewrite, or template fallback. Failed cases remain in the denominator.",
+    "No Odoo business writes or real customer data used in the benchmark."
+  ],
+  "next_evidence_needed": [
+    "Stable provider access before repeating the frozen comparison.",
+    "Independent blind business ratings; model review is not a substitute.",
+    "Paired measurement of total seller time and errors against manual/template workflows."
+  ],
+  "verification": {
+    "backend_tests_passed": 181,
+    "both_skills_validated": true,
+    "privacy_http_checks_passed": true,
+    "read_only_runtime_smoke_passed": true,
+    "fixture_and_old_results_preserved": true,
+    "human_ratings_blank": true
+  },
+  "artifacts_local": {
+    "before": "data/processed/followup_evaluations/dev-review-20261123",
+    "after": "data/processed/followup_evaluations/dev-grounding-20261123",
+    "known_error_replay": "data/processed/followup_evaluations/grounding-replay-20261123.json"
+  },
+  "evidence_sha256": {
+    "before_results": "73429435cf8e9772ce70901092cef2a5dc213ae31eb51565e7101ed0d6a873b6",
+    "after_results": "f0705fb7f5ec4b402aa7ea013266ac0277c9a603f1e1efec2831defa64bf0c18",
+    "after_manifest": "38b9c5b4b117e189ce5cbd8432571ef66529febb494f0f51d618097eb346f173",
+    "replay": "0b7d95b34901ebf6da025964cf49d0a634d6be6908c8b0b8ec158e3bd25af433",
+    "review": "65b86afc96f58395f9f2254a9d5fe403ef509029f16176dfeeaae2786a1727bb"
+  }
+}

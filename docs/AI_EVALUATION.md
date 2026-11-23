@@ -77,6 +77,21 @@ Xem [số liệu, lỗi và nhận xét từng trường hợp](../reports/follo
 
 Trace mới giữ HTTP status và nhóm lỗi (`rate_limited`, `request_rejected`, `provider_error`), không giữ body/header/URL lỗi nhà cung cấp. Lỗi 429 được ghi nhận là giới hạn tần suất/hạn mức từ dịch vụ, không tự kết luận cần mua thêm quota. Các lượt cũ thiếu status vẫn được báo là chưa phân loại. Manifest giữ phiên bản/hash bộ lọc; compare hiển thị phiên bản trước/sau vì bộ lọc chặt hơn có thể làm tỷ lệ hoàn tất giảm.
 
+Lượt `dev-grounding-20261123` chạy trên commit đã khóa `6b85ed0`, cùng mười họ, seed và bốn baseline của lượt trước:
+
+| Phương án | Hoàn tất trước | Hoàn tất sau |
+|---|---:|---:|
+| rules | 10/10 | 10/10 |
+| Groq | 6/10 | 2/10 |
+| Gemini | 9/10 | 2/10 |
+| pipeline | 3/10 | 1/10 |
+
+Lượt mới có 13 `GroundingRejected`, 6 HTTP 503, 5 HTTP 429 và một timeout. Khi phát lại 28 bản nháp cũ qua bộ chặn, cả 11 bản từng được assistant đánh dấu cần sửa đều bị chặn. Hai bản khác bị chặn theo phạm vi note rà việc hiện có đã siết lại. Đây là kiểm tra trên dữ liệu phát triển đã biết; không được dùng để tuyên bố độ chính xác trên mẫu mới. Một assistant đã đọc 15 đầu ra còn lại của lượt mới, gồm năm đầu ra cloud; chưa phải người dùng chấm mù.
+
+**Đã có bằng chứng chặn lỗi đã biết; chưa có bằng chứng AI tốt hơn hoặc người bán làm nhanh hơn.** Bộ lọc chặt hơn và tình trạng dịch vụ đều khác lượt trước, nên không quy toàn bộ thay đổi cho prompt/model. Xem [bằng chứng và giới hạn của lượt sửa](../reports/followup_grounding_20261123.json). Kết quả cũ được giữ nguyên, không tự thử lại hoặc chọn lượt đẹp hơn.
+
+Trước khi chạy tập dự phòng, cần ổn định truy cập dịch vụ và khóa bản phát triển. Sau đó hai người chấm riêng phiếu mù; đo thêm thời gian người bán từ mở báo giá đến duyệt xong trong Odoo, cả thời gian đọc/sửa/lỗi/chờ. So với thao tác thủ công và mẫu quy tắc, phân công thứ tự khác nhau giữa người tham gia để giảm ảnh hưởng học lại tình huống. Chốt tiêu chí trước lượt đo: giảm tổng thời gian mà không tăng lỗi nghiệp vụ; pilot chỉ để ước lượng biến động và chọn cỡ mẫu tiếp theo, không suy ra hiệu quả từ một vài người dùng. `edit_seconds` trong phiếu nội dung chỉ là thời gian đọc/sửa để chuẩn bị duyệt, không thay cho tổng thời gian làm việc trong Odoo.
+
 ## Ranh giới dữ liệu
 
 `followup-minimized-v1` chỉ cho mã tạm mỗi lượt, draft/sent, mã lý do hữu hạn, có việc hay chưa và allowed_actions ra API. Tên, mã thật, số tiền/tiền tệ, ngày cụ thể, người phụ trách và ghi chú giữ local. Ghép kết quả với ID Odoo tại máy. JSON đã serialize được kiểm tra trước transport ở cả Groq và Gemini; trường ngoài danh sách bị chặn. Bản nháp có số, email/URL hoặc hành động ngoài phạm vi bị chặn trước khi chuyển model thứ hai.
