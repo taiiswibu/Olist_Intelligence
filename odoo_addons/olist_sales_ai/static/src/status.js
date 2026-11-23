@@ -15,7 +15,7 @@ class FollowupStatus extends Component {
         onWillUnmount(() => { this.active = false; clearInterval(this.timer); });
     }
     get label() {
-        return { pending: "Đang phân tích", ready: "Chờ duyệt", approved: "Đã giao việc", failed: "Chưa hoàn tất", cancelled: "Đã bỏ qua", checked: "Đã kiểm tra quy tắc", explained: "Đã diễn giải" }[this.props.record.data[this.props.name]] || "";
+        return { pending: "Đang phân tích", ready: "Chờ duyệt", approved: "Đã giao việc", failed: "Chưa hoàn tất", cancelled: "Đã bỏ qua", checked: "Đã kiểm tra quy tắc", explained: "Đã diễn giải", prepared: "Đã lọc theo Odoo", ranked: "Đã nhận xếp hạng" }[this.props.record.data[this.props.name]] || "";
     }
     async poll() {
         if (!this.active || this.busy || this.props.record.data[this.props.name] !== "pending") return;

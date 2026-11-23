@@ -1,0 +1,57 @@
+<odoo>
+    <record id="product_advice_wizard_form" model="ir.ui.view">
+        <field name="name">olist.product.advice.wizard</field><field name="model">olist.ai.product.advice.wizard</field>
+        <field name="arch" type="xml"><form string="Nhu cầu và ngân sách">
+            <div class="alert alert-info">Mỗi phương án là một sản phẩm với số lượng bên dưới. Ngân sách gồm thuế theo cấu hình Odoo. Nhu cầu và giá cụ thể giữ local; chưa tạo báo giá.</div>
+            <group><field name="partner_id" options="{'no_create': True}"/><field name="need" placeholder="Ví dụ: tìm quà tặng sinh nhật"/>
+                <field name="intent"/><field name="quantity"/><field name="currency_id" invisible="True"/><field name="budget"/></group>
+            <footer><button name="action_generate" type="object" string="Xem phương án" class="btn-primary"/><button string="Hủy" special="cancel"/></footer>
+        </form></field>
+    </record>
+    <record id="product_advice_form" model="ir.ui.view">
+        <field name="name">olist.product.advice.form</field><field name="model">olist.ai.product.advice</field>
+        <field name="arch" type="xml"><form create="false" edit="false" delete="false" duplicate="false">
+            <header><button name="action_rank" type="object" string="Nhờ AI xếp hạng" class="btn-primary" invisible="job_started or not shown_option_ids"/><field name="state" widget="olist_ai_status"/></header>
+            <sheet><field name="job_started" invisible="True"/><field name="currency_id" invisible="True"/>
+                <group><field name="partner_id"/><field name="need"/><field name="intent"/><field name="quantity"/><field name="budget"/><field name="checked_at"/></group>
+                <field name="message" nolabel="1"/>
+                <div class="alert alert-info">Danh mục DEMO chỉ có thông tin nhóm hàng. Cần đối chiếu sản phẩm thực tế, thông số, tồn kho và nguồn giá trước khi chào khách. Chọn phương án chỉ lập đề xuất; tạo báo giá nháp cần tick và duyệt riêng.</div>
+                <field name="shown_option_ids" nolabel="1" mode="kanban"><kanban create="false" edit="false" delete="false" records_draggable="false">
+                    <field name="currency_id"/>
+                    <templates><t t-name="card"><strong><field name="product_id"/></strong><div><field name="reason"/></div>
+                        <div>Đơn giá: <field name="unit_price"/></div><div>Trước thuế: <field name="subtotal"/></div><div>Thuế: <field name="tax"/></div>
+                        <div><strong>Tổng: <field name="total"/></strong></div><div>Ngân sách còn lại: <field name="remaining"/></div>
+                        <button name="action_propose" type="object" string="Chọn để lập đề xuất" class="btn btn-primary mt-2"/>
+                    </t></templates>
+                </kanban></field>
+                <notebook><page string="Lịch sử model"><field name="trace" nolabel="1"/></page></notebook>
+            </sheet>
+        </form></field>
+    </record>
+    <record id="product_advice_list" model="ir.ui.view">
+        <field name="name">olist.product.advice.list</field><field name="model">olist.ai.product.advice</field>
+        <field name="arch" type="xml"><list create="false" edit="false" delete="false"><field name="partner_id"/><field name="intent"/><field name="budget"/><field name="currency_id" column_invisible="True"/><field name="owner_id"/><field name="checked_at"/><field name="state"/></list></field>
+    </record>
+    <record id="product_option_form" model="ir.ui.view">
+        <field name="name">olist.product.option.form</field><field name="model">olist.ai.product.option</field>
+        <field name="arch" type="xml"><form create="false" delete="false" duplicate="false">
+            <header><button name="action_approve" type="object" string="Duyệt tạo báo giá nháp" class="btn-primary" invisible="state != 'proposed'" confirm="Tạo báo giá nháp theo đúng phương án đã đối chiếu?"/><field name="state" widget="statusbar"/></header>
+            <sheet><field name="currency_id" invisible="True"/><div class="alert alert-info">Đề xuất giữ nguyên nguồn giá đã đọc. Server đối chiếu lại giá, thuế và ngân sách trước khi ghi Odoo.</div>
+                <group><field name="advice_id"/><field name="partner_id"/><field name="product_id"/><field name="unit_price"/><field name="subtotal"/><field name="tax"/><field name="total"/><field name="remaining"/></group>
+                <field name="source_html" nolabel="1"/>
+                <field name="approval_checked" invisible="state != 'proposed'"/>
+                <group invisible="not quote_id"><field name="quote_id"/><field name="approved_by"/><field name="approved_at"/></group>
+            </sheet>
+        </form></field>
+    </record>
+    <record id="product_option_list" model="ir.ui.view">
+        <field name="name">olist.product.option.list</field><field name="model">olist.ai.product.option</field>
+        <field name="arch" type="xml"><list create="false" edit="false" delete="false"><field name="partner_id"/><field name="product_id"/><field name="total"/><field name="currency_id" column_invisible="True"/><field name="state"/><field name="quote_id"/></list></field>
+    </record>
+    <record id="product_advice_start" model="ir.actions.act_window"><field name="name">Nhu cầu và ngân sách</field><field name="res_model">olist.ai.product.advice.wizard</field><field name="view_mode">form</field><field name="target">new</field></record>
+    <record id="product_advice_history" model="ir.actions.act_window"><field name="name">Lịch sử gợi ý sản phẩm</field><field name="res_model">olist.ai.product.advice</field><field name="view_mode">list,form</field></record>
+    <record id="product_option_pending" model="ir.actions.act_window"><field name="name">Đề xuất từ sản phẩm</field><field name="res_model">olist.ai.product.option</field><field name="view_mode">list,form</field><field name="domain">[('state', 'in', ['proposed','done'])]</field></record>
+    <menuitem id="product_advice_menu" name="Gợi ý theo ngân sách" parent="root_menu" action="product_advice_start" sequence="5"/>
+    <menuitem id="product_advice_history_menu" name="Lịch sử gợi ý" parent="root_menu" action="product_advice_history" sequence="6"/>
+    <menuitem id="product_option_menu" name="Đề xuất từ sản phẩm" parent="root_menu" action="product_option_pending" sequence="7"/>
+</odoo>

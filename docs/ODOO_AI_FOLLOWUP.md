@@ -1,5 +1,17 @@
 # AI hỗ trợ bán hàng trong Odoo
 
+## Gợi ý sản phẩm theo nhu cầu và ngân sách
+
+Mở **AI hỗ trợ bán hàng → Gợi ý theo ngân sách**, chọn khách DEMO, nhập nhu cầu, số lượng nguyên và ngân sách gồm thuế bằng BRL rồi bấm **Xem phương án**. Chọn nhóm nhu cầu nếu hệ thống chưa nhận diện được một nhóm rõ ràng. Mỗi phương án là một sản phẩm với số lượng đã nhập; ba phương án là các lựa chọn thay thế, không phải một giỏ hàng cộng chung.
+
+Odoo tính giá trên báo giá trong bộ nhớ, từ **OLIST DEMO BRL**, khách, vị trí tài chính và thuế hiện tại. Không tạo chứng từ ở bước tìm phương án. Giá thẻ USD không bị coi là BRL; khi quy đổi, hiển thị nguồn tỷ giá và ngày cấu hình của Odoo, chưa phải tỷ giá thị trường mới nhất. Thiếu tỷ giá có hiệu lực thì báo lỗi để kiểm tra cấu hình. Tối đa năm trăm sản phẩm DEMO; phí vận chuyển lịch sử, sản phẩm lưu trữ, không bán hoặc chưa có giá dương không được dùng làm lựa chọn. Chưa có lựa chọn khớp thì báo rõ, không thêm sản phẩm giả.
+
+Mặc định hiển thị ba lựa chọn rẻ nhất thuộc nhóm và đủ ngân sách. **Nhờ AI xếp hạng** dùng Groq chọn và Gemini kiểm tra trong tối đa mười hai ứng viên rẻ nhất đã qua lọc. AI chỉ nhận nhóm nhu cầu, mã tạm, nhóm hàng hữu hạn và mức giá tương đối; tên khách, nhu cầu nguyên văn, ID thật, số lượng, ngân sách, giá và thuế cụ thể giữ trong Odoo. Lý do chỉ lấy từ danh sách cho phép, không suy ra cấu hình, chất lượng, tồn kho hoặc giao hàng từ tên nhóm DEMO. Lỗi API hoặc kết quả sai thì giữ lựa chọn local và ghi trạng thái chưa có xếp hạng AI; không âm thầm ghi là AI thành công. `FOLLOWUP_AI_MODE=rules_only` trả thứ tự mẫu và không gọi model.
+
+Bấm **Chọn để lập đề xuất** để mở bản chờ duyệt, đọc nguồn giá và tổng tiền, tick đồng ý rồi **Duyệt tạo báo giá nháp**. Server đọc lại dữ liệu trước khi ghi; giá, thuế, khách hoặc ngày đối chiếu đã đổi thì yêu cầu tạo lượt gợi ý mới. Duyệt lặp dùng lại cùng chứng từ, không xác nhận đơn hoặc xuất hóa đơn. Xem lại tại **Lịch sử gợi ý** và **Đề xuất từ sản phẩm**; nhân viên xử lý lượt của mình, quản lý xử lý nhóm mình, trong công ty đang chọn.
+
+Kiểm thử dùng giá/thuế và phép đổi tiền biết trước trong database tạm, kiểm tra riêng tư tại HTTP của cả hai model và luồng duyệt trên trình duyệt. Đây là bằng chứng hành vi kỹ thuật; chưa chứng minh xếp hạng AI phù hợp hơn ba lựa chọn theo giá hoặc giúp người bán nhanh hơn. Danh mục DEMO hiện chủ yếu có nhóm hàng, chưa đủ thông số để kết luận sản phẩm đáp ứng một yêu cầu kỹ thuật cụ thể.
+
 ## Kiểm tra rủi ro báo giá
 
 Mở báo giá DEMO nháp/đã gửi → **Kiểm tra rủi ro**. Odoo đối chiếu hạn hiệu lực (sắp hết trong ba ngày), dòng sản phẩm, số lượng, đơn giá, chiết khấu, thuế đã chọn, trạng thái sản phẩm và điều khoản thanh toán. Mỗi cờ kèm bằng chứng tại máy và mức cần xem; đây chưa phải đánh giá tín dụng, lợi nhuận hoặc kết luận tuân thủ thuế.

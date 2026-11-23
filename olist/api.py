@@ -20,9 +20,11 @@ from . import sales
 from . import sales_pricing
 from . import sales_exports
 from .followups import router as followup_router
+from .product_advisor import router as product_advisor_router
 
 app = FastAPI(title="Olist Intelligence", version=__version__)
 app.include_router(followup_router)
+app.include_router(product_advisor_router)
 app.mount("/assets", StaticFiles(directory=ROOT / "frontend/assets"), name="assets")
 
 
