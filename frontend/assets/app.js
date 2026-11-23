@@ -115,6 +115,7 @@ function responseHTML(r){
  if(data?.length){const keys=Object.keys(data[0]);extra=`<details class="evidence"><summary>Xem ${data.length} dòng dữ liệu từ công cụ</summary><div class="table-scroll"><table class="data-table"><thead><tr>${keys.map(k=>`<th>${esc(k)}</th>`).join('')}</tr></thead><tbody>${data.map(row=>`<tr>${keys.map(k=>`<td>${esc(typeof row[k]==='number'?new Intl.NumberFormat('vi-VN',{maximumFractionDigits:3}).format(row[k]):row[k])}</td>`).join('')}</tr>`).join('')}</tbody></table></div></details>`;}
  if(r.sql)extra+=`<details class="evidence"><summary>SQL & phạm vi truy vấn</summary><div class="evidence-content"><p>${esc(scopeText(r.filters))}</p><pre>${esc(r.sql)}</pre></div></details>`;
  if(r.sources?.length)extra+=r.sources.map(s=>`<details class="evidence"><summary>${esc(s.section)} · ${esc(s.source)}</summary><div class="evidence-content">${basicMarkdown(s.text)}<p class="mono">Chunk ${esc(s.id)} · ${esc(r.retrieval)}</p></div></details>`).join('');
+ if(r.skills?.length)extra+=`<p class="small-text muted">Skill đã nạp: ${r.skills.map(s=>esc(s.label)).join(' · ')}</p>`;
  if(r.evidence?.length)extra+=r.evidence.map(teamEvidence).join('');
  if(r.trace?.length)extra+=`<details class="evidence"><summary>Các bước xử lý · ${r.trace.length} sự kiện</summary><div class="evidence-content">${teamTrace(r.trace)}</div></details>`;
  if(r.run_id&&r.evidence?.some(e=>['business_kpis','business_breakdown'].includes(e.tool)))extra+=`<button class="button secondary small report-from-chat" data-report-chat="${esc(r.run_id)}">${icon('chart')}Đưa vào báo cáo</button>`;
@@ -128,6 +129,9 @@ function teamEvidence(e){
  const r=e.result;
  let content;
  if(r?.values){const labels={orders:'Tổng số đơn',delivered_orders:'Đơn đã giao',product_gmv:'GMV hàng hóa (BRL)',freight:'Cước (BRL)',canceled_orders:'Đơn hủy',late_eligible:'Đơn đủ ngày giao',late_orders:'Đơn giao trễ',product_aov:'AOV hàng hóa (BRL)',cancellation_rate:'Tỷ lệ hủy',late_delivery_rate:'Tỷ lệ giao trễ'};content=`<div class="table-scroll"><table class="data-table"><tbody>${Object.entries(r.values).map(([k,v])=>`<tr><th>${esc(labels[k]||k)}</th><td>${esc(k.endsWith('_rate')?percent(v):['product_gmv','freight','product_aov'].includes(k)?money(v):typeof v==='number'?number(v):v??'—')}</td></tr>`).join('')}</tbody></table></div><p>${esc(r.definition)}</p>`;}
+ else if(e.tool==='review_current_quotation'&&r?.payload&&r?.lines){content=`<div class="sales-review-evidence">${salesReviewTable(r)}</div><p class="small-text muted">${esc(r.policy)}<br>Bản chụp lúc gửi; sửa form sẽ cần kiểm tra lại.</p><button class="button secondary small" data-sales-return>Về form ERP</button>`;}
+ else if(e.tool==='odoo_quotation_document'&&Number.isSafeInteger(r?.order_id)){content=`<p>${esc(r.name)} · ${esc(money(r.total,r.currency))} · ${esc(salesStatus[r.state]||r.state)}</p><button class="button secondary small" data-sales-pdf="${r.order_id}">${icon('download')}Tải báo giá PDF</button><p class="small-text muted">Đọc lại từ Odoo lúc tải. Không tự gửi cho khách.</p>`;}
+ else if(e.tool==='read_odoo_quotation'&&r?.lines){content=salesOrderHTML(r);}
  else if(r?.sources){content=r.sources.map(x=>`<p><strong>${esc(x.section)}</strong> · ${esc(x.source)} · ${esc(x.id)}</p><p>${basicMarkdown(x.text)}</p>`).join('')||'<p>Không có tài liệu phù hợp.</p>';}
  else content=`<pre>${esc(JSON.stringify(r,null,2))}</pre>`;
  if(r?.filters)content=`<p>${esc(scopeText(r.filters))}</p>`+content;
@@ -155,7 +159,7 @@ async function assistant(){
  ${active&&!team?.ready?'<div class="notice">Đội agent chưa sẵn sàng. Kiểm tra Groq/Gemini và cài <code>requirements-agent.txt</code>. Bạn vẫn có thể dùng Trợ lý thường.</div>':''}
  <div class="chat-messages" id="chat-messages">${chatTranscript()}</div>
  <form class="chat-composer" id="chat-form"><div class="composer-input"><textarea name="question" id="chat-input" rows="2" maxlength="2000" required placeholder="Đặt một câu hỏi về dữ liệu của bạn…" aria-label="Câu hỏi cho trợ lý"></textarea><button class="button" type="submit" ${state.busy?'disabled':''} aria-label="Gửi câu hỏi">${icon('send')}</button></div><p class="composer-note">Enter để gửi · Shift + Enter để xuống dòng · Khoảng ngày: ${esc(scopeText())}</p></form></section>
- <aside class="chat-aside"><div class="panel side-card"><h3>Đội agent</h3><ul class="tool-list">${roles.map(r=>`<li>${icon(r.role==='bi'?'chart':r.role==='erp'?'layers':r.role==='knowledge'?'book':'spark')}<span>${esc(r.label)}${r.optional?' · tùy chọn':''}<small>${r.configured?esc(r.provider)+' / '+esc(r.model):'Chưa cấu hình '+esc(r.provider)}</small></span></li>`).join('')}</ul></div><div class="panel side-card"><h3>Cách làm việc</h3><p>Chỉ gọi agent cần cho câu hỏi. Số liệu lấy từ công cụ; tài liệu có nguồn để đối chiếu.</p><p>Tối đa hai agent chạy cùng lúc, một vòng bổ sung bằng chứng. Báo giá vẫn cần duyệt riêng ở ERP.</p><p>Qwen chỉ tóm tắt khi bật và lịch sử đủ dài. Groq/Gemini vẫn nhận ngữ cảnh cần dùng.</p></div></aside></div>`;
+ <aside class="chat-aside"><div class="panel side-card"><h3>Đội agent</h3><ul class="tool-list">${roles.map(r=>`<li>${icon(r.role==='bi'?'chart':r.role==='erp'?'layers':r.role==='knowledge'?'book':'spark')}<span>${esc(r.label)}${r.optional?' · tùy chọn':''}<small>${r.configured?esc(r.provider)+' / '+esc(r.model):'Chưa cấu hình '+esc(r.provider)}</small></span></li>`).join('')}</ul></div><div class="panel side-card"><h3>Kỹ năng ERP</h3>${(team?.skills||[]).map(s=>`<p><strong>${esc(s.label)}</strong><br><small>${esc(s.description)}</small></p>`).join('')||'<p>Chưa đọc được danh mục skill.</p>'}</div><div class="panel side-card"><h3>Cách làm việc</h3><p>Chỉ gọi agent cần cho câu hỏi. Số liệu lấy từ công cụ; tài liệu có nguồn để đối chiếu.</p><p>Tối đa hai agent chạy cùng lúc, một vòng bổ sung bằng chứng. Báo giá vẫn cần duyệt riêng ở ERP.</p><p>Qwen chỉ tóm tắt khi bật và lịch sử đủ dài. Groq/Gemini vẫn nhận ngữ cảnh cần dùng.</p></div></aside></div>`;
 }
 async function streamTeam(payload){
  const response=await fetch('/agent/team/stream',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Olist-Request':'1'},body:JSON.stringify(payload)});
@@ -174,12 +178,12 @@ async function streamTeam(payload){
  if(!result)throw new Error('Kết nối bị ngắt. Lấy lại lượt vừa gửi để kiểm tra kết quả; xem ERP trước khi tạo đề xuất khác.');
  return result;
 }
-async function sendQuestion(question,retry=null){
+async function sendQuestion(question,retry=null,extra={}){
  if(state.busy||!question.trim())return;
  if(state.page!=='assistant'){state.pendingQuestion=question;await navigate('assistant');return;}
  state.busy=true;$('#chat-input').value='';
  const team=Boolean(retry)||state.chatMode==='team',thread=state.teamThread;
- const payload=retry||{question,filters:{...state.filters},thread_id:thread,run_id:crypto.randomUUID().replaceAll('-',''),local_summary:state.localSummary,allow_proposals:state.allowProposals};
+ const payload=retry||{question,filters:{...state.filters},thread_id:thread,run_id:crypto.randomUUID().replaceAll('-',''),local_summary:state.localSummary,allow_proposals:state.allowProposals,...extra};
  state.teamRetry=null;state.chatFailure=null;state.activeChat={question,payload,steps:[]};
  refreshChat();
  for(const el of document.querySelectorAll('#chat-form button,#chat-mode,#team-local,#team-proposals,#clear-chat'))el.disabled=true;

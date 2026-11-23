@@ -135,6 +135,12 @@ Khi duyệt, ứng dụng kiểm tra lại cấu hình và nội dung đã lưu 
 
 **Chi tiết & lịch sử** hiển thị các lần lưu, duyệt, lỗi và từ chối. **Xem báo giá Odoo** đọc lại trạng thái, từng dòng, thuế và tổng tiền từ Odoo. “Đã ghi bản nháp” là trạng thái xử lý đề xuất trong ứng dụng; trạng thái chứng từ hiển thị riêng theo Odoo.
 
+**Nhờ agent kiểm tra:** nhập đủ khách và các dòng hàng trên ERP, ghi câu hỏi nếu cần rồi bấm nút này. Trợ lý nhận bản chụp form, dùng Odoo đối soát và giải thích chiết khấu/thuế/làm tròn. Model không được đổi giá, số lượng hay thuế trong bản chụp. Kết quả có bảng số tiền và nguồn, chưa lưu đề xuất; quay về form để sửa, đối soát và duyệt riêng. Lấy lại cùng lượt chạy sau mất kết nối giữ nguyên bản chụp, không gọi model lại nếu kết quả đã lưu.
+
+**Tải báo giá PDF:** mở chi tiết báo giá Odoo nháp/đã gửi rồi bấm **Tải báo giá PDF**. File đọc số liệu trực tiếp từ Odoo lúc tải, có khách, dòng hàng, chiết khấu, thuế, tổng và tiền tệ. Đề xuất pending chưa có chứng từ thì chưa tải PDF được. Tải file không đánh dấu đã gửi, không xác nhận đơn và không gửi email. Trong chat có thể hỏi “Cho xem báo giá Odoo DEMO và cách tải PDF”; agent tra chứng từ và đưa nút tải.
+
+Bộ skill của agent ERP nằm ở [.agents/skills](.agents/skills): `olist-sales-lookup`, `olist-quote-review`, `olist-quote-pdf`. Ứng dụng tự nạp hướng dẫn khi gọi agent ERP và hiển thị skill đã nạp trong kết quả. Quyền công cụ được giới hạn trong mã nguồn, file skill không cấp thêm quyền ghi. Cần Groq/Gemini và `requirements-agent.txt` cho trợ lý; tải PDF trực tiếp không cần gọi model.
+
 Luồng tạo báo giá nháp đã được kiểm tra với Odoo local thật, có đối chiếu payload và chặn tạo trùng; xem `reports/web_browser_qa.json`. Phạm vi kiểm tra chỉ gồm dữ liệu DEMO và báo giá nháp. Bản local một operator, chưa có RBAC doanh nghiệp. Không mở port ứng dụng ra Internet.
 
 ## ML giao trễ thử nghiệm

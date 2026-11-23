@@ -63,4 +63,3 @@ def test_pdf_auth_scope_and_truncated_lines(client, financial, quotation):
     assert client.get("/erp/quotations/0/pdf").status_code == 422
     quotation["lines"] *= 501
     assert client.get("/erp/quotations/99/pdf").status_code == 422
-

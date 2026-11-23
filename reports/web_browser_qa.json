@@ -1,11 +1,11 @@
 {
   "checked_at_utc": "2026-11-22T10:13:52.512405+00:00",
   "app_version": "0.2.0",
-  "branch": "feat/erp-thue-chiet-khau",
+  "branch": "feat/erp-agent-pdf",
   "platform": "Windows",
   "python": "3.12.2",
   "browser": "Microsoft Edge via Playwright",
-  "unit_tests_passed": 123,
+  "unit_tests_passed": 134,
   "checks": {
     "default_runtime": {
       "url": "http://127.0.0.1:8000/",
@@ -437,6 +437,67 @@
         "mobile_no_overflow": true,
         "javascript_errors": []
       }
+    },
+    "erp_agent_skills_and_pdf": {
+      "checked_at_utc": "2026-11-23T06:41:18.501469+00:00",
+      "checks": {
+        "live_pdf": {
+          "existing_odoo_quote": true,
+          "native_totals_and_currency": true,
+          "unicode": true,
+          "browser_download": true,
+          "no_model_needed": true
+        },
+        "live_agent_review": {
+          "status": "complete",
+          "providers": [
+            "gemini",
+            "groq"
+          ],
+          "model_calls": 6,
+          "tool_calls": 2,
+          "native_snapshot_matches": true,
+          "three_skills_loaded": true,
+          "proposal_permission_disabled_for_review": true,
+          "no_pending_proposal": true
+        },
+        "retry": {
+          "same_run_same_result": true,
+          "no_new_model_calls": true
+        },
+        "ui_and_safety": {
+          "desktop_mobile": true,
+          "form_preserved_after_chat": true,
+          "new_edit_requires_review": true,
+          "reports_still_load": true,
+          "javascript_errors": [],
+          "new_local_proposals": false,
+          "odoo_writes": false,
+          "approval_calls": false
+        }
+      },
+      "source_base_commit": "e687ba1fb9ea3648afb4dc5c5824f768da153754",
+      "agent_document": {
+        "status": "complete",
+        "providers": [
+          "gemini",
+          "groq"
+        ],
+        "existing_quote_read": true,
+        "real_document_tool": true,
+        "download_from_chat": true,
+        "pdf_matches_odoo": true,
+        "mobile": true,
+        "javascript_errors": [],
+        "no_local_proposals_or_odoo_writes": true
+      },
+      "runtime_url": "http://127.0.0.1:8000",
+      "pdf_visual_review": true,
+      "pdf_multipage_discount_tax_tests": "mock Odoo; actual existing quotation download also checked",
+      "skills_validated": true,
+      "skills_loaded_only_for_erp": true,
+      "form_snapshot_not_editable_by_model": true,
+      "legacy_proposal_and_approval_tests_pass": true
     }
   },
   "fixed": [
@@ -455,5 +516,5 @@
     "Lượt bật Qwen đã lấy đúng KPI phạm vi mới nhưng chưa hoàn tất tổng hợp do Gemini trả HTTP 503; không coi là lượt hoàn tất.",
     "Bộ lọc từ chối cụm thời gian tương đối và từ ngoài phạm vi kể cả trong một số câu giải thích/phủ định; kịch bản demo dùng câu hỏi và ngày cụ thể."
   ],
-  "updated_at_utc": "2026-11-22T15:30:27.598063+00:00"
+  "updated_at_utc": "2026-11-23T06:43:44.433149+00:00"
 }
