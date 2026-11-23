@@ -18,6 +18,7 @@ from . import agent_team
 from . import reporting, report_exports
 from . import sales
 from . import sales_pricing
+from . import sales_exports
 
 app = FastAPI(title="Olist Intelligence", version=__version__)
 app.mount("/assets", StaticFiles(directory=ROOT / "frontend/assets"), name="assets")
@@ -317,6 +318,13 @@ def sales_taxes():
 @app.get("/erp/quotations/{order_id}", dependencies=secured)
 def sales_order(order_id: int = ApiPath(ge=1)):
     return sales_read(sales.order_detail, order_id)
+
+
+@app.get("/erp/quotations/{order_id}/pdf", dependencies=secured)
+def sales_pdf(order_id: int = ApiPath(ge=1)):
+    content = sales_read(sales_exports.pdf, order_id)
+    return Response(content, media_type="application/pdf", headers={
+        "Content-Disposition": f'attachment; filename="bao_gia_{order_id}.pdf"', "Cache-Control": "no-store"})
 
 
 @app.get("/actions", dependencies=secured)
