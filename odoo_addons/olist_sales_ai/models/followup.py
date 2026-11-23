@@ -134,6 +134,9 @@ class FollowupReview(models.Model):
             detail = json.loads(review.trace or "{}")
             review.model_details = "\n".join(f"{item['provider']} · {item['model']}" for item in detail.get("trace", [])) + (
                 "\nKỹ năng: " + ", ".join(item["label"] for item in detail.get("skills", [])) if detail.get("skills") else "")
+            if detail.get("privacy_version"):
+                review.model_details += "\nChế độ: " + ("Quy tắc local, không gọi API model." if detail.get("strategy") == "rules" else
+                    "Chỉ gửi mã tạm, trạng thái và dấu hiệu nghiệp vụ; giữ tên khách, giá và ghi chú tại máy.")
 
     def _allowed_users(self):
         self.ensure_one()
@@ -269,7 +272,7 @@ class FollowupReview(models.Model):
                 "activity_type": item["activity_type"], "explanation": item["explanation"],
                 "evidence": f"{evidence['name']} · {evidence['partner_name']}\nTổng: {evidence['total']} {evidence['currency']}\n"
                     f"Hạn báo giá: {evidence['validity_date'] or 'Chưa có'}\n" + " · ".join(LABELS[c] for c in item["reason_codes"]),
-                "trace": json.dumps({k: result.get(k, []) for k in ("trace", "skills")}, ensure_ascii=False)})
+                "trace": json.dumps({k: result.get(k, []) for k in ("trace", "skills", "privacy_version", "strategy")}, ensure_ascii=False)})
         elif result.get("state") in {"failed", "interrupted"}:
             self._set_internal({"state": "failed", "error": result.get("error", "Chưa hoàn tất phân tích."),
                 "trace": json.dumps({"trace": result.get("trace", [])}, ensure_ascii=False)})

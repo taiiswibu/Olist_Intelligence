@@ -12,6 +12,7 @@ class TeamModel:
     tools: list | None = None
     json_mode: bool = False
     max_tokens: int = 1800
+    outbound_guard: object = None
 
     def bind_tools(self, tools, **kwargs):
         from langchain_core.utils.function_calling import convert_to_openai_tool
@@ -41,7 +42,10 @@ class TeamModel:
             payload.update(tools=self.tools, parallel_tool_calls=False)
         base = self.provider.base + "/v1" if self.provider.name == "ollama" else self.provider.base
         headers = {"Authorization": "Bearer " + (self.provider.key or "ollama")}
-        async with httpx.AsyncClient(timeout=self.timeout, trust_env=self.provider.name != "ollama") as client:
+        async def guard_request(request):
+            self.outbound_guard(json.loads(request.content))
+        hooks = {"request": [guard_request]} if self.outbound_guard is not None else None
+        async with httpx.AsyncClient(timeout=self.timeout, trust_env=self.provider.name != "ollama", event_hooks=hooks) as client:
             if self.provider.name == "ollama" and not self.tools:
                 response = await client.post(self.provider.base + "/api/chat", json={
                     "model": self.provider.model, "messages": wire, "think": False, "stream": False,
@@ -62,7 +66,7 @@ class TeamModel:
         usage = data.get("usage") or {}
         return AIMessage(content=raw.get("content") or "", tool_calls=calls,
                          additional_kwargs={"wire_message": saved},
-                         response_metadata={"finish_reason": data["choices"][0].get("finish_reason")},
+                         response_metadata={"finish_reason": data["choices"][0].get("finish_reason"), "usage_reported": bool(data.get("usage"))},
                          usage_metadata={"input_tokens": usage.get("prompt_tokens", 0),
                                          "output_tokens": usage.get("completion_tokens", 0),
                                          "total_tokens": usage.get("total_tokens", 0)})

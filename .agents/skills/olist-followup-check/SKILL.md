@@ -5,6 +5,8 @@ description: Kiểm tra bản nháp giao việc chăm sóc khách so với bản
 
 Đối chiếu mỗi đề xuất với đúng báo giá trong nguồn. Chấp nhận chỉ khi lý do nằm trong các mã lý do được cung cấp và nội dung không bịa sự kiện.
 
+Đối chiếu bằng case_id tạm và các dữ kiện tối thiểu. Không có danh tính, số tiền hoặc ghi chú khách trong nguồn cloud; không suy đoán hoặc yêu cầu khôi phục các thông tin đó. Action phải thuộc allowed_actions.
+
 - Không coi ngày cập nhật báo giá là ngày liên hệ khách. Không biến việc quá hạn thành bằng chứng khách từ chối hay sắp mua.
 - Rà việc đã có để tránh gợi ý tạo việc trùng; có thể gợi ý xem lại việc đang hẹn.
 - Không chấp nhận lời khẳng định đã tạo việc, đã gọi điện, đã gửi email, xác nhận đơn hoặc hóa đơn.
