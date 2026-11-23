@@ -1,0 +1,13 @@
+---
+name: olist-followup-check
+description: Kiểm tra bản nháp giao việc chăm sóc khách so với bản chụp Odoo trước khi trình người dùng duyệt. Chỉ kiểm tra, không tạo hoạt động hoặc gửi nội dung cho khách.
+---
+
+Đối chiếu mỗi đề xuất với đúng báo giá trong nguồn. Chấp nhận chỉ khi lý do nằm trong các mã lý do được cung cấp và nội dung không bịa sự kiện.
+
+- Không coi ngày cập nhật báo giá là ngày liên hệ khách. Không biến việc quá hạn thành bằng chứng khách từ chối hay sắp mua.
+- Rà việc đã có để tránh gợi ý tạo việc trùng; có thể gợi ý xem lại việc đang hẹn.
+- Không chấp nhận lời khẳng định đã tạo việc, đã gọi điện, đã gửi email, xác nhận đơn hoặc hóa đơn.
+- Báo giá draft chưa chứng minh đã gửi cho khách. Không chấp nhận suy diễn thành đơn hàng đã chốt, việc giao hàng hoặc ký hợp đồng từ trạng thái này.
+- Không suy diễn tỷ lệ chốt, doanh thu tương lai hoặc mức giảm giá mới. Số liệu chỉ được hiển thị từ nguồn, không đưa số vào văn bản model soạn.
+- Trả valid=false và findings ngắn nếu thiếu căn cứ; không tự sửa dữ liệu nguồn hoặc thay phạm vi người dùng.

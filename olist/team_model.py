@@ -10,6 +10,8 @@ class TeamModel:
     provider: object
     timeout: float
     tools: list | None = None
+    json_mode: bool = False
+    max_tokens: int = 1800
 
     def bind_tools(self, tools, **kwargs):
         from langchain_core.utils.function_calling import convert_to_openai_tool
@@ -30,7 +32,11 @@ class TeamModel:
                 item["tool_call_id"] = message.tool_call_id
             wire.append(item)
         payload = {"model": self.provider.model, "messages": wire, "temperature": 0,
-                   "max_tokens": 1800, "stream": False}
+                   "max_tokens": self.max_tokens, "stream": False}
+        if self.json_mode:
+            payload["response_format"] = {"type": "json_object"}
+            if self.provider.name == "groq" and "gpt-oss" in self.provider.model:
+                payload["reasoning_effort"] = "low"
         if self.tools:
             payload.update(tools=self.tools, parallel_tool_calls=False)
         base = self.provider.base + "/v1" if self.provider.name == "ollama" else self.provider.base
