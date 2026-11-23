@@ -8,7 +8,7 @@ from langchain_core.messages import AIMessage
 
 from olist import followups as f, followup_transport as t, followup_evaluation as e, followup_privacy as p
 from test_followup_privacy import sensitive_payload
-from test_followups import payload
+from test_followups import payload, bridge
 
 
 @pytest.fixture
@@ -146,6 +146,17 @@ def test_retries_require_budget_before_any_model_call(tmp_path):
     with pytest.raises(ValueError, match="vượt"):
         asyncio.run(e.run(tmp_path / "budget", ("pipeline",), limit=1, live=True, max_model_calls=2, request_policy=t.Policy(2, 0)))
     assert not (tmp_path / "budget").exists()
+
+
+def test_recovered_http_error_cannot_hide_terminal_content_failure(bridge, monkeypatch):
+    async def fail(source):
+        raise f.AnalysisFailure([{"provider":"groq","status":"failed","http_status":503,"attempt":1},
+                                 {"provider":"groq","status":"rejected","attempt":2}], "GroundingRejected")
+    monkeypatch.setattr(f,"analyze",fail)
+    bridge.post("/odoo-ai/analyses",json=payload())
+    result=bridge.get("/odoo-ai/analyses/"+"a"*32,params={"database":"odoo-test","user_id":11,"company_id":2}).json()
+    assert "GroundingRejected" in result["error"] and "HTTP 503" not in result["error"]
+    assert result["trace"][0]["http_status"]==503
 
 
 @pytest.mark.parametrize("value", ["not-a-delay", "nan", "inf", "-1", ""])

@@ -296,8 +296,9 @@ async def run_job(request_id):
         state = "complete"
     except Exception as exc:
         trace = getattr(exc, "trace", [])
-        status = next((t["http_status"] for t in reversed(trace) if "http_status" in t), None)
-        reason = "HTTP " + str(status) if status is not None else getattr(exc, "reason", type(exc).__name__)
+        failure = getattr(exc, "reason", type(exc).__name__)
+        status = trace[-1].get("http_status") if trace and failure == "HTTPStatusError" else None
+        reason = "HTTP " + str(status) if status is not None else failure
         result = {"error": "Chưa hoàn tất phân tích (" + reason + "). Kiểm tra kết nối/model rồi tạo đề xuất mới.",
                   "trace": trace}
         state = "failed"
