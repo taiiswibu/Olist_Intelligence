@@ -24,8 +24,11 @@ services:
       HOST: odoo-db
       USER: odoo
       PASSWORD: ${ODOO_PG_PASSWORD:-olist_local_demo}
+      ODOO_AI_BRIDGE_TOKEN: ${ODOO_AI_BRIDGE_TOKEN:-}
+      ODOO_AI_BACKEND_URL: http://host.docker.internal:8000
     volumes:
       - odoo-web:/var/lib/odoo
+      - ./odoo_addons:/mnt/extra-addons:ro
   analytics-db:
     image: postgres:16
     profiles: ["postgres"]

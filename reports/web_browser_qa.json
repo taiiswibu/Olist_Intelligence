@@ -1,11 +1,11 @@
 {
   "checked_at_utc": "2026-11-22T10:13:52.512405+00:00",
   "app_version": "0.2.0",
-  "branch": "feat/erp-agent-pdf",
+  "branch": "feat/odoo-ai-followup",
   "platform": "Windows",
   "python": "3.12.2",
   "browser": "Microsoft Edge via Playwright",
-  "unit_tests_passed": 134,
+  "unit_tests_passed": 146,
   "checks": {
     "default_runtime": {
       "url": "http://127.0.0.1:8000/",
@@ -498,6 +498,46 @@
       "skills_loaded_only_for_erp": true,
       "form_snapshot_not_editable_by_model": true,
       "legacy_proposal_and_approval_tests_pass": true
+    },
+    "odoo_native_followup": {
+      "queue_native_odoo": true,
+      "live_groq_gemini": true,
+      "review_before_activity": true,
+      "native_checkbox_and_confirmation": true,
+      "activity_created_only_after_approval": true,
+      "duplicate_approval_same_activity": true,
+      "quotation_still_draft": true,
+      "desktop_mobile": true,
+      "javascript_errors": [],
+      "trace": [
+        {
+          "provider": "groq",
+          "model": "openai/gpt-oss-20b",
+          "status": "done"
+        },
+        {
+          "provider": "gemini",
+          "model": "gemini-3.5-flash-lite",
+          "status": "done"
+        }
+      ],
+      "main_quotations_unchanged": true,
+      "checked_at_utc": "2026-11-23T07:36:13.816555+00:00",
+      "source_base_commit": "21096b40cd59f0e2cf35ac5ce9a2e7bc05e8971c",
+      "backend_tests": 146,
+      "odoo_integration_tests": 9,
+      "separate_test_database": true,
+      "main_addon_installed": false,
+      "employee_manager_company_access_checked": true,
+      "stale_source_blocks_activity": true,
+      "duplicate_activity_blocked": true,
+      "batch_uses_one_job": true,
+      "lost_response_reuses_job": true,
+      "model_format_failure_creates_no_activity": true,
+      "json_mode_validated_with_live_providers": true,
+      "final_layout_checked": true,
+      "mobile_no_page_overflow": true,
+      "test_database_cleaned": true
     }
   },
   "fixed": [
@@ -516,5 +556,5 @@
     "Lượt bật Qwen đã lấy đúng KPI phạm vi mới nhưng chưa hoàn tất tổng hợp do Gemini trả HTTP 503; không coi là lượt hoàn tất.",
     "Bộ lọc từ chối cụm thời gian tương đối và từ ngoài phạm vi kể cả trong một số câu giải thích/phủ định; kịch bản demo dùng câu hỏi và ngày cụ thể."
   ],
-  "updated_at_utc": "2026-11-23T06:43:44.433149+00:00"
+  "updated_at_utc": "2026-11-23T07:36:13.853074+00:00"
 }

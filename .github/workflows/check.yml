@@ -13,3 +13,12 @@ jobs:
       - run: python -m pytest -q
       - run: node --check frontend/assets/app.js && node --check frontend/assets/reports.js && node --check frontend/assets/sales.js
       - run: python -m compileall -q olist scripts app.py manage.py run.py
+  odoo-addon:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose up -d odoo
+      - run: python scripts/test_odoo_ai.py
+      - if: always()
+        run: docker compose down -v
