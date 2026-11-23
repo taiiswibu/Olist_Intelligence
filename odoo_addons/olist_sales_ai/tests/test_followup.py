@@ -1,4 +1,7 @@
 from datetime import timedelta
+import base64
+import csv
+import io
 from unittest.mock import patch
 
 from odoo import Command, fields
@@ -171,3 +174,115 @@ class TestFollowup(TransactionCase):
             self.assertEqual(review.poll_state(), "cancelled")
             self.assertEqual(calls, ["POST", "GET"])
         self.assertFalse(review.activity_id)
+
+    def test_trial_methods_rotate_and_templates_are_explicit(self):
+        requests, methods = [], []
+        model = self.env["olist.ai.followup.review"].with_user(self.staff)
+        def bridge(record, method, path, payload=None):
+            requests.append((record.trial_method, method, payload))
+            if method == "POST":
+                return {"state": "pending"}
+            return {"request_id": record.request_key, "state": "complete", "strategy": "rules" if record.trial_method == "rules" else "pipeline",
+                "items": [{"order_id": record.order_id.id, "summary": "Rà soát báo giá", "note": "Kiểm tra nội dung trước khi gửi.",
+                    "activity_type": "todo", "explanation": "Bản nháp.", "reason_codes": ["no_activity"]}]}
+        with patch.object(type(model), "_bridge", bridge):
+            for _ in range(3):
+                action = self.quote.with_user(self.staff).action_olist_measure()
+                review = model.browse(action["res_id"])
+                methods.append(review.trial_method)
+                self.assertEqual(review.trial_sequence, len(methods))
+                self.assertTrue(review.trial_started_at)
+                if review.trial_method == "manual":
+                    self.assertEqual(review.state, "ready")
+                    self.assertFalse(review.note)
+                    self.assertFalse(review.summary)
+                    self.assertIn("draft", review.evidence)
+                else:
+                    review.poll_state()
+                self.assertTrue(review.trial_ready_at)
+                self.assertFalse(review.activity_id)
+                review.action_cancel()
+                self.assertTrue(review.trial_finished_at)
+        self.assertEqual(set(methods), {"manual", "rules", "ai"})
+        posts = [r for r in requests if r[1] == "POST"]
+        self.assertEqual(len(posts), 2)
+        self.assertEqual(next(r[2]["mode"] for r in posts if r[0] == "rules"), "rules_only")
+        self.assertNotIn("mode", next(r[2] for r in posts if r[0] == "ai"))
+        trials = model.search([("owner_id", "=", self.staff.id), ("trial_started_at", "!=", False)])
+        self.assertEqual(len(set(trials.mapped("trial_participant"))), 1)
+        self.assertEqual(len(set(trials.mapped("trial_case"))), 1)
+        self.assertFalse(self.quote.activity_ids)
+
+    def test_trial_double_click_resumes_and_parallel_task_is_blocked(self):
+        model = self.env["olist.ai.followup.review"].with_user(self.staff)
+        with patch.object(type(model), "_bridge", return_value={"state": "pending"}) as bridge:
+            first = self.quote.with_user(self.staff).action_olist_measure()
+            again = self.quote.with_user(self.staff).action_olist_measure()
+            self.assertEqual(first["res_id"], again["res_id"])
+            self.assertLessEqual(bridge.call_count, 1)
+            other = self.quote.copy()
+            with self.assertRaises(UserError):
+                other.with_user(self.staff).action_olist_measure()
+            review = model.browse(first["res_id"])
+            with self.assertRaises(AccessError):
+                review.write({"trial_started_at": fields.Datetime.now()})
+            with self.assertRaises(AccessError):
+                model.create({"order_id": self.quote.id, "trial_method": "manual"})
+            with self.assertRaises(AccessError):
+                self.quote.with_user(self.other).action_olist_measure()
+
+    def test_trial_timer_ends_once_on_explicit_approval(self):
+        review = self.ready()
+        start = fields.Datetime.now() - timedelta(seconds=40)
+        ready = start + timedelta(seconds=10)
+        review._set_internal({"trial_method": "manual", "trial_sequence": 1,
+            "trial_participant": "P_fixture", "trial_case": "T_fixture", "trial_started_at": start,
+            "trial_ready_at": ready})
+        review.write({"approval_checked": True})
+        review.action_approve()
+        finished = review.trial_finished_at
+        self.assertTrue(finished)
+        self.assertGreaterEqual(review.trial_elapsed, 40)
+        self.assertTrue(review.activity_id)
+        review.action_approve()
+        self.assertEqual(review.trial_finished_at, finished)
+
+    def test_trial_csv_keeps_failures_and_is_private_without_customer_text(self):
+        model = self.env["olist.ai.followup.review"].with_user(self.staff)
+        reviews = model.create([{"order_id": self.quote.id}, {"order_id": self.quote.id}])
+        start = fields.Datetime.now() - timedelta(seconds=30)
+        for index, review in enumerate(reviews):
+            review._set_internal({"trial_method": "rules" if index else "ai", "trial_sequence": index+1,
+                "trial_participant": "P_fixture", "trial_case": "T_fixture", "trial_started_at": start})
+        reviews[0]._set_internal({"state": "failed"})
+        reviews[1]._set_internal({"state": "ready"})
+        action = reviews.with_user(self.manager).action_export_trials()
+        attachment_id = int(action["url"].split("/")[-1].split("?")[0])
+        attachment = self.env["ir.attachment"].with_user(self.manager).browse(attachment_id)
+        content = base64.b64decode(attachment.datas).decode("utf-8-sig")
+        rows = list(csv.DictReader(io.StringIO(content)))
+        self.assertEqual([r["outcome"] for r in rows], ["failed", "unfinished"])
+        self.assertNotEqual(rows[0]["total_seconds"], "")
+        self.assertEqual(rows[0]["after_ready_seconds"], "")
+        self.assertEqual(rows[1]["total_seconds"], "")
+        self.assertEqual(rows[0]["actual_strategy"], "unknown")
+        self.assertNotIn("Fixture client", content)
+        self.assertNotIn(self.quote.name, content)
+        self.assertNotIn(self.staff.login, content)
+        with self.assertRaises(AccessError):
+            attachment.with_user(self.staff).check_access("read")
+        with self.assertRaises(AccessError):
+            reviews.with_user(self.other).action_export_trials()
+
+    def test_failed_trial_finishes_without_rewriting_old_timestamp(self):
+        review = self.ready()
+        review._set_internal({"trial_started_at": fields.Datetime.now() - timedelta(seconds=10), "state": "pending"})
+        result = {"state": "failed", "error": "HTTP 503", "trace": []}
+        with patch.object(type(review), "_bridge", return_value=result):
+            self.assertEqual(review.poll_state(), "failed")
+        finished = review.trial_finished_at
+        self.assertTrue(finished)
+        self.assertFalse(review.activity_id)
+        review.action_cancel()
+        self.assertEqual(review.trial_finished_at, finished)
+        self.assertEqual(review.trial_outcome, "failed")

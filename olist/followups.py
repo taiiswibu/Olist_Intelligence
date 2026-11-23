@@ -6,6 +6,7 @@ import json
 import os
 import re
 import time
+from typing import Literal
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 
@@ -53,6 +54,7 @@ class AnalysisRequest(Strict):
     company_id: int = Field(gt=0)
     today: date
     orders: list[Quote] = Field(min_length=1, max_length=20)
+    mode: Literal["configured", "rules_only"] = "configured"
 
 
 class Suggestion(Strict):
@@ -159,7 +161,8 @@ def _decode(row):
 def claim(payload):
     if len({q.id for q in payload.orders}) != len(payload.orders) or any(len(n) > 1000 for q in payload.orders for n in q.notes):
         raise ValueError("Bản chụp có báo giá lặp hoặc ghi chú quá dài.")
-    serialized = payload.model_dump_json()
+    # Preserve fingerprints of requests created before the optional mode existed.
+    serialized = payload.model_dump_json(exclude={"mode"} if payload.mode == "configured" else set())
     fingerprint = hashlib.sha256(serialized.encode()).hexdigest()
     conn = _connection()
     try:
@@ -276,7 +279,7 @@ async def analyze(payload):
     mode = os.getenv("FOLLOWUP_AI_MODE", "cloud_minimized")
     if mode not in {"cloud_minimized", "rules_only"}:
         raise ValueError("FOLLOWUP_AI_MODE chưa hợp lệ; chưa gọi model.")
-    return await analyze_strategy(payload, "rules" if mode == "rules_only" else "pipeline")
+    return await analyze_strategy(payload, "rules" if mode == "rules_only" or payload.mode == "rules_only" else "pipeline")
 
 
 async def run_job(request_id):

@@ -116,3 +116,23 @@ def test_terminal_backend_job_discards_temporary_raw_snapshot(bridge, monkeypatc
         row = conn.execute("SELECT payload,state FROM odoo_ai_jobs WHERE request_id=?", (payload()["request_id"],)).fetchone()
         assert row["payload"] == "" and row["state"] == "complete"
     assert bridge.post("/odoo-ai/analyses", json=payload()).json()["state"] == "complete"
+
+
+def test_explicit_template_mode_never_calls_model_and_binds_idempotency(bridge, monkeypatch):
+    monkeypatch.setenv("FOLLOWUP_AI_MODE", "cloud_minimized")
+    monkeypatch.setattr(httpx, "AsyncClient", lambda **kw: pytest.fail("Template baseline must not call a model"))
+    data = {**payload(), "mode": "rules_only"}
+    bridge.post("/odoo-ai/analyses", json=data)
+    result = bridge.post("/odoo-ai/analyses", json=data).json()
+    assert result["state"] == "complete" and result["strategy"] == "rules" and result["trace"] == []
+    assert bridge.post("/odoo-ai/analyses", json=payload()).status_code == 422
+
+
+def test_default_mode_preserves_legacy_fingerprint(bridge):
+    import hashlib
+    source = f.AnalysisRequest.model_validate(payload())
+    expected = hashlib.sha256(source.model_dump_json(exclude={"mode"}).encode()).hexdigest()
+    f.claim(source)
+    with f._connection() as conn:
+        row = conn.execute("SELECT fingerprint FROM odoo_ai_jobs WHERE request_id=?", (source.request_id,)).fetchone()
+        assert row["fingerprint"] == expected

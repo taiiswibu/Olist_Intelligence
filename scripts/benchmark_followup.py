@@ -31,6 +31,9 @@ def main():
     score.add_argument("--run", type=Path, required=True);score.add_argument("--ratings", type=Path, required=True)
     compare = commands.add_parser("compare")
     compare.add_argument("--before", type=Path, required=True);compare.add_argument("--after", type=Path, required=True)
+    trials = commands.add_parser("trials")
+    trials.add_argument("--csv", type=Path, required=True)
+    trials.add_argument("--out", type=Path)
     args = parser.parse_args()
     try:
         if args.command == "run":
@@ -40,9 +43,17 @@ def main():
                 evaluation.followup_transport.Policy(args.max_attempts, args.request_interval)))
         elif args.command == "score":
             result = evaluation.score(args.run, args.ratings)
-        else:
+        elif args.command == "compare":
             result = evaluation.compare(args.before, args.after)
+        else:
+            from olist import followup_trials
+            result = followup_trials.summarize(args.csv)
+            if args.out:
+                with args.out.open("x", encoding="utf-8") as stream:
+                    stream.write(json.dumps(result, ensure_ascii=False, indent=2)+"\n")
         print(json.dumps(result, ensure_ascii=False, indent=2))
+    except FileExistsError:
+        parser.exit(2, "Tệp kết quả đã tồn tại; chọn tên khác để giữ bằng chứng cũ.\n")
     except ValueError as exc:
         parser.exit(2, str(exc)+"\n")
 

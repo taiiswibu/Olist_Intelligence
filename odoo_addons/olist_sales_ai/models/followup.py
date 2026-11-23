@@ -1,6 +1,10 @@
 import hashlib
+import base64
+import csv
+import io
 import json
 import os
+import secrets
 import uuid
 from datetime import timedelta
 
@@ -94,6 +98,37 @@ class SaleOrder(models.Model):
                 "view_mode": "list,form" if len(reviews) > 1 else "form", "res_id": reviews.id if len(reviews) == 1 else False,
                 "domain": [("id", "in", reviews.ids)]}
 
+    def action_olist_measure(self):
+        """One explicit, timed task; rotate methods without silently selecting successes."""
+        self.ensure_one()
+        self._olist_check_scope()
+        self.env.cr.execute("SELECT id FROM res_users WHERE id=%s FOR UPDATE", (self.env.uid,))
+        model = self.env["olist.ai.followup.review"]
+        domain = [("owner_id", "=", self.env.uid), ("company_id", "=", self.env.company.id),
+                  ("trial_started_at", "!=", False)]
+        active = model.search(domain + [("trial_finished_at", "=", False)], limit=1)
+        if active:
+            if active.order_id != self:
+                raise UserError("Hoàn tất hoặc bỏ qua lượt đo đang mở trước khi bắt đầu lượt khác.")
+            review = active
+        else:
+            previous = model.search(domain, order="id desc", limit=1)
+            sequence = model.search_count(domain) + 1
+            method = ("manual", "rules", "ai")[(sequence - 1 + self.env.uid) % 3]
+            peer = model.search(domain + [("order_id", "=", self.id)], order="id desc", limit=1)
+            review = model.create({"order_id": self.id})
+            review._set_internal({"trial_method": method, "trial_sequence": sequence,
+                "trial_participant": previous.trial_participant or "P_" + secrets.token_hex(6),
+                "trial_case": peer.trial_case if peer and peer.source_hash == review.source_hash else "T_" + secrets.token_hex(6),
+                "trial_started_at": fields.Datetime.now()})
+            if method == "manual":
+                review._set_internal({"state": "ready", "trace": json.dumps({"strategy": "manual"}),
+                    "evidence": review._source_evidence(), "explanation": "Soạn tay từ dữ liệu đối chiếu. Chưa gọi model."})
+            else:
+                review.action_start()
+        return {"type": "ir.actions.act_window", "name": "Đo thao tác chăm sóc", "res_model": review._name,
+                "view_mode": "form", "res_id": review.id, "target": "current"}
+
 
 class FollowupReview(models.Model):
     _name = "olist.ai.followup.review"
@@ -127,6 +162,23 @@ class FollowupReview(models.Model):
     approved_at = fields.Datetime("Thời điểm duyệt", readonly=True)
     approved_payload = fields.Text("Nội dung đã duyệt", readonly=True)
     allowed_user_ids = fields.Many2many("res.users", compute="_compute_allowed_users")
+    trial_method = fields.Selection([("manual", "Soạn tay"), ("rules", "Mẫu quy tắc"), ("ai", "AI theo cấu hình")],
+                                    string="Cách chuẩn bị", readonly=True, copy=False)
+    trial_sequence = fields.Integer("Thứ tự lượt đo", readonly=True, copy=False)
+    trial_participant = fields.Char("Mã người tham gia", readonly=True, copy=False)
+    trial_case = fields.Char("Mã tình huống", readonly=True, copy=False)
+    trial_started_at = fields.Datetime("Bắt đầu lượt đo", readonly=True, copy=False)
+    trial_ready_at = fields.Datetime("Có bản nháp", readonly=True, copy=False)
+    trial_finished_at = fields.Datetime("Kết thúc lượt đo", readonly=True, copy=False)
+    trial_outcome = fields.Selection([("approved", "Đã duyệt"), ("failed", "Lỗi"), ("cancelled", "Bỏ qua")],
+                                     string="Kết quả lượt đo", readonly=True, copy=False)
+    trial_elapsed = fields.Float("Tổng thời gian (giây)", compute="_compute_trial_elapsed", digits=(16, 1))
+
+    @api.depends("trial_started_at", "trial_finished_at")
+    def _compute_trial_elapsed(self):
+        for review in self:
+            review.trial_elapsed = ((review.trial_finished_at - review.trial_started_at).total_seconds()
+                                    if review.trial_started_at and review.trial_finished_at else 0)
 
     @api.depends("trace")
     def _compute_model_details(self):
@@ -156,7 +208,51 @@ class FollowupReview(models.Model):
         self.order_id._olist_check_scope()
 
     def _set_internal(self, values):
-        return super(FollowupReview, self).write(values)
+        for review in self:
+            update = dict(values)
+            if update.get("trial_started_at") or review.trial_started_at:
+                if update.get("state") == "ready" and not review.trial_ready_at:
+                    update["trial_ready_at"] = fields.Datetime.now()
+                if update.get("state") in {"approved", "failed", "cancelled"} and not review.trial_finished_at:
+                    update["trial_finished_at"] = fields.Datetime.now()
+                    update["trial_outcome"] = update["state"]
+            super(FollowupReview, review).write(update)
+        return True
+
+    def _source_evidence(self):
+        self.ensure_one()
+        evidence = json.loads(self.snapshot_json)
+        return (f"{evidence['name']} · {evidence['partner_name']}\nTổng: {evidence['total']} {evidence['currency']}\n"
+                f"Trạng thái: {evidence['state']}\nHạn báo giá: {evidence['validity_date'] or 'Chưa có'}\n" + self.order_id.olist_ai_reason)
+
+    def action_export_trials(self):
+        if not self or any(not r.trial_started_at for r in self):
+            raise UserError("Chọn các lượt đo cần xuất, gồm cả lượt lỗi hoặc bị bỏ qua.")
+        for review in self:
+            review._check_scope("read")
+        stream = io.StringIO(newline="")
+        columns = ["schema_version", "trial_id", "participant", "case", "sequence", "assignment_version", "method", "actual_strategy", "outcome",
+                   "started_at_utc", "ready_at_utc", "finished_at_utc", "total_seconds", "after_ready_seconds", "quotation_state", "has_activity"]
+        writer = csv.DictWriter(stream, fieldnames=columns)
+        writer.writeheader()
+        for review in self.sorted("id"):
+            detail = json.loads(review.trace or "{}")
+            snapshot = json.loads(review.snapshot_json)
+            finished = review.trial_finished_at
+            writer.writerow({"schema_version": "followup-task-times-v1", "trial_id": review.request_key, "participant": review.trial_participant,
+                "case": review.trial_case, "sequence": review.trial_sequence, "assignment_version": "cyclic-v1",
+                "method": review.trial_method, "actual_strategy": detail.get("strategy", "unknown"),
+                "outcome": review.trial_outcome if finished else "unfinished",
+                "started_at_utc": fields.Datetime.to_string(review.trial_started_at),
+                "ready_at_utc": fields.Datetime.to_string(review.trial_ready_at) if review.trial_ready_at else "",
+                "finished_at_utc": fields.Datetime.to_string(finished) if finished else "",
+                "total_seconds": (finished - review.trial_started_at).total_seconds() if finished else "",
+                "after_ready_seconds": (finished - review.trial_ready_at).total_seconds() if finished and review.trial_ready_at else "",
+                "quotation_state": snapshot["state"], "has_activity": bool(snapshot["activities"])})
+        attachment = self.env["ir.attachment"].create({"name": "olist-luot-do.csv", "type": "binary",
+            "datas": base64.b64encode(("\ufeff" + stream.getvalue()).encode("utf-8")), "mimetype": "text/csv",
+            "public": False})  # Unlinked: only the exporter and administrators may read it.
+        return {"type": "ir.actions.act_url", "url": f"/web/content/{attachment.id}?download=true", "target": "self"}
 
     @api.model
     def _snapshot(self, order):
@@ -237,6 +333,10 @@ class FollowupReview(models.Model):
         payload = {"request_id": key, "database": self.env.cr.dbname, "user_id": self.owner_id.id,
             "company_id": self.company_id.id, "today": fields.Date.to_string(self[0].snapshot_date),
             "orders": [json.loads(r.snapshot_json) for r in self]}
+        if any(r.trial_method == "rules" for r in self):
+            if any(r.trial_method != "rules" for r in self):
+                raise UserError("Không trộn lượt dùng mẫu với lượt AI trong một yêu cầu.")
+            payload["mode"] = "rules_only"
         try:
             self._bridge("POST", "/odoo-ai/analyses", payload)
         except UserError as exc:
@@ -272,7 +372,7 @@ class FollowupReview(models.Model):
                 "activity_type": item["activity_type"], "explanation": item["explanation"],
                 "evidence": f"{evidence['name']} · {evidence['partner_name']}\nTổng: {evidence['total']} {evidence['currency']}\n"
                     f"Hạn báo giá: {evidence['validity_date'] or 'Chưa có'}\n" + " · ".join(LABELS[c] for c in item["reason_codes"]),
-                "trace": json.dumps({k: result.get(k, []) for k in ("trace", "skills", "privacy_version", "strategy")}, ensure_ascii=False)})
+                "trace": json.dumps({k: result.get(k, []) for k in ("trace", "skills", "privacy_version", "grounding_version", "request_policy", "strategy")}, ensure_ascii=False)})
         elif result.get("state") in {"failed", "interrupted"}:
             self._set_internal({"state": "failed", "error": result.get("error", "Chưa hoàn tất phân tích."),
                 "trace": json.dumps({"trace": result.get("trace", [])}, ensure_ascii=False)})

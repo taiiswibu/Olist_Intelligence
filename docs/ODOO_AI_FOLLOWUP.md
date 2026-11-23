@@ -29,6 +29,28 @@ Nhân viên chỉ dùng báo giá do mình phụ trách. Quản lý dùng báo g
 
 Phân tích chỉ lập đề xuất; chưa tạo Activities, chưa gửi nội dung liên hệ. Chứng từ thay đổi thì phân tích lại. Lượt duyệt lặp không tạo thêm việc. Việc cùng loại/người/báo giá đã có sẽ chặn tạo trùng. Module không xác nhận đơn hoặc lập hóa đơn.
 
+## Đo thao tác thực tế
+
+Sau khi nâng addon lên `19.0.1.1.0`, mở một báo giá DEMO và bấm **Bắt đầu lượt đo**. Server luân phiên soạn tay, mẫu quy tắc và AI theo cấu hình; lệch thứ tự khởi đầu giữa các tài khoản. Đây là lịch luân phiên để chạy pilot, chưa phải phân nhóm ngẫu nhiên hay bằng chứng nhân quả.
+
+- **Soạn tay**: bản nháp trống, đối chiếu vẫn lấy từ Odoo; không gọi backend/model.
+- **Mẫu quy tắc**: yêu cầu riêng `rules_only`, không gọi API model dù ứng dụng đang bật AI.
+- **AI theo cấu hình**: dùng chế độ đang cấu hình. Nếu hệ thống đặt `FOLLOWUP_AI_MODE=rules_only`, kết quả thực tế vẫn là rules; CSV giữ cả cách được phân công và strategy thực chạy, không được tính lượt đó thành AI.
+
+Mỗi người chỉ có một lượt đang mở trong công ty hiện tại. Bấm lại cùng báo giá sẽ mở lượt cũ; không đặt lại đồng hồ hoặc gọi model mới. Đồng hồ tính từ lúc bấm bắt đầu đến khi **Duyệt tạo việc**, lỗi phân tích hoặc **Bỏ qua**, gồm cả chờ model, đọc, sửa, rời màn hình và xác nhận. Không diễn giải thành thời gian chú ý thuần. Thời điểm kết thúc đầu tiên và kết quả đầu tiên được giữ, kể cả sau khi bỏ qua một lượt đã lỗi. Phê duyệt vẫn tạo Activities theo luồng có xác nhận, không dùng nút duyệt chỉ để dừng giờ nếu chưa muốn giao việc.
+
+Mở **AI hỗ trợ bán hàng → Lượt đo thao tác**, chọn đủ các lượt cần so, gồm lỗi/bỏ qua/chưa xong → **Tải CSV lượt đo**. Bản tải riêng cho người xuất và quản trị viên, không chứa tên khách, tên nhân viên, mã báo giá, số tiền hoặc nội dung liên hệ. Dữ liệu chỉ lưu local; mã người tham gia/tình huống là mã ngẫu nhiên, không phải bảo đảm ẩn danh tuyệt đối. Thời gian của lượt chưa xong để trống, không thay bằng không. Lượt soạn tay/mẫu/AI vẫn dùng chung kiểm tra nguồn cũ, quyền và phê duyệt.
+
+Đo trên tình huống đã thống nhất và chấm nghiệp vụ riêng. Sau khi tạo Activities, nguồn thay đổi; mã tình huống mới sẽ được cấp cho bản chụp khác. Không ghép hai bản chụp khác nhau thành cặp giống hệt. Chưa có người tham gia thì phiếu và thời gian thực tế vẫn là chưa thu thập; kiểm thử tự động không thay người dùng.
+
+Đối chiếu CSV đã tải, giữ cả lượt lỗi/chưa xong:
+
+```powershell
+.venv\Scripts\python.exe scripts/benchmark_followup.py trials --csv path_to_export.csv --out data/processed/trial-summary.json
+```
+
+Lệnh kiểm tra mã lặp, thứ tự, thời điểm UTC và phép trừ thời gian trước khi tính. Báo riêng tỷ lệ duyệt, thời gian các lượt đã duyệt, tất cả lượt kết thúc và strategy thực chạy. Không điền thời gian cho lượt chưa xong; không ghi đè báo cáo đã có. Thời gian ngắn do lỗi không được coi là làm việc nhanh. Báo cáo chỉ mô tả pilot và luôn giữ `benefit_claim_ready=false` vì CSV chưa có điểm nghiệp vụ độc lập hoặc bằng chứng cỡ mẫu đủ để kết luận.
+
 ## Kiểm tra và lỗi kết nối
 
 ```powershell
@@ -38,4 +60,4 @@ Phân tích chỉ lập đề xuất; chưa tạo Activities, chưa gửi nội 
 
 Lệnh thứ hai cài addon và kiểm tra phân quyền/duyệt trên database mới có tiền tố `olist_ai_test_`; tự xóa đúng database thử khi kết thúc. Cần Docker/Odoo đang chạy. Không chạy trên `olist_demo`.
 
-Khi mất kết nối, mở lại cùng đề xuất và lấy kết quả. Một lượt có tối đa hai lần gọi model; lượt bị ngắt được báo chưa hoàn tất, không tự chạy lại hoặc tự giao việc. Tạo đề xuất mới sau khi đã kiểm tra cấu hình. Nếu chưa thấy dữ liệu, kiểm tra mã khách `OLIST-DEMO:`, origin `OLIST-`, trạng thái nháp/đã gửi, người phụ trách, trưởng nhóm và công ty đang chọn. Không thêm dữ liệu giả vào nguồn Olist để làm đầy màn hình.
+Khi mất kết nối, mở lại cùng đề xuất và lấy kết quả. Mặc định mỗi bước soạn/kiểm tra được gửi tối đa hai lần với lỗi HTTP tạm thời, từng lần được ghi trace; lỗi nội dung không tự soạn lại. Tổng lượt có deadline gồm cả hàng chờ, không tự giao việc. Xem [chính sách gọi model](AI_EVALUATION.md#hàng-chờ-và-thử-lại-có-giới-hạn). Nếu chưa thấy dữ liệu, kiểm tra mã khách `OLIST-DEMO:`, origin `OLIST-`, trạng thái nháp/đã gửi, người phụ trách, trưởng nhóm và công ty đang chọn. Không thêm dữ liệu giả vào nguồn Olist để làm đầy màn hình.
