@@ -88,7 +88,40 @@ Cài Ollama từ https://ollama.com/download. Có thể bắt đầu bằng `oll
 
 Corpus nằm trong `docs/knowledge/`, do dự án biên soạn; không phải tài liệu nội bộ Olist. Mặc định truy xuất **lexical TF-IDF** có bỏ dấu tiếng Việt. Có thể bật hybrid qua Ollama embedding: đặt `EMBED_MODEL`, chạy `python manage.py embed`, đặt `RAG_MODE=hybrid`. Chế độ model embedding thật chưa được xác minh trong môi trường phát hành.
 
+## Đội agent
+
+Trong **Trợ lý dữ liệu**, chọn **Đội agent**. Groq điều phối, phân tích BI và đọc Odoo; Gemini tra tài liệu, kiểm tra và tổng hợp. Mở các mục bằng chứng để xem số liệu gốc và nguồn.
+
+Cài phần phụ thuộc một lần:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-agent.txt
+.\.venv\Scripts\python.exe manage.py agent-team
+```
+
+CLI nhận thêm `--thread ID` để tiếp tục hội thoại, `--local-summary` để bật Qwen, `--allow-proposals` để cho phép lưu đề xuất. Trên web có các ô chọn tương ứng. `OLLAMA_MODEL` phải khớp tên trong `ollama list`; máy hiện tại dùng `qwen3:4b-instruct-2507-q4_K_M`.
+
+Qwen chỉ tóm tắt khi bật và lịch sử đủ dài. Groq/Gemini vẫn nhận ngữ cảnh cần dùng. Mỗi lượt tối đa 12 lần gọi model, 12 công cụ, 120 giây, hai agent cùng lúc và một vòng sửa. Phạm vi BI theo bộ lọc; chưa hỗ trợ so sánh nhiều kỳ trong một câu hỏi.
+
+Muốn tạo đề xuất, bật quyền rồi ghi rõ: `Tạo đề xuất báo giá partner_id=1 product_id=2 quantity=3 unit_price=10`. Thay ID bằng bản ghi DEMO thật, giá theo BRL. Đề xuất chỉ ở trạng thái pending; xem và duyệt riêng trong ERP. Chat không xác nhận đơn hoặc lập hóa đơn.
+
+Nếu mất kết nối, bấm **Lấy lại lượt vừa gửi** để lấy kết quả cùng mã, tránh tạo lại đề xuất. Hội thoại mới tạo thread riêng; lịch sử lưu local trong SQLite và không đưa lên Git. Bộ kiểm tra nguồn/số không bảo đảm mọi diễn giải của model đều đúng; cần đối chiếu bằng chứng.
+
+Kịch bản kiểm tra BI, Gemini, Qwen và cách xử lý lỗi: [docs/DEMO_AGENT_VI.md](docs/DEMO_AGENT_VI.md).
+
+## Báo cáo PDF / Excel
+
+Mở **Báo cáo → Tạo báo cáo**, chọn phạm vi, sửa nhận xét và chọn biểu đồ đường/cột. Có thể thêm, bỏ, đổi thứ tự tối đa sáu biểu đồ, kèm bảng chi tiết. Kết quả BI của Đội agent có nút **Đưa vào báo cáo** để lấy đúng bộ lọc, nhận xét và tài liệu nguồn.
+
+Bấm **Lưu bản nháp** để mở lại sau; **PDF / Excel** tự lưu thay đổi trước khi tải. PDF có font tiếng Việt, biểu đồ và nguồn; Excel có số liệu và biểu đồ gốc để chỉnh tiếp. Font PDF dùng Arial trên Windows hoặc DejaVu Sans/Liberation Sans trên Linux. Cập nhật thư viện bằng `python -m pip install -r requirements.txt`.
+
+Số liệu được chụp từ công cụ BI và lưu local trong `data/processed/operations.db`, không đưa lên Git. Sửa nhận xét không tự đổi số liệu; đổi bộ lọc hoặc thêm nguồn biểu đồ mới sẽ truy vấn lại khi lưu. Nhận xét là nội dung có thể sửa, cần rà soát khi đổi phạm vi hoặc chat nguồn chưa hoàn tất. Bản đầu hỗ trợ một kỳ mỗi báo cáo, chưa so sánh hai kỳ; lịch sử hiển thị 100 bản nháp gần nhất.
+
 ## Odoo Community local
+
+Module chạy trong Odoo: **[AI hỗ trợ bán hàng](docs/ODOO_AI_FOLLOWUP.md)** — xem khách cần chăm sóc, Groq/Gemini đề xuất việc và người dùng duyệt trước khi tạo Activities. Có phân quyền nhân viên/quản lý nhóm; bản đầu chỉ dùng Olist DEMO.
+
+Đánh giá và riêng tư: **[Baseline, benchmark và dữ liệu gửi model](docs/AI_EVALUATION.md)**. Luồng chăm sóc chỉ gửi mã tạm và dữ kiện tối thiểu; có chế độ quy tắc không gọi cloud. Kết quả tự động tách riêng phiếu chấm nội dung của người dùng.
 
 Hướng dẫn kết nối từ đầu và Agent đa công cụ tùy chọn: **[docs/ODOO_AGENT_GUIDE_VI.md](docs/ODOO_AGENT_GUIDE_VI.md)**. Có thêm `python manage.py odoo-check` để kiểm tra kết nối chỉ đọc. Agent Lab chạy CLI riêng, không thay Assistant web; cần cài `requirements-agent.txt`.
 
@@ -96,7 +129,23 @@ Xem **docs/ODOO_WINDOWS.md**. Compose chạy Odoo Community 19 và PostgreSQL; B
 
 Luồng: nhập demo bằng `manage.py odoo-seed --limit 10` → đọc catalog qua RPC → lưu đề xuất trong ứng dụng → người dùng xem payload và duyệt → tạo `sale.order` draft → audit. Không xác nhận đơn, xuất kho, lập hóa đơn hoặc thu tiền.
 
-Odoo/PostgreSQL server thật chưa được kiểm thử trong môi trường xây dựng; tests mock không được mô tả là đã tích hợp server thành công. Bản local một operator, chưa có RBAC doanh nghiệp. Không mở port ứng dụng ra Internet.
+Trong **ERP & Phê duyệt**, bấm **Đọc lại Odoo**, tìm khách/sản phẩm theo tên hoặc mã DEMO và mở chi tiết bản ghi. Chọn khách, thêm tối đa 20 dòng hàng, nhập số lượng, đơn giá BRL, chiết khấu 0–100% và chọn thuế → **Đối soát đề xuất** → **Lưu đề xuất chờ duyệt**. Các số nhập tối đa hai chữ số thập phân. Giá trên thẻ sản phẩm giữ tiền tệ gốc và không tự dùng làm đơn giá BRL.
+
+Danh mục thuế lấy từ thuế bán hàng đang hoạt động của công ty kết nối Odoo. Ứng dụng dùng Odoo tính thử trên bản ghi trong bộ nhớ, không lưu báo giá khi đối soát. Bảng hiển thị tiền hàng trước giảm, tiền giảm (đều chưa thuế), tiền sau giảm, thuế và tổng thanh toán. Thuế đã gồm trong đơn giá và cách làm tròn dùng đúng cấu hình Odoo; nếu làm tròn theo tổng chứng từ, tổng thanh toán có thể lệch vài xu so với cộng các dòng và được ghi rõ. Đây là cấu hình hiện có của công ty, không tự đặt thuế theo tiền tệ BRL.
+
+Khi duyệt, ứng dụng kiểm tra lại cấu hình và nội dung đã lưu rồi mới tạo bản nháp, sau đó đọc lại từng dòng và tổng tiền để đối chiếu. Cấu hình thay đổi thì cần lập đề xuất mới. Đề xuất cũ không có thuế/chiết khấu vẫn dùng được.
+
+Đề xuất đã lưu giữ nguyên khách, từng dòng hàng và tổng tiền để duyệt riêng. Sửa nội dung trên form sẽ yêu cầu đối soát lại. Nếu thông tin Odoo thay đổi trước lúc duyệt, lượt ghi bị chặn để kiểm tra lại. Mất kết nối sau khi tạo báo giá thì thử lại cùng mã để tìm theo origin và đối chiếu từng dòng trước khi nhận kết quả. Luồng một sản phẩm từ chat vẫn được giữ.
+
+**Chi tiết & lịch sử** hiển thị các lần lưu, duyệt, lỗi và từ chối. **Xem báo giá Odoo** đọc lại trạng thái, từng dòng, thuế và tổng tiền từ Odoo. “Đã ghi bản nháp” là trạng thái xử lý đề xuất trong ứng dụng; trạng thái chứng từ hiển thị riêng theo Odoo.
+
+**Nhờ agent kiểm tra:** nhập đủ khách và các dòng hàng trên ERP, ghi câu hỏi nếu cần rồi bấm nút này. Trợ lý nhận bản chụp form, dùng Odoo đối soát và giải thích chiết khấu/thuế/làm tròn. Model không được đổi giá, số lượng hay thuế trong bản chụp. Kết quả có bảng số tiền và nguồn, chưa lưu đề xuất; quay về form để sửa, đối soát và duyệt riêng. Lấy lại cùng lượt chạy sau mất kết nối giữ nguyên bản chụp, không gọi model lại nếu kết quả đã lưu.
+
+**Tải báo giá PDF:** mở chi tiết báo giá Odoo nháp/đã gửi rồi bấm **Tải báo giá PDF**. File đọc số liệu trực tiếp từ Odoo lúc tải, có khách, dòng hàng, chiết khấu, thuế, tổng và tiền tệ. Đề xuất pending chưa có chứng từ thì chưa tải PDF được. Tải file không đánh dấu đã gửi, không xác nhận đơn và không gửi email. Trong chat có thể hỏi “Cho xem báo giá Odoo DEMO và cách tải PDF”; agent tra chứng từ và đưa nút tải.
+
+Bộ skill của agent ERP nằm ở [.agents/skills](.agents/skills): `olist-sales-lookup`, `olist-quote-review`, `olist-quote-pdf`. Ứng dụng tự nạp hướng dẫn khi gọi agent ERP và hiển thị skill đã nạp trong kết quả. Quyền công cụ được giới hạn trong mã nguồn, file skill không cấp thêm quyền ghi. Cần Groq/Gemini và `requirements-agent.txt` cho trợ lý; tải PDF trực tiếp không cần gọi model.
+
+Luồng tạo báo giá nháp đã được kiểm tra với Odoo local thật, có đối chiếu payload và chặn tạo trùng; xem `reports/web_browser_qa.json`. Phạm vi kiểm tra chỉ gồm dữ liệu DEMO và báo giá nháp. Bản local một operator, chưa có RBAC doanh nghiệp. Không mở port ứng dụng ra Internet.
 
 ## ML giao trễ thử nghiệm
 

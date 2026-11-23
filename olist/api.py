@@ -3,18 +3,26 @@ import json
 import hashlib
 import os
 import time
+import asyncio
 from pathlib import Path
 from typing import Annotated, Literal
-from fastapi import FastAPI, Depends, Header, HTTPException, Request, Cookie, Response
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, Depends, Header, HTTPException, Request, Cookie, Response, Query, Path as ApiPath
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, SecretStr
 from . import __version__, analytics, agent, rag, ml, erp, llm
 from .config import ROOT, settings
 from .database import ready, operational
-from .schemas import Quotation
+from .schemas import Quotation, SalesQuotation, SalesProposal
+from . import agent_team
+from . import reporting, report_exports
+from . import sales
+from . import sales_pricing
+from . import sales_exports
+from .followups import router as followup_router
 
 app = FastAPI(title="Olist Intelligence", version=__version__)
+app.include_router(followup_router)
 app.mount("/assets", StaticFiles(directory=ROOT / "frontend/assets"), name="assets")
 
 
@@ -137,9 +145,99 @@ class Chat(BaseModel):
     filters: analytics.Filters = Field(default_factory=analytics.Filters)
 
 
+@app.get("/report-drafts", dependencies=secured)
+def report_list():
+    return reporting.list_drafts()
+
+
+@app.post("/report-drafts", dependencies=data_secured)
+def report_create(payload: reporting.Create):
+    return reporting.create(payload)
+
+
+@app.get("/report-drafts/{report_id}", dependencies=secured)
+def report_get(report_id: str):
+    try:
+        return reporting.get(report_id)
+    except KeyError:
+        raise HTTPException(404, "Không tìm thấy báo cáo.") from None
+
+
+@app.put("/report-drafts/{report_id}", dependencies=data_secured)
+def report_update(report_id: str, payload: reporting.Update):
+    try:
+        return reporting.update(report_id, payload)
+    except KeyError:
+        raise HTTPException(404, "Không tìm thấy báo cáo.") from None
+    except reporting.Conflict as exc:
+        raise HTTPException(409, str(exc)) from None
+
+
+@app.get("/report-drafts/{report_id}/export/{file_format}", dependencies=secured)
+def report_export(report_id: str, file_format: Literal["pdf", "xlsx"]):
+    try:
+        report = reporting.get(report_id)
+    except KeyError:
+        raise HTTPException(404, "Không tìm thấy báo cáo.") from None
+    body = report_exports.pdf(report) if file_format == "pdf" else report_exports.excel(report)
+    media = "application/pdf" if file_format == "pdf" else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    return Response(content=body, media_type=media, headers={"Content-Disposition": f'attachment; filename="olist_report_{report["id"][:8]}.{file_format}"', "Cache-Control": "no-store"})
+
+
 @app.post("/agent/chat", dependencies=data_secured)
 def chat(payload: Chat):
     return agent.ask(payload.question, payload.filters)
+
+
+@app.get("/agent/team", dependencies=secured)
+def team_configuration():
+    return agent_team.team_status()
+
+
+@app.post("/agent/team/chat", dependencies=data_secured)
+async def team_chat(payload: agent_team.TeamRequest):
+    try:
+        return await agent_team.ask(payload)
+    except agent_team.TeamUnavailable as exc:
+        raise HTTPException(503, str(exc)) from None
+    except agent_team.RunBusy as exc:
+        raise HTTPException(409, str(exc)) from None
+
+
+@app.post("/agent/team/stream", dependencies=data_secured)
+async def team_stream(payload: agent_team.TeamRequest):
+    # JSON lines over fetch keeps the existing cookie/CSRF headers and POST body.
+    if not agent_team.team_status()["ready"]:
+        raise HTTPException(503, "Đội agent chưa sẵn sàng. Kiểm tra cấu hình và requirements-agent.txt.")
+    agent.extract_filters(payload.question, payload.filters)
+
+    async def events():
+        queue = asyncio.Queue()
+
+        async def run():
+            try:
+                result = await agent_team.ask(payload, queue.put_nowait)
+                queue.put_nowait({"type": "result", "result": result})
+            except (agent_team.TeamUnavailable, agent_team.RunBusy, ValueError) as exc:
+                queue.put_nowait({"type": "error", "message": str(exc)})
+            except Exception:
+                queue.put_nowait({"type": "error", "message": "Chưa hoàn tất lượt chạy. Kiểm tra trạng thái và ERP trước khi thử lại."})
+            finally:
+                queue.put_nowait(None)
+
+        task = asyncio.create_task(run())
+        try:
+            while True:
+                event = await queue.get()
+                if event is None:
+                    break
+                yield json.dumps(event, ensure_ascii=False, default=str) + "\n"
+        finally:
+            if not task.done():
+                task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+
+    return StreamingResponse(events(), media_type="application/x-ndjson", headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
 
 
 class Search(BaseModel):
@@ -189,14 +287,66 @@ def get_erp(kind: Literal["catalog", "quotations"]):
     return erp_read(kind)
 
 
+def sales_read(operation, *args):
+    try:
+        return operation(erp.Odoo(), *args)
+    except ValueError:
+        raise
+    except Exception:
+        raise HTTPException(503, "Chưa đọc được dữ liệu Odoo. Kiểm tra kết nối rồi thử lại.") from None
+
+
+@app.get("/erp/search/{kind}", dependencies=secured)
+def sales_search(kind: Literal["partners", "products"], q: str = Query(default="", max_length=120),
+                 offset: int = Query(default=0, ge=0, le=10000), limit: int = Query(default=20, ge=1, le=50)):
+    return sales_read(sales.search, kind, q, offset, limit)
+
+
+@app.get("/erp/records/{kind}/{record_id}", dependencies=secured)
+def sales_record(kind: Literal["partners", "products"], record_id: int = ApiPath(ge=1)):
+    return sales_read(sales.record, kind, record_id)
+
+
+@app.post("/erp/quotation-preview", dependencies=secured)
+def sales_preview(payload: SalesQuotation):
+    return sales_read(sales.preview, payload.model_dump())
+
+
+@app.get("/erp/sales/taxes", dependencies=secured)
+def sales_taxes():
+    return sales_read(sales_pricing.tax_catalog)
+
+
+@app.get("/erp/quotations/{order_id}", dependencies=secured)
+def sales_order(order_id: int = ApiPath(ge=1)):
+    return sales_read(sales.order_detail, order_id)
+
+
+@app.get("/erp/quotations/{order_id}/pdf", dependencies=secured)
+def sales_pdf(order_id: int = ApiPath(ge=1)):
+    content = sales_read(sales_exports.pdf, order_id)
+    return Response(content, media_type="application/pdf", headers={
+        "Content-Disposition": f'attachment; filename="bao_gia_{order_id}.pdf"', "Cache-Control": "no-store"})
+
+
 @app.get("/actions", dependencies=secured)
 def actions():
     return erp.list_actions()
 
 
 @app.post("/actions", dependencies=secured)
-def propose(payload: Quotation):
-    return erp.propose(payload.model_dump())
+def propose(payload: SalesProposal | Quotation):
+    try:
+        return erp.propose(payload.model_dump())
+    except ValueError:
+        raise
+    except Exception:
+        raise HTTPException(503, "Chưa lưu được đề xuất. Kiểm tra kết nối rồi lấy lại bằng cùng mã yêu cầu.") from None
+
+
+@app.get("/actions/{action_id}", dependencies=secured)
+def action_detail(action_id: str):
+    return erp.action_detail(action_id)
 
 
 @app.post("/actions/{action_id}/approve", dependencies=secured)

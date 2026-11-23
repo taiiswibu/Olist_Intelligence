@@ -12,10 +12,10 @@ from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.sqlite import SqliteSaver
 from pydantic import BaseModel, ConfigDict, Field
 
-from . import analytics, erp, rag
+from . import analytics, erp, rag, sales, sales_pricing, sales_exports
 from .config import ROOT
 from .llm import providers
-from .schemas import Quotation
+from .schemas import Quotation, SalesQuotation
 
 
 class Window(analytics.Filters):
@@ -38,6 +38,17 @@ class OrderQuery(BaseModel):
     order_id: str = Field(pattern=r"^[a-f0-9]{32}$")
 
 
+class SalesSearch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    kind: Literal["partners", "products"]
+    query: str = Field(default="", max_length=120)
+
+
+class QuotationQuery(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    order_id: int = Field(gt=0)
+
+
 def safe_result(fn, *args, **kwargs):
     try:
         return fn(*args, **kwargs)
@@ -46,7 +57,7 @@ def safe_result(fn, *args, **kwargs):
         return {"error": type(exc).__name__, "hint": "Không có kết quả. Kiểm tra dữ liệu/cấu hình; không tự đoán giá trị."}
 
 
-def build_tools(allow_proposals=False):
+def build_tools(allow_proposals=False, sales_draft=None):
     @tool(args_schema=Window)
     def business_kpis(start: date = date(2017, 1, 1), end: date = date(2018, 8, 31), state: str | None = None) -> dict:
         """Read Olist KPIs for explicit purchase dates and optional Brazilian state; currency BRL."""
@@ -78,8 +89,39 @@ def build_tools(allow_proposals=False):
         """Read up to 50 DEMO Odoo quotations. No confirmation, creation or invoicing."""
         return {"rows": safe_result(lambda: erp.Odoo().quotations())}
 
+    @tool(args_schema=SalesSearch)
+    def search_odoo_sales(kind: str, query: str = "") -> dict:
+        """Search the first 20 marked DEMO partners or products by name/code. Prices retain their source currency."""
+        return safe_result(lambda: sales.search(erp.Odoo(), kind, query))
+
+    @tool
+    def odoo_sales_taxes() -> dict:
+        """Read active sales tax configurations of the current Odoo company; do not infer tax rates from BRL."""
+        return safe_result(lambda: sales_pricing.tax_catalog(erp.Odoo()))
+
+    @tool(args_schema=QuotationQuery)
+    def read_odoo_quotation(order_id: int) -> dict:
+        """Read an existing Olist DEMO quotation's lines, discounts, taxes, currency and document totals."""
+        return safe_result(lambda: sales.order_detail(erp.Odoo(), order_id))
+
+    @tool(args_schema=QuotationQuery)
+    def odoo_quotation_document(order_id: int) -> dict:
+        """Find a PDF download for an existing DEMO draft/sent quotation. Does not send, save, confirm or invoice."""
+        return safe_result(lambda: sales_exports.document(erp.Odoo(), order_id))
+
     tools = [business_kpis, business_breakdown, search_business_docs, lookup_historical_order,
-             odoo_demo_catalog, odoo_demo_quotations]
+             odoo_demo_catalog, odoo_demo_quotations, search_odoo_sales, odoo_sales_taxes,
+             read_odoo_quotation, odoo_quotation_document]
+    if sales_draft is not None:
+        # Capture validated user input; the model cannot supply alternative prices or taxes.
+        snapshot = SalesQuotation.model_validate(sales_draft).model_dump(mode="json")
+
+        @tool
+        def review_current_quotation() -> dict:
+            """Calculate the current user-provided quotation snapshot in Odoo without saving or changing it. No arguments."""
+            return safe_result(lambda: sales.preview(erp.Odoo(), snapshot))
+
+        tools.append(review_current_quotation)
     if allow_proposals:
         @tool(args_schema=Quotation)
         def prepare_quotation(partner_id: int, product_id: int, quantity: float, unit_price: float) -> dict:

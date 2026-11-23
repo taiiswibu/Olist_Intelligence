@@ -1,0 +1,95 @@
+<odoo>
+    <record id="queue_list" model="ir.ui.view">
+        <field name="name">olist.ai.queue</field><field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <list string="Khách cần chăm sóc" create="false" edit="false" delete="false">
+                <header><button name="action_olist_ai_analyze" type="object" string="Phân tích AI" class="btn-primary"/></header>
+                <field name="name"/><field name="partner_id"/><field name="user_id"/><field name="team_id"/>
+                <field name="olist_ai_reason"/><field name="validity_date"/><field name="activity_ids" widget="list_activity"/>
+                <field name="amount_total" sum=""/><field name="currency_id" column_invisible="True"/><field name="state"/>
+                <button name="action_olist_ai_analyze" type="object" string="Phân tích AI"/>
+                <button name="action_olist_measure" type="object" string="Bắt đầu lượt đo"/>
+            </list>
+        </field>
+    </record>
+    <record id="sale_order_ai_button" model="ir.ui.view">
+        <field name="name">sale.order.ai.followup</field><field name="model">sale.order</field><field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml"><xpath expr="//header" position="inside">
+            <field name="olist_ai_demo" invisible="True"/>
+            <button name="action_olist_ai_analyze" type="object" string="AI chăm sóc khách" invisible="not olist_ai_demo" groups="sales_team.group_sale_salesman"/>
+            <button name="action_olist_measure" type="object" string="Bắt đầu lượt đo" invisible="not olist_ai_demo" groups="sales_team.group_sale_salesman"/>
+        </xpath></field>
+    </record>
+    <record id="review_list" model="ir.ui.view">
+        <field name="name">olist.ai.followup.list</field><field name="model">olist.ai.followup.review</field>
+        <field name="arch" type="xml"><list create="false" delete="false">
+            <header><button name="action_export_trials" type="object" string="Tải CSV lượt đo"/></header>
+            <field name="order_id"/><field name="state" widget="badge"/><field name="summary"/><field name="assigned_id"/>
+            <field name="deadline"/><field name="approved_by"/><field name="approved_at"/>
+            <field name="trial_method" optional="hide"/><field name="trial_sequence" optional="hide"/>
+            <field name="trial_finished_at" column_invisible="True"/>
+            <field name="trial_elapsed" optional="hide" invisible="not trial_finished_at"/>
+        </list></field>
+    </record>
+    <record id="review_form" model="ir.ui.view">
+        <field name="name">olist.ai.followup.form</field><field name="model">olist.ai.followup.review</field>
+        <field name="arch" type="xml"><form create="false" delete="false" duplicate="false">
+            <header>
+                <button name="action_approve" type="object" string="Duyệt tạo việc" class="btn-primary" invisible="state != 'ready'" confirm="Tạo công việc chăm sóc với nội dung, người phụ trách và ngày hẹn đã kiểm tra?"/>
+                <button name="action_poll" type="object" string="Lấy kết quả" invisible="state != 'pending'"/>
+                <button name="action_cancel" type="object" string="Bỏ qua" invisible="state in ('approved','cancelled')"/>
+                <button name="action_trial_usable" type="object" string="Tự chấm: Dùng được" invisible="not trial_finished_at or trial_rated_at" confirm="Ghi tự đánh giá dùng được? Đây là nhận xét của người thực hiện, không phải chấm độc lập."/>
+                <button name="action_trial_needs_edit" type="object" string="Tự chấm: Cần sửa" invisible="not trial_finished_at or trial_rated_at" confirm="Ghi tự đánh giá cần sửa? Kết quả đầu tiên được giữ để đối chiếu."/>
+                <button name="action_trial_reject" type="object" string="Tự chấm: Không dùng được" invisible="not trial_finished_at or trial_rated_at" confirm="Ghi tự đánh giá không dùng được? Kết quả đầu tiên được giữ để đối chiếu."/>
+                <field name="state" widget="olist_ai_status"/>
+            </header>
+            <sheet>
+                <div class="alert alert-info" role="status" invisible="state != 'pending'">Đang phân tích. Bạn có thể rời màn hình và mở lại cùng đề xuất.</div>
+                <div class="alert alert-warning" role="status" invisible="state != 'ready'">Đây là đề xuất. Kiểm tra, sửa nội dung và duyệt riêng để tạo công việc.</div>
+                <group><field name="order_id"/><field name="owner_id"/><field name="company_id" groups="base.group_multi_company"/></group>
+                <field name="error" invisible="not error" readonly="True"/>
+                <group string="Lượt đo thao tác" invisible="not trial_started_at">
+                    <div class="alert alert-info" colspan="2">Thời gian tính từ lúc bấm bắt đầu đến khi duyệt, lỗi hoặc bỏ qua, gồm cả thời gian chờ. Cách chuẩn bị luân phiên giữa soạn tay, mẫu quy tắc và AI. Chỉ bấm Duyệt tạo việc sau khi kiểm tra riêng.</div>
+                    <field name="trial_method"/><field name="trial_sequence"/><field name="trial_started_at"/>
+                    <field name="trial_ready_at"/><field name="trial_finished_at"/><field name="trial_elapsed" invisible="not trial_finished_at"/>
+                    <field name="trial_outcome" invisible="not trial_finished_at"/>
+                    <div class="text-muted" colspan="2" invisible="not trial_finished_at">Tự chấm kết quả cuối sau khi đọc/sửa; chưa phải đánh giá độc lập hoặc độ đúng của bản nháp ban đầu.</div>
+                    <field name="trial_rating"/><field name="trial_rated_at"/>
+                </group>
+                <group string="Đối chiếu"><field name="evidence" nolabel="1" colspan="2"/><field name="explanation" nolabel="1" colspan="2"/></group>
+                <group string="Nội dung sẽ được duyệt">
+                    <field name="summary" readonly="state != 'ready'"/><field name="activity_type" readonly="state != 'ready'"/>
+                    <field name="allowed_user_ids" invisible="True"/>
+                    <field name="assigned_id" domain="[('id', 'in', allowed_user_ids)]" readonly="state != 'ready'" options="{'no_create': True}"/>
+                    <field name="deadline" readonly="state != 'ready'"/><field name="note" readonly="state != 'ready'"/>
+                    <field name="approval_checked" readonly="state != 'ready'"/>
+                </group>
+                <group string="Lịch sử duyệt" invisible="state != 'approved'">
+                    <field name="approved_by"/><field name="approved_at"/><field name="activity_id"/><field name="approved_payload"/>
+                </group>
+                <notebook><page string="Model và skill"><field name="model_details" nolabel="1"/></page></notebook>
+            </sheet>
+        </form></field>
+    </record>
+    <record id="queue_action" model="ir.actions.server">
+        <field name="name">Khách cần chăm sóc</field><field name="model_id" ref="sale.model_sale_order"/>
+        <field name="state">code</field><field name="code">action = model.olist_ai_queue_action()</field>
+    </record>
+    <record id="pending_action" model="ir.actions.act_window">
+        <field name="name">Đề xuất chờ duyệt</field><field name="res_model">olist.ai.followup.review</field><field name="view_mode">list,form</field>
+        <field name="domain">[('state', 'in', ['pending','ready','failed'])]</field>
+    </record>
+    <record id="history_action" model="ir.actions.act_window">
+        <field name="name">Lịch sử giao việc</field><field name="res_model">olist.ai.followup.review</field><field name="view_mode">list,form</field>
+        <field name="domain">[('state', 'in', ['approved','cancelled'])]</field>
+    </record>
+    <record id="trials_action" model="ir.actions.act_window">
+        <field name="name">Lượt đo thao tác</field><field name="res_model">olist.ai.followup.review</field><field name="view_mode">list,form</field>
+        <field name="domain">[('trial_started_at', '!=', False)]</field>
+    </record>
+    <menuitem id="root_menu" name="AI hỗ trợ bán hàng" sequence="35" groups="sales_team.group_sale_salesman"/>
+    <menuitem id="queue_menu" name="Khách cần chăm sóc" parent="root_menu" action="queue_action" sequence="10"/>
+    <menuitem id="pending_menu" name="Đề xuất chờ duyệt" parent="root_menu" action="pending_action" sequence="20"/>
+    <menuitem id="history_menu" name="Công việc và lịch sử" parent="root_menu" action="history_action" sequence="30"/>
+    <menuitem id="trials_menu" name="Lượt đo thao tác" parent="root_menu" action="trials_action" sequence="40"/>
+</odoo>

@@ -6,12 +6,13 @@ from olist.config import init_env
 def main():
     init_env()
     parser = argparse.ArgumentParser(description="Olist Intelligence local management")
-    parser.add_argument("command", choices=["setup", "download", "ingest", "train", "status", "odoo-seed", "odoo-check", "embed", "models", "agent-lab"])
+    parser.add_argument("command", choices=["setup", "download", "ingest", "train", "status", "odoo-seed", "odoo-check", "embed", "models", "agent-lab", "agent-team"])
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--provider", default="groq")
     parser.add_argument("--question")
     parser.add_argument("--thread")
     parser.add_argument("--allow-proposals", action="store_true")
+    parser.add_argument("--local-summary", action="store_true")
     args = parser.parse_args()
     if args.command in {"setup", "download", "ingest"}:
         from olist.ingest import download, ingest
@@ -34,6 +35,9 @@ def main():
         print(json.dumps(result, indent=2, ensure_ascii=False))
         if not result["ok"]:
             raise SystemExit(1)
+    elif args.command == "agent-team":
+        from olist.agent_team import cli
+        cli(args.question, args.thread, args.local_summary, args.allow_proposals)
     elif args.command == "agent-lab":
         try:
             from olist.agent_lab import cli

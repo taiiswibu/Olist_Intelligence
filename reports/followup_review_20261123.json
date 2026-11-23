@@ -1,0 +1,238 @@
+{
+  "title": "Đối chiếu AI chăm sóc bán hàng — mười tình huống phát triển",
+  "reviewed_at_utc": "2026-11-23T09:04:01.621870+00:00",
+  "source_commit": "7ccf5cb2542c0d0c730b5bb55dba576033113ab8",
+  "worktree_dirty_at_run": false,
+  "run_manifest_sha256": "1e6cb87561e05f1a5b05515ba0a5911e6f080d6722b80c0c146ff1b6a4875b2b",
+  "raw_results_sha256": "73429435cf8e9772ce70901092cef2a5dc213ae31eb51565e7101ed0d6a873b6",
+  "review_csv_sha256": "8cb29092538e9cc54594873981f944e1bf6682a11ef6b4c9e81111e9967f408d",
+  "fixture_sha256": "fe652bdd8453a467f5db201ead16fac5822333f302c2c42c51945ba72af744b1",
+  "review_script_local": ".openai/qa/review_followup.py",
+  "source_hashes": {
+    "olist/followups.py": "9eeca630d39fa53df3665c71b73ffb4ca82c5a2055762b5f7303ea03bacdbaba",
+    "olist/followup_privacy.py": "e1c8e115d1428fe93d24b7491dae641142f74f60f746894f2fbede805d618786",
+    "olist/team_model.py": "88ba725d47ea82ac50b4fdc624dd7c97dfb4c27757d47551c9ed1ff2da00b311",
+    "olist/followup_evaluation.py": "a1fca9a47448e33f6bd8eea21e88772e34a50ee97661c540649e5e8cbe8e7160",
+    ".agents/skills/olist-customer-followup/SKILL.md": "70373b63bd0e6ad98a581842db4a860b4d08638a2a2ef9a1b6cf4e98a575b345",
+    ".agents/skills/olist-followup-check/SKILL.md": "8d90abbb0e3d569aae0a5c315de5aa2124312d87513052b6a961ba35394533df"
+  },
+  "models": {
+    "groq": "openai/gpt-oss-20b",
+    "gemini": "gemini-3.5-flash-lite"
+  },
+  "split": "dev",
+  "families": 10,
+  "variants_per_family": 1,
+  "repeats": 1,
+  "cases_per_strategy": 10,
+  "selected_case_ids": [
+    "draft_expires_today-v0",
+    "draft_future_activity-v0",
+    "sent_due_tomorrow-v0",
+    "draft_expiry_boundary-v0",
+    "draft_no_expiry-v0",
+    "draft_overdue_and_expired-v0",
+    "sent_activity_today-v0",
+    "sent_expired-v0",
+    "sent_outside_expiry_window-v0",
+    "sent_overdue_activity-v0"
+  ],
+  "summary": {
+    "gemini": {
+      "cases": 10,
+      "completed": 9,
+      "completion_rate": 0.9,
+      "contract_pass_rate": 0.9,
+      "elapsed_p50_ms": 1437.5,
+      "elapsed_p95_ms": 1855.05,
+      "model_calls": 10,
+      "http_requests_privacy_checked": 10,
+      "tokens_reported": null,
+      "estimated_cost": null,
+      "human_quality": "not_scored"
+    },
+    "groq": {
+      "cases": 10,
+      "completed": 6,
+      "completion_rate": 0.6,
+      "contract_pass_rate": 0.6,
+      "elapsed_p50_ms": 969.0,
+      "elapsed_p95_ms": 1883.15,
+      "model_calls": 10,
+      "http_requests_privacy_checked": 10,
+      "tokens_reported": null,
+      "estimated_cost": null,
+      "human_quality": "not_scored"
+    },
+    "pipeline": {
+      "cases": 10,
+      "completed": 3,
+      "completion_rate": 0.3,
+      "contract_pass_rate": 0.3,
+      "elapsed_p50_ms": 2125.0,
+      "elapsed_p95_ms": 2398.8,
+      "model_calls": 16,
+      "http_requests_privacy_checked": 16,
+      "tokens_reported": null,
+      "estimated_cost": null,
+      "human_quality": "not_scored"
+    },
+    "rules": {
+      "cases": 10,
+      "completed": 10,
+      "completion_rate": 1,
+      "contract_pass_rate": 1,
+      "elapsed_p50_ms": 16.0,
+      "elapsed_p95_ms": 16.0,
+      "model_calls": 0,
+      "http_requests_privacy_checked": 0,
+      "tokens_reported": 0,
+      "estimated_cost": 0,
+      "human_quality": "not_scored"
+    }
+  },
+  "errors": {
+    "gemini": {
+      "HTTPStatusError": 1
+    },
+    "groq": {
+      "HTTPStatusError": 4
+    },
+    "pipeline": {
+      "ReviewRejected": 3,
+      "HTTPStatusError": 4
+    },
+    "rules": {}
+  },
+  "assistant_review": {
+    "reviewer_kind": "single_assistant_not_blinded",
+    "human_raters": 0,
+    "independent_quality_validation": false,
+    "observed_edit_seconds": null,
+    "rubric": [
+      "Văn bản nhất quán trạng thái báo giá và action.",
+      "Không suy diễn lịch sử gửi/nhận/phản hồi từ no_activity.",
+      "Có lịch việc không chứng minh đã thực hiện hoặc tương tự.",
+      "Mẫu chung được coi là bản nháp dùng được, chưa phải nội dung tối ưu."
+    ],
+    "verdict_counts": {
+      "gemini": {
+        "usable_draft": 7,
+        "needs_edit": 2,
+        "no_output": 1
+      },
+      "groq": {
+        "needs_edit": 6,
+        "no_output": 4
+      },
+      "pipeline": {
+        "no_output": 7,
+        "needs_edit": 3
+      },
+      "rules": {
+        "usable_draft": 10
+      }
+    },
+    "findings": [
+      {
+        "sample_id": "69c83a07d34d4065",
+        "case_id": "draft_expires_today-v0",
+        "strategy": "groq",
+        "issue": "unsupported_history",
+        "comment": "Không có việc chưa chứng minh chưa có phản hồi; 'gửi lại' không có lịch sử gửi làm căn cứ. Bỏ suy đoán phản hồi và đề nghị điều chỉnh giá khi chưa có căn cứ."
+      },
+      {
+        "sample_id": "66f37a3f39fc421c",
+        "case_id": "draft_future_activity-v0",
+        "strategy": "gemini",
+        "issue": "unsupported_similarity",
+        "comment": "Có lịch việc chưa đủ chứng minh đó là 'lịch việc tương tự'. Đổi thành 'đã có lịch việc'; tiếp tục rà soát nội dung thực tế ở Odoo."
+      },
+      {
+        "sample_id": "c1597058b8c346c2",
+        "case_id": "draft_future_activity-v0",
+        "strategy": "pipeline",
+        "issue": "unsupported_history",
+        "comment": "Cụm 'các hoạt động đã thực hiện' giả định lịch sử hoàn tất mà nguồn không có. Đổi thành xem nội dung và tiến độ việc đang hẹn."
+      },
+      {
+        "sample_id": "8b868ece3efd49a6",
+        "case_id": "draft_future_activity-v0",
+        "strategy": "groq",
+        "issue": "action_text_mismatch",
+        "comment": "Action yêu cầu rà việc hiện có nhưng văn bản chủ yếu hoàn thiện báo giá/cập nhật khách. Nêu rõ xem lịch việc đang hẹn trước khi đề nghị bước mới."
+      },
+      {
+        "sample_id": "3e9194be1de04bc0",
+        "case_id": "sent_due_tomorrow-v0",
+        "strategy": "pipeline",
+        "issue": "unsupported_history",
+        "comment": "Reviewer vẫn cho qua câu 'chưa nhận phản hồi'; no_activity không chứng minh lịch sử phản hồi."
+      },
+      {
+        "sample_id": "41cf791a7a0941a3",
+        "case_id": "sent_due_tomorrow-v0",
+        "strategy": "groq",
+        "issue": "unsupported_history",
+        "comment": "Bỏ khẳng định 'chưa có phản hồi': nguồn chỉ nói chưa có hoạt động, không cung cấp lịch sử phản hồi."
+      },
+      {
+        "sample_id": "38606f963f8b453e",
+        "case_id": "draft_expiry_boundary-v0",
+        "strategy": "groq",
+        "issue": "unsupported_history",
+        "comment": "Đổi 'gửi lại' thành 'chuẩn bị gửi'; trạng thái nháp không chứng minh đã gửi trước đó."
+      },
+      {
+        "sample_id": "49e91849d7ac4d87",
+        "case_id": "draft_no_expiry-v0",
+        "strategy": "groq",
+        "issue": "state_contradiction",
+        "comment": "Nguồn là draft nhưng note khẳng định 'Báo giá đã gửi'. Bỏ lịch sử gửi/nhận và phản hồi tự suy diễn."
+      },
+      {
+        "sample_id": "98a88996843149c7",
+        "case_id": "draft_overdue_and_expired-v0",
+        "strategy": "pipeline",
+        "issue": "action_text_mismatch",
+        "comment": "Action là review_existing_activity nhưng note/explanation chỉ rà báo giá và điều kiện hợp đồng. Cần xử lý việc quá hạn đã có, tránh tạo thêm trùng."
+      },
+      {
+        "sample_id": "a0488edda98b429a",
+        "case_id": "draft_overdue_and_expired-v0",
+        "strategy": "gemini",
+        "issue": "action_text_mismatch",
+        "comment": "Nguồn là báo giá nháp, đã hết hạn và việc quá hạn. Note lại soạn gửi lại báo giá quá hạn. Cần xem việc đang hẹn và hiệu lực trước khi chuẩn bị liên hệ."
+      },
+      {
+        "sample_id": "1adc63636793461c",
+        "case_id": "sent_expired-v0",
+        "strategy": "groq",
+        "issue": "unsupported_history",
+        "comment": "Bỏ khẳng định chưa có phản hồi; cần nhắc kiểm tra hiệu lực trước khi trao đổi nội dung báo giá đã hết hạn."
+      }
+    ]
+  },
+  "artifacts_local": "data/processed/followup_evaluations/dev-review-20261123",
+  "assessment": "Cần sửa trước khi khẳng định chất lượng; có thể chia sẻ như kết quả thử nghiệm với giới hạn đã nêu.",
+  "interpretation": [
+    "Đúng cấu trúc không đồng nghĩa nội dung đúng: có câu mâu thuẫn draft/đã gửi và suy đoán chưa phản hồi.",
+    "Bước reviewer vừa từ chối một số lượt vừa cho qua nội dung cần sửa; không đủ căn cứ chọn nhiều agent làm phương án tốt nhất.",
+    "Quy tắc cho đầu ra ổn định trong lượt này nhưng câu chữ chung; chưa chứng minh hiệu quả bán hàng.",
+    "Các lỗi HTTP chưa có status code trong trace; không kết luận là quota, mạng hay model yếu."
+  ],
+  "limits": [
+    "Một assistant đọc cả tên phương án, không phải hai người chấm mù độc lập.",
+    "Mười họ tổng hợp, một biến thể mỗi họ, một lượt chạy; chưa đại diện dữ liệu khách thật.",
+    "Nhãn do kỹ thuật soạn, chưa có chuyên gia nghiệp vụ xác nhận; tập dự phòng chưa chạy.",
+    "Không sửa prompt, fixture hoặc cấu hình ứng dụng sau khi xem kết quả; không tự gửi liên hệ hay ghi ERP.",
+    "Token và chi phí của các phương án cloud còn thiếu do lỗi; không thay giá trị thiếu bằng không."
+  ],
+  "verification": {
+    "all_40_records_reviewed": true,
+    "counts_recomputed_from_raw": true,
+    "fixture_unchanged": true,
+    "human_ratings_untouched": true,
+    "production_behavior_unchanged": true
+  }
+}

@@ -1,0 +1,175 @@
+{
+  "scope": "Odoo follow-up workflow only",
+  "privacy_version": "followup-minimized-v1",
+  "observed_at_utc": "2026-11-23T08:50:49.614634+00:00",
+  "base_commit": "f219de4042a2ecbcff04dba5d9769cdd46546bf0",
+  "worktree_dirty_at_run": true,
+  "models": {
+    "groq": "openai/gpt-oss-20b",
+    "gemini": "gemini-3.5-flash-lite"
+  },
+  "fixture_suite": "followup-fixtures-v1",
+  "fixture_sha256": "fe652bdd8453a467f5db201ead16fac5822333f302c2c42c51945ba72af744b1",
+  "families": 30,
+  "development_samples": 40,
+  "reserved_samples": 80,
+  "privacy_variants_per_family": 4,
+  "expert_labels": "not_reviewed",
+  "human_quality": "not_scored",
+  "reserved_live_evaluation": "not_run",
+  "rules_development": {
+    "cases": 40,
+    "completed": 40,
+    "completion_rate": 1,
+    "contract_pass_rate": 1,
+    "elapsed_p50_ms": 15.0,
+    "elapsed_p95_ms": 16.0,
+    "model_calls": 0,
+    "http_requests_privacy_checked": 0,
+    "tokens_reported": 0,
+    "estimated_cost": 0,
+    "human_quality": "not_scored"
+  },
+  "live_smoke": {
+    "gemini": {
+      "cases": 3,
+      "completed": 3,
+      "completion_rate": 1,
+      "contract_pass_rate": 1,
+      "elapsed_p50_ms": 1437.0,
+      "elapsed_p95_ms": 1844.7,
+      "model_calls": 3,
+      "http_requests_privacy_checked": 3,
+      "tokens_reported": 3197,
+      "estimated_cost": null,
+      "human_quality": "not_scored"
+    },
+    "groq": {
+      "cases": 3,
+      "completed": 3,
+      "completion_rate": 1,
+      "contract_pass_rate": 1,
+      "elapsed_p50_ms": 1000.0,
+      "elapsed_p95_ms": 1028.8,
+      "model_calls": 3,
+      "http_requests_privacy_checked": 3,
+      "tokens_reported": 3441,
+      "estimated_cost": null,
+      "human_quality": "not_scored"
+    },
+    "pipeline": {
+      "cases": 3,
+      "completed": 2,
+      "completion_rate": 0.6666666666666666,
+      "contract_pass_rate": 0.6666666666666666,
+      "elapsed_p50_ms": 2125.0,
+      "elapsed_p95_ms": 2377.9,
+      "model_calls": 6,
+      "http_requests_privacy_checked": 6,
+      "tokens_reported": 5410,
+      "estimated_cost": null,
+      "human_quality": "not_scored"
+    },
+    "rules": {
+      "cases": 3,
+      "completed": 3,
+      "completion_rate": 1,
+      "contract_pass_rate": 1,
+      "elapsed_p50_ms": 16.0,
+      "elapsed_p95_ms": 16.0,
+      "model_calls": 0,
+      "http_requests_privacy_checked": 0,
+      "tokens_reported": 0,
+      "estimated_cost": 0,
+      "human_quality": "not_scored"
+    }
+  },
+  "live_selected_cases": [
+    "draft_expires_today-v0",
+    "draft_future_activity-v0",
+    "sent_due_tomorrow-v0"
+  ],
+  "http_requests_privacy_checked": 12,
+  "tested_model_code_hashes": {
+    "olist/followups.py": "9eeca630d39fa53df3665c71b73ffb4ca82c5a2055762b5f7303ea03bacdbaba",
+    "olist/followup_privacy.py": "e1c8e115d1428fe93d24b7491dae641142f74f60f746894f2fbede805d618786",
+    "olist/team_model.py": "88ba725d47ea82ac50b4fdc624dd7c97dfb4c27757d47551c9ed1ff2da00b311",
+    ".agents/skills/olist-customer-followup/SKILL.md": "70373b63bd0e6ad98a581842db4a860b4d08638a2a2ef9a1b6cf4e98a575b345",
+    ".agents/skills/olist-followup-check/SKILL.md": "8d90abbb0e3d569aae0a5c315de5aa2124312d87513052b6a961ba35394533df"
+  },
+  "verification": {
+    "backend_tests_passed": 159,
+    "native_odoo_tests_passed": 9,
+    "serialized_http_canary_tests": true,
+    "unknown_wire_fields_blocked": true,
+    "model_contact_text_blocked_before_reviewer": true,
+    "rules_only_no_model_network": true,
+    "blind_scoring_and_paired_comparison_checked": true,
+    "native_business_writes_during_benchmark": false,
+    "same_public_input_for_single_and_pipeline_drafter": true
+  },
+  "artifacts_local": "data/processed/followup_evaluations/live-smoke-v1-final",
+  "limits": [
+    "Three development cases are a connectivity smoke test, not a quality ranking.",
+    "Four privacy variants per family are correlated, not independent business cases.",
+    "Internal engineering labels await independent business review and two blind human ratings.",
+    "Costs remain unknown without a supplied price snapshot; token usage is provider-reported.",
+    "Other ERP chat/RAG workflows require separate privacy review.",
+    "Latest pipeline completion is two of three. Earlier smoke is retained; neither run has human ratings."
+  ],
+  "initial_smoke": {
+    "gemini": {
+      "cases": 3,
+      "completed": 3,
+      "completion_rate": 1,
+      "contract_pass_rate": 1,
+      "elapsed_p50_ms": 1843.0,
+      "elapsed_p95_ms": 1843.9,
+      "model_calls": 3,
+      "http_requests_privacy_checked": 3,
+      "tokens_reported": 4031,
+      "estimated_cost": null,
+      "human_quality": "not_scored"
+    },
+    "groq": {
+      "cases": 3,
+      "completed": 2,
+      "completion_rate": 0.6666666666666666,
+      "contract_pass_rate": 0.6666666666666666,
+      "elapsed_p50_ms": 1141.0,
+      "elapsed_p95_ms": 1211.2,
+      "model_calls": 3,
+      "http_requests_privacy_checked": 3,
+      "tokens_reported": 4379,
+      "estimated_cost": null,
+      "human_quality": "not_scored"
+    },
+    "pipeline": {
+      "cases": 3,
+      "completed": 1,
+      "completion_rate": 0.3333333333333333,
+      "contract_pass_rate": 0.3333333333333333,
+      "elapsed_p50_ms": 2484.0,
+      "elapsed_p95_ms": 2835.9,
+      "model_calls": 6,
+      "http_requests_privacy_checked": 6,
+      "tokens_reported": 7499,
+      "estimated_cost": null,
+      "human_quality": "not_scored"
+    },
+    "rules": {
+      "cases": 3,
+      "completed": 3,
+      "completion_rate": 1,
+      "contract_pass_rate": 1,
+      "elapsed_p50_ms": 15.0,
+      "elapsed_p95_ms": 15.9,
+      "model_calls": 0,
+      "http_requests_privacy_checked": 0,
+      "tokens_reported": 0,
+      "estimated_cost": 0,
+      "human_quality": "not_scored"
+    }
+  },
+  "exploratory_runs_retained": 2
+}

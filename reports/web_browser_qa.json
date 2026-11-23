@@ -1,35 +1,560 @@
 {
-  "checked_at_utc": "2026-11-21T17:03:39.340866+00:00",
+  "checked_at_utc": "2026-11-22T10:13:52.512405+00:00",
   "app_version": "0.2.0",
-  "browser": "Chrome via managed preview",
+  "branch": "feat/odoo-ai-followup",
+  "platform": "Windows",
+  "python": "3.12.2",
+  "browser": "Microsoft Edge via Playwright",
+  "unit_tests_passed": 146,
   "checks": {
-    "one_use_ticket_session": "passed; fragment removed after authentication",
-    "dashboard_real_data": "passed",
-    "state_filter_SP": {
-      "orders_rendered": "41.621",
-      "gmv_rendered": "R$ 5.055.587,13",
-      "late_rate_rendered": "4,5%"
+    "default_runtime": {
+      "url": "http://127.0.0.1:8000/",
+      "dashboard": true,
+      "team_controls": true,
+      "odoo_read": true,
+      "partners": 10,
+      "products": 11,
+      "javascript_errors": []
     },
-    "chart_switch_to_late_rate": "passed",
-    "bi_chat_2018_SP": {
-      "orders_rendered": "23,871",
-      "gmv_rendered": "R$ 2,919,328.17",
-      "route": "local_rules"
+    "dashboard_default": {
+      "passed": true,
+      "filters": {
+        "start": "2017-01-01",
+        "end": "2018-08-31"
+      },
+      "orders": 99092
     },
-    "rag_search": "passed; three source sections displayed",
-    "ml_form": {
-      "score_rendered": "0.084",
-      "model": "hist_gradient_boosting",
-      "threshold": 0.13
+    "dashboard_filtered": {
+      "passed": true,
+      "filters": {
+        "start": "2018-01-01",
+        "end": "2018-01-31",
+        "state": "SP"
+      },
+      "orders": 3052
     },
-    "odoo_missing_configuration": "clear ODOO_PASSWORD error; no fake connection",
-    "desktop_visual": "reviewed at browser viewport; no browser screenshots saved as deliverables"
+    "dashboard_chart_tables_export": {
+      "passed": true,
+      "chart": true,
+      "tables": true,
+      "export": true
+    },
+    "team_live_success": {
+      "status": "complete",
+      "providers": [
+        "gemini",
+        "groq"
+      ],
+      "tools": [
+        "business_kpis",
+        "search_business_docs",
+        "search_business_docs"
+      ],
+      "model_calls": 7,
+      "tool_calls": 3,
+      "numbers_matched_parameterized_api": true
+    },
+    "chat_navigation_and_recovery": {
+      "waiting_navigation": true,
+      "error_preserved_after_navigation": true,
+      "retry_same_run": true,
+      "no_duplicate_messages": true,
+      "no_new_model_calls": true,
+      "new_thread_clears_error": true,
+      "javascript_errors": []
+    },
+    "odoo_connection": {
+      "passed": true,
+      "partners": 10,
+      "products": 11,
+      "quotations": 10
+    },
+    "odoo_status_and_navigation": {
+      "successful_status": true,
+      "failed_refresh_status": true,
+      "cached_data_labelled": true,
+      "no_navigation_jump": true,
+      "button_reenabled": true,
+      "javascript_errors": [],
+      "writes_to_odoo": false
+    },
+    "desktop_mobile": {
+      "passed": true,
+      "desktop": true,
+      "mobile": true,
+      "javascript_errors": []
+    },
+    "odoo_quotation_end_to_end": {
+      "checked_at_utc": "2026-11-22T11:22:39.139856+00:00",
+      "live_models_and_odoo": true,
+      "proposal_created_from_chat": true,
+      "model_calls": 4,
+      "tool_calls": 2,
+      "reviewed_payload_approved_by_user": true,
+      "approval_via_web_checkbox_and_button": true,
+      "state": "draft",
+      "currency": "BRL",
+      "partner_product_quantity_price_total_match": true,
+      "taxes_empty": true,
+      "retry_same_run_same_action": true,
+      "duplicate_approval_rejected": true,
+      "orders_for_origin": 1,
+      "invoice_count": 0,
+      "done_action_persisted_after_backend_reload": true,
+      "javascript_errors": [],
+      "backend_source_commit": "597685a7b9e69f48c08a7d90403dd23890cb9dc1",
+      "quotation_table_preserves_cents": true,
+      "currency_matches": true,
+      "dashboard_unchanged": true
+    },
+    "multi_agent_long_conversation": {
+      "checked_at_utc": "2026-11-22T12:57:28.158659+00:00",
+      "source_base_commit": "b5d2f3a17cdd1620bddf8ffab83847335801b8cd",
+      "live_models": true,
+      "bi_and_knowledge": {
+        "live_turn_1": {
+          "status": "complete",
+          "numbers_match_parameterized_api": true,
+          "knowledge_sources_match_files": true,
+          "citations_valid": true,
+          "filters": {
+            "start": "2018-01-01",
+            "end": "2018-01-31",
+            "state": "SP"
+          },
+          "model_calls": 7,
+          "tool_calls": 3,
+          "errors": []
+        },
+        "live_turn_2": {
+          "status": "complete",
+          "numbers_match_parameterized_api": true,
+          "knowledge_sources_match_files": true,
+          "citations_valid": true,
+          "filters": {
+            "start": "2018-01-01",
+            "end": "2018-01-31",
+            "state": "SP"
+          },
+          "model_calls": 7,
+          "tool_calls": 3,
+          "errors": []
+        },
+        "live_turn_3": {
+          "status": "incomplete",
+          "numbers_match_parameterized_api": true,
+          "knowledge_sources_match_files": true,
+          "citations_valid": true,
+          "filters": {
+            "start": "2018-01-01",
+            "end": "2018-01-31",
+            "state": "SP"
+          },
+          "model_calls": 7,
+          "tool_calls": 3,
+          "errors": [
+            {
+              "agent": "bi",
+              "error": "TimeoutError",
+              "http_status": null
+            },
+            {
+              "agent": "bi",
+              "error": "TimeoutError",
+              "http_status": null
+            },
+            {
+              "agent": "reviewer",
+              "error": "TimeoutError",
+              "http_status": null
+            },
+            {
+              "agent": "coordinator",
+              "error": "TimeoutError",
+              "http_status": null
+            }
+          ]
+        }
+      },
+      "local_summary": {
+        "history_chars": 6139,
+        "summary_called": true,
+        "summary_chars": 64,
+        "forwarded_to_coordinator": true,
+        "current_filters_preserved": true,
+        "numbers_match_parameterized_api": true,
+        "model_calls": 9,
+        "tool_calls": 3,
+        "errors": [
+          {
+            "agent": "reviewer",
+            "error": "HTTPStatusError",
+            "http_status": 503
+          },
+          {
+            "agent": "coordinator",
+            "error": "HTTPStatusError",
+            "http_status": null
+          }
+        ],
+        "finish_reason": "stop",
+        "elapsed_ms": 42953,
+        "input_max_chars": 3000,
+        "output_max_tokens": 96,
+        "previous_scope": {
+          "state": "RJ",
+          "start": "2018-02-01",
+          "end": "2018-02-28"
+        },
+        "current_scope": {
+          "start": "2018-03-01",
+          "end": "2018-03-31",
+          "state": "MG"
+        },
+        "cpu_inference": true,
+        "run_status": "incomplete",
+        "summary_complete": true
+      },
+      "web_and_safety": {
+        "desktop": true,
+        "mobile": true,
+        "cached_result_same": true,
+        "new_erp_actions": false,
+        "javascript_errors": []
+      },
+      "timeout_and_recovery": {
+        "actual_cloud_timeout": true,
+        "partial_evidence_preserved": true,
+        "connection_loss_simulated": true,
+        "retry_same_run": true,
+        "replayed_status": "incomplete",
+        "no_duplicate_messages": true,
+        "no_new_model_runs": true,
+        "no_new_erp_actions": true,
+        "local_fallback_notice_visible": true,
+        "mobile": true,
+        "javascript_errors": []
+      },
+      "simulated_provider_failures": [
+        "HTTP 503",
+        "ReadTimeout",
+        "ConnectError"
+      ],
+      "empty_or_truncated_summary_keeps_original_history": true,
+      "summary_cannot_change_filters_or_authorize_erp": true,
+      "shared_run_deadline_seconds": 120,
+      "result_persisted_after_backend_reload": true
+    },
+    "report_builder": {
+      "checked_at_utc": "2026-11-22T13:29:46.785854+00:00",
+      "source_base_commit": "13268cfb706feb564dedfe1a5b233be396a06bf7",
+      "real_olist_data": true,
+      "create_edit_save": {
+        "passed": true,
+        "scope_matches": true,
+        "numbers_match_api": true,
+        "notes_saved": true
+      },
+      "charts": {
+        "line_and_bar_supported": true,
+        "metric_switch": true,
+        "add_reorder_remove": true,
+        "table_preview": true
+      },
+      "downloads": {
+        "pdf": true,
+        "xlsx": true,
+        "unicode": true,
+        "pdf_pages": 3,
+        "excel_native_charts": 2,
+        "percent_is_ratio_not_scaled_number": true
+      },
+      "persistence": {
+        "reload_and_reopen": true,
+        "charts_and_notes_preserved": true
+      },
+      "from_chat": {
+        "passed": true,
+        "stored_chat_scope_used": true,
+        "numbers_requeried": true,
+        "notes_imported": true,
+        "download_saves_edits": true
+      },
+      "web": {
+        "desktop": true,
+        "mobile": true,
+        "javascript_errors": []
+      },
+      "safety": {
+        "no_new_model_runs": true,
+        "no_erp_writes": true,
+        "source_data_real": true
+      },
+      "default_runtime": {
+        "checked_at_utc": "2026-11-22T13:29:46.785854+00:00",
+        "runtime_url": "http://127.0.0.1:8000",
+        "drafts_persist_after_reload": true,
+        "unsaved_notes_preserved_on_navigation": true,
+        "downloads_save_edits": true,
+        "pdf_unicode_and_layout": true,
+        "pdf_pages": 3,
+        "mobile_chart_resizes": true,
+        "no_horizontal_page_overflow": true,
+        "javascript_errors": [],
+        "saved_report_available_when_data_not_ready": true
+      },
+      "formula_like_notes_exported_as_text": true,
+      "stale_version_update_rejected": true,
+      "snapshot_preserved_on_note_edit": true,
+      "client_supplied_figures_rejected": true,
+      "conflict_recovery_preserves_edits_until_user_discards": true
+    },
+    "erp_sales_multi_line": {
+      "checked_at_utc": "2026-11-22T14:32:57.243880+00:00",
+      "source_base_commit": "634b5f1fb5d861e3b88f4e2e24952636cf566a16",
+      "connection": {
+        "passed": true,
+        "real_catalog": true
+      },
+      "search_and_review": {
+        "customer_search": true,
+        "product_search": true,
+        "master_details": true,
+        "price_not_assumed_brl": true,
+        "two_lines_from_existing_odoo_quote": true,
+        "per_line_and_total_match": true,
+        "edit_invalidates_review": true
+      },
+      "proposal_and_approval_gate": {
+        "pending_snapshot_preserved": true,
+        "same_request_same_action": true,
+        "unchecked_approval_disabled": true,
+        "checkbox_enables_approval": true,
+        "no_order_before_approval": true,
+        "rejection_recorded_in_history": true,
+        "real_approval_not_sent": true
+      },
+      "order_detail": {
+        "real_existing_quote": true,
+        "all_order_lines": true,
+        "tax_subtotal_total_and_currency": true
+      },
+      "recovery_and_navigation": {
+        "failed_refresh_keeps_labelled_cache": true,
+        "no_navigation_jump": true
+      },
+      "safety": {
+        "new_odoo_orders": false,
+        "confirm_or_invoice_called": false,
+        "javascript_errors": [],
+        "desktop_mobile": true
+      },
+      "mobile_review": {
+        "quantity_price_subtotal_visible": true,
+        "no_horizontal_page_overflow": true
+      },
+      "live_odoo_read_and_preview": true,
+      "multi_line_write_tests": "mock Odoo only",
+      "approved_payload_immutable": true,
+      "line_totals_round_half_up_in_brl": true,
+      "timeout_recovery_validates_existing_order": true,
+      "changed_master_data_blocks_write": true,
+      "legacy_single_line_tests_pass": true,
+      "qa_local_proposal_cleaned_up": true,
+      "default_runtime": {
+        "url": "http://127.0.0.1:8000",
+        "health": "ok",
+        "live_preview_matches": true,
+        "existing_order_and_legacy_history": true,
+        "report_page_still_loads": true,
+        "javascript_errors": []
+      }
+    },
+    "erp_sales_discount_tax": {
+      "checked_at_utc": "2026-11-22T15:27:10.365154+00:00",
+      "checks": {
+        "native_odoo_pricing": {
+          "company_scoped_catalog": true,
+          "discounts_and_taxes": true,
+          "global_rounding_explained": true,
+          "no_persisted_preview": true
+        },
+        "connection": {
+          "passed": true,
+          "real_catalog": true
+        },
+        "search_and_review": {
+          "customer_search": true,
+          "product_search": true,
+          "master_details": true,
+          "price_not_assumed_brl": true,
+          "two_lines_from_existing_odoo_quote": true,
+          "per_line_and_total_match": true,
+          "edit_invalidates_review": true
+        },
+        "proposal_and_approval_gate": {
+          "pending_snapshot_preserved": true,
+          "same_request_same_action": true,
+          "unchecked_approval_disabled": true,
+          "checkbox_enables_approval": true,
+          "no_order_before_approval": true,
+          "rejection_recorded_in_history": true,
+          "real_approval_not_sent": true
+        },
+        "order_detail": {
+          "real_existing_quote": true,
+          "all_order_lines": true,
+          "tax_subtotal_total_and_currency": true
+        },
+        "recovery_and_navigation": {
+          "failed_refresh_keeps_labelled_cache": true,
+          "no_navigation_jump": true
+        },
+        "safety": {
+          "new_odoo_orders": false,
+          "confirm_or_invoice_called": false,
+          "javascript_errors": [],
+          "desktop_mobile": true
+        }
+      },
+      "source_base_commit": "b753b420c47c4e3b59c306bbce63bfc9abd0a8e0",
+      "live_odoo_read_and_native_preview": true,
+      "discount_tax_write_tests": "mock Odoo only",
+      "price_included_and_excluded_tax_tests": true,
+      "document_rounding_not_sum_of_lines": true,
+      "tax_and_child_configuration_changes_block_write": true,
+      "company_and_fiscal_position_validated": true,
+      "immutable_review_and_idempotent_recovery": true,
+      "legacy_zero_discount_zero_tax_compatible": true,
+      "qa_local_proposal_cleaned_up": true,
+      "default_runtime": {
+        "url": "http://127.0.0.1:8000",
+        "health": "ok",
+        "live_preview_matches": true,
+        "existing_order_and_legacy_history": true,
+        "report_page_still_loads": true,
+        "narrow_desktop_review_all_columns_visible": true,
+        "mobile_no_overflow": true,
+        "javascript_errors": []
+      }
+    },
+    "erp_agent_skills_and_pdf": {
+      "checked_at_utc": "2026-11-23T06:41:18.501469+00:00",
+      "checks": {
+        "live_pdf": {
+          "existing_odoo_quote": true,
+          "native_totals_and_currency": true,
+          "unicode": true,
+          "browser_download": true,
+          "no_model_needed": true
+        },
+        "live_agent_review": {
+          "status": "complete",
+          "providers": [
+            "gemini",
+            "groq"
+          ],
+          "model_calls": 6,
+          "tool_calls": 2,
+          "native_snapshot_matches": true,
+          "three_skills_loaded": true,
+          "proposal_permission_disabled_for_review": true,
+          "no_pending_proposal": true
+        },
+        "retry": {
+          "same_run_same_result": true,
+          "no_new_model_calls": true
+        },
+        "ui_and_safety": {
+          "desktop_mobile": true,
+          "form_preserved_after_chat": true,
+          "new_edit_requires_review": true,
+          "reports_still_load": true,
+          "javascript_errors": [],
+          "new_local_proposals": false,
+          "odoo_writes": false,
+          "approval_calls": false
+        }
+      },
+      "source_base_commit": "e687ba1fb9ea3648afb4dc5c5824f768da153754",
+      "agent_document": {
+        "status": "complete",
+        "providers": [
+          "gemini",
+          "groq"
+        ],
+        "existing_quote_read": true,
+        "real_document_tool": true,
+        "download_from_chat": true,
+        "pdf_matches_odoo": true,
+        "mobile": true,
+        "javascript_errors": [],
+        "no_local_proposals_or_odoo_writes": true
+      },
+      "runtime_url": "http://127.0.0.1:8000",
+      "pdf_visual_review": true,
+      "pdf_multipage_discount_tax_tests": "mock Odoo; actual existing quotation download also checked",
+      "skills_validated": true,
+      "skills_loaded_only_for_erp": true,
+      "form_snapshot_not_editable_by_model": true,
+      "legacy_proposal_and_approval_tests_pass": true
+    },
+    "odoo_native_followup": {
+      "queue_native_odoo": true,
+      "live_groq_gemini": true,
+      "review_before_activity": true,
+      "native_checkbox_and_confirmation": true,
+      "activity_created_only_after_approval": true,
+      "duplicate_approval_same_activity": true,
+      "quotation_still_draft": true,
+      "desktop_mobile": true,
+      "javascript_errors": [],
+      "trace": [
+        {
+          "provider": "groq",
+          "model": "openai/gpt-oss-20b",
+          "status": "done"
+        },
+        {
+          "provider": "gemini",
+          "model": "gemini-3.5-flash-lite",
+          "status": "done"
+        }
+      ],
+      "main_quotations_unchanged": true,
+      "checked_at_utc": "2026-11-23T07:36:13.816555+00:00",
+      "source_base_commit": "21096b40cd59f0e2cf35ac5ce9a2e7bc05e8971c",
+      "backend_tests": 146,
+      "odoo_integration_tests": 9,
+      "separate_test_database": true,
+      "main_addon_installed": false,
+      "employee_manager_company_access_checked": true,
+      "stale_source_blocks_activity": true,
+      "duplicate_activity_blocked": true,
+      "batch_uses_one_job": true,
+      "lost_response_reuses_job": true,
+      "model_format_failure_creates_no_activity": true,
+      "json_mode_validated_with_live_providers": true,
+      "final_layout_checked": true,
+      "mobile_no_page_overflow": true,
+      "test_database_cleaned": true
+    }
   },
-  "not_verified": [
-    "Windows runtime",
-    "Odoo live server",
-    "cloud model APIs",
-    "mobile browser viewport",
-    "GitHub remote CI"
-  ]
+  "fixed": [
+    "Giữ câu hỏi và tiến trình khi chuyển trang trong lúc chat.",
+    "Giữ lỗi và lấy lại cùng lượt chạy sau mất kết nối.",
+    "Hiển thị đúng trạng thái Odoo, ghi rõ dữ liệu cũ khi kết nối lại thất bại.",
+    "Không chuyển ngược về ERP khi kết nối hoàn tất sau khi người dùng đổi trang.",
+    "Bảng báo giá giữ hai chữ số thập phân và dùng đúng tiền tệ từ Odoo.",
+    "Giới hạn đầu vào/đầu ra Qwen và cho phép chờ riêng tối đa 60 giây trong tổng ngân sách 120 giây.",
+    "Giữ lịch sử gốc khi bản tóm tắt rỗng hoặc bị cắt; thông báo trên chat khi phải dùng lịch sử chưa nén."
+  ],
+  "limits": [
+    "Có lượt cloud trả HTTP 503 hoặc lỗi kết nối/timeout; ứng dụng giữ bằng chứng đã lấy và báo chưa hoàn tất.",
+    "Chỉ kiểm tra tạo báo giá DEMO ở trạng thái nháp; không xác nhận đơn, xuất kho hoặc lập hóa đơn.",
+    "Qwen local chạy bằng CPU; lượt tóm tắt hợp lệ mất khoảng 43 giây. Chỉ nén chủ đề/phạm vi trong phần lịch sử gần nhất, không dùng làm nguồn số liệu.",
+    "Lượt bật Qwen đã lấy đúng KPI phạm vi mới nhưng chưa hoàn tất tổng hợp do Gemini trả HTTP 503; không coi là lượt hoàn tất.",
+    "Bộ lọc từ chối cụm thời gian tương đối và từ ngoài phạm vi kể cả trong một số câu giải thích/phủ định; kịch bản demo dùng câu hỏi và ngày cụ thể."
+  ],
+  "updated_at_utc": "2026-11-23T07:36:13.853074+00:00"
 }
