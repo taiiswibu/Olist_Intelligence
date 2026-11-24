@@ -83,6 +83,20 @@ def test_long_documents_not_silently_truncated(corpus):
     assert max(len(d['text']) for d in rag.documents())<=1300
 
 
+def test_private_local_documents_are_excluded_from_cloud_tools(corpus,monkeypatch):
+    private=rag.ROOT/'data/knowledge'
+    private.mkdir(parents=True)
+    (private/'internal.md').write_text('## Nội bộ riêng tư\n'+'PRIVATE_CANARY Chăm sóc tài khoản nội bộ, chỉ đọc tại máy. '*4,encoding='utf-8')
+    assert any('PRIVATE_CANARY' in d['text'] for d in rag.documents())
+    assert all('PRIVATE_CANARY' not in d['text'] for d in rag.documents(public_only=True))
+    monkeypatch.setattr(store,'model_identity',lambda *a:pytest.fail('Cloud tool must not open the private vector index'))
+    result=rag.retrieve('PRIVATE_CANARY',public_only=True)
+    assert 'PRIVATE_CANARY' not in json.dumps(result)
+    from olist.agent_lab import build_tools
+    tool=next(t for t in build_tools() if t.name=='search_business_docs')
+    assert 'PRIVATE_CANARY' not in json.dumps(tool.invoke({'query':'PRIVATE_CANARY'}))
+
+
 @pytest.mark.parametrize('bad',['invented','wrong_source','extra','empty'])
 def test_only_verbatim_citations_reach_answer(corpus,monkeypatch,bad):
     rag.build_embeddings()

@@ -7,6 +7,7 @@ SKILLS = {
     "olist-quote-pdf": ("Tải báo giá PDF", {"odoo_quotation_document"}),
 }
 FOLLOWUP_SKILLS = {"olist-customer-followup": "Chăm sóc khách hàng", "olist-followup-check": "Kiểm tra giao việc",
+                   "olist-followup-plan": "Chọn góc trao đổi chăm sóc",
                    "olist-risk-review": "Đối chiếu rủi ro báo giá", "olist-product-advice": "Xếp hạng sản phẩm"}
 
 

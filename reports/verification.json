@@ -1,12 +1,12 @@
 {
-  "verified_at_utc": "2026-11-22T08:30:33.691903+00:00",
-  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
-  "python": "3.12.14",
-  "unit_tests_passed": 51,
+  "verified_at_utc": "2026-11-24T04:38:01.667132+00:00",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.2",
+  "unit_tests_passed": 283,
   "cloud_llm_tested": false,
   "odoo_server_tested": false,
   "postgres_server_tested": false,
-  "windows_executed": false,
+  "windows_executed": true,
   "hybrid_embedding_model_tested": false,
   "browser_visual_tested": false,
   "api_http_checks": [
@@ -50,7 +50,7 @@
     "http_only_session": "passed",
     "cookie_authenticated_chat": "passed"
   },
-  "compose_structure": "passed; no Docker daemon available",
+  "compose_structure": "passed; daemon not checked by this script",
   "raw_csv_reconciliation_2018_SP": {
     "orders": 23871,
     "gmv": 2919328.17,
@@ -218,8 +218,8 @@
     ]
   },
   "offline_agent_latency_ms": {
-    "p50": 94.87861449997581,
-    "p95": 407.0590264002931,
-    "note": "local test environment, no LLM; not the user's laptop"
+    "p50": 366.9999999999618,
+    "p95": 1649.6500000000876,
+    "note": "host CPU, no LLM requests; not a load test"
   }
 }

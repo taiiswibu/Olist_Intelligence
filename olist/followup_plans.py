@@ -7,7 +7,7 @@ from pydantic import Field
 
 from . import agent_skills, followup_privacy as privacy, followup_transport as transport, llm
 
-VERSION = 'followup-plan-minimized-v1'
+VERSION = 'followup-plan-minimized-v2'
 RENDER_VERSION = 'followup-plan-render-v1'
 Focus = Literal['content', 'validity', 'terms', 'needs', 'receipt', 'status', 'deadline', 'next_step']
 
@@ -36,7 +36,7 @@ class Plan(privacy.Strict):
 
 class Envelope(privacy.Strict):
     cases: list[PlanCase] = Field(min_length=1, max_length=20)
-    draft: Plan | None = None
+    selection: Plan | None = None
 
 
 def validate(plan, cases):
@@ -54,7 +54,7 @@ def wire_guard(messages,audit=None):
         data=Envelope.model_validate_json(content)
         if any(c.allowed_focus!=allowed_focus(c) for c in data.cases):
             raise ValueError('ChangedFocusScope')
-        if data.draft:validate(data.draft,data.cases)
+        if data.selection:validate(data.selection,data.cases)
     return privacy.pinned_guard(messages,check,audit)
 
 
@@ -96,12 +96,13 @@ async def analyze(payload,*,request_policy=None):
             from langchain_core.messages import HumanMessage,SystemMessage
             providers={p.name:p for p in llm.providers()}
             if not {'groq','gemini'}<=providers.keys():raise ValueError('MissingProvider')
-            prompt=agent_skills.read('olist-customer-followup')['instructions']+'\nChọn góc trao đổi trong allowed_focus cho từng case_id. Chỉ chọn call khi action là request_feedback; còn lại chọn todo. Không soạn văn bản, không thêm trường. Khi có cờ hiệu lực hoặc quá hạn, ưu tiên góc đối chiếu tương ứng nếu được phép. Trả JSON theo schema: '+json.dumps(Plan.model_json_schema())
+            guidance=agent_skills.read('olist-followup-plan')['instructions']
+            prompt=guidance+'\nBước hiện tại: CHỌN. Trả JSON theo schema: '+json.dumps(Plan.model_json_schema())
             envelope=Envelope(cases=public)
             choices=await f._model_json(providers['groq'],[SystemMessage(content=prompt),HumanMessage(content=envelope.model_dump_json())],Plan,trace,policy,guard_factory=wire_guard,privacy_version=VERSION)
             validate(choices,cases)
-            reviewer=agent_skills.read('olist-followup-check')['instructions']+'\nBản nháp chỉ chọn góc trao đổi và loại công việc, chưa có văn bản. Chấp nhận khi đủ case_id, focus thuộc allowed_focus và call chỉ dành cho request_feedback. Trả JSON theo schema: '+json.dumps(f.Verification.model_json_schema())
-            envelope.draft=choices
+            reviewer=guidance+'\nBước hiện tại: KIỂM TRA selection. Trả JSON theo schema: '+json.dumps(f.Verification.model_json_schema())
+            envelope.selection=choices
             verification=await f._model_json(providers['gemini'],[SystemMessage(content=reviewer),HumanMessage(content=envelope.model_dump_json())],f.Verification,trace,policy,guard_factory=wire_guard,privacy_version=VERSION)
             if not verification.valid:raise ValueError('ReviewRejected')
             draft=render(choices,cases)
@@ -116,4 +117,4 @@ async def analyze(payload,*,request_policy=None):
     return f._clean({'items':items,'trace':trace,'strategy':'assisted' if accepted else 'rules_fallback','ai_completed':accepted,
         'fallback_reason':failure,'privacy_version':VERSION,'grounding_version':RENDER_VERSION,'request_policy':policy.metadata(),
         'cloud_fields':list(PlanCase.model_fields),'choices':[c.model_dump() for c in choices.items] if accepted else [],
-        'skills':agent_skills.catalog(['olist-customer-followup','olist-followup-check'])})
+        'skills':agent_skills.catalog(['olist-followup-plan'])})

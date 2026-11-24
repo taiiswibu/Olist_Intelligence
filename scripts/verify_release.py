@@ -98,7 +98,12 @@ def main():
         port = s.getsockname()[1]
     os.environ["API_URL"] = f"http://127.0.0.1:{port}"
     cfg = settings()
-    p = subprocess.Popen([sys.executable,"-m","uvicorn","olist.api:app","--host","127.0.0.1","--port",str(port)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # Windows drops empty environment values when creating a process. Set the
+    # offline overrides inside the child, before dotenv can load local secrets.
+    child = ("import os,uvicorn; os.environ.update(LLM_PROVIDERS='',ODOO_PASSWORD='',"
+             "RAG_MODE='lexical',RAG_ANSWER_MODEL='',OLLAMA_MODEL=''); "
+             f"uvicorn.run('olist.api:app',host='127.0.0.1',port={port},log_level='warning')")
+    p = subprocess.Popen([sys.executable,'-c',child], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     checks = []
     ui = {}
     try:
@@ -117,7 +122,7 @@ def main():
                 assert r.status_code==200, (path,r.text)
                 checks.append({"path":path,"status":r.status_code})
             r=c.post("/agent/chat",json={"question":"GMV năm 2018"})
-            assert r.status_code==200 and r.json()["routing"]["mode"]=="local_rules"
+            assert r.status_code==200 and r.json()["routing"]["mode"]=="local_rules", (r.status_code,r.json().get('routing',{}).get('mode'))
             r=c.post("/rag/search",json={"question":"Tỷ lệ giao trễ tính như thế nào?"})
             assert r.status_code==200 and r.json()["sources"]
             assert httpx.get(cfg.api_url+"/status",trust_env=False).status_code==401
@@ -141,12 +146,12 @@ def main():
     assert compose["services"]["odoo"]["ports"]==["127.0.0.1:8069:8069"]
     report = {"verified_at_utc":datetime.now(timezone.utc).isoformat(),"platform":platform.platform(),"python":platform.python_version(),
         "unit_tests_passed":tests,"cloud_llm_tested":False,"odoo_server_tested":False,"postgres_server_tested":False,
-        "windows_executed":False,"hybrid_embedding_model_tested":False,"browser_visual_tested":False,
-        "api_http_checks":checks,"html_web_checks":ui,"compose_structure":"passed; no Docker daemon available",
+        "windows_executed":platform.system()=='Windows',"hybrid_embedding_model_tested":False,"browser_visual_tested":False,
+        "api_http_checks":checks,"html_web_checks":ui,"compose_structure":"passed; daemon not checked by this script",
         "raw_csv_reconciliation_2018_SP":{"orders":len(scope),"gmv":expected_gmv,"late_eligible":len(known),"late_orders":expected_late,"passed":True},
         "lexical_retrieval":{"cases":len(GOLD),"recall_at_1":float(np.mean(recalls1)),"recall_at_3":float(np.mean(recalls3)),"mrr_at_5":float(np.mean(reciprocal)),"details":retrieval_cases},
         "local_rule_router":{"cases":len(tools),"accuracy":sum(x["actual"]==x["expected"] for x in tools)/len(tools),"details":tools},
-        "offline_agent_latency_ms":{"p50":float(np.percentile(latency,50)),"p95":float(np.percentile(latency,95)),"note":"local test environment, no LLM; not the user's laptop"}}
+        "offline_agent_latency_ms":{"p50":float(np.percentile(latency,50)),"p95":float(np.percentile(latency,95)),"note":"host CPU, no LLM requests; not a load test"}}
     (ROOT / "reports/verification.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
     print(json.dumps({"unit_tests_passed":tests,"ui":ui,"retrieval":{k:v for k,v in report["lexical_retrieval"].items() if k!="details"},"router_accuracy":report["local_rule_router"]["accuracy"]},ensure_ascii=False,indent=2))
 

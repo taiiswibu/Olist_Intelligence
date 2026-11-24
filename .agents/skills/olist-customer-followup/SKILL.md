@@ -26,4 +26,4 @@ Các trường reply_status, activity_completion, activity_similarity luôn là 
 
 Explanation chỉ giải thích trạng thái và reason_codes đang có. Không tự đề xuất chỉnh giá, giảm giá hoặc điều kiện hợp đồng khi chưa có yêu cầu/nguồn cho thay đổi đó.
 
-Luồng ổn định cung cấp `allowed_focus`: chỉ chọn góc trao đổi trong danh sách và loại việc. Nội dung tiếng Việt được dựng local từ dữ kiện; không thêm summary/note vào JSON khi schema chỉ yêu cầu lựa chọn. Luồng benchmark văn bản cũ vẫn dùng schema riêng để giữ baseline.
+Luồng lựa chọn hữu hạn dùng skill `olist-followup-plan` riêng; hướng dẫn trên áp dụng cho benchmark văn bản.

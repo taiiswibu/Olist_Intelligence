@@ -22,9 +22,12 @@ def normalize(text):
     return ''.join(c for c in unicodedata.normalize('NFD', text) if unicodedata.category(c) != 'Mn')
 
 
-def documents():
+def documents(*, public_only=False):
     chunks = []
-    for path in sorted((ROOT/'docs/knowledge').glob('*.md')):
+    files=[(p,p.name) for p in sorted((ROOT/'docs/knowledge').glob('*.md'))]
+    if not public_only:
+        files += [(p,'local/'+p.name) for p in sorted((ROOT/'data/knowledge').glob('*.md'))]
+    for path,source in files:
         text = path.read_text(encoding='utf-8')
         for part in re.split(r'(?m)(?=^## )', text):
             if len(part.strip()) < 50:
@@ -34,8 +37,8 @@ def documents():
                 body = part[offset:offset+1300].strip()
                 if not body:
                     continue
-                key = hashlib.sha256((path.name+section+str(offset)+body).encode()).hexdigest()[:12]
-                chunks.append({'id': key, 'source': path.name, 'section': section, 'text': body})
+                key = hashlib.sha256((source+section+str(offset)+body).encode()).hexdigest()[:12]
+                chunks.append({'id': key, 'source': source, 'section': section, 'text': body})
     return chunks
 
 
@@ -44,8 +47,8 @@ def fingerprint():
 
 
 @lru_cache(maxsize=2)
-def lexical_index(digest):
-    chunks = documents()
+def lexical_index(digest, public_only=False):
+    chunks = documents(public_only=public_only)
     if not chunks:
         return chunks, None, None
     vectorizer = TfidfVectorizer(preprocessor=normalize, analyzer='char_wb', ngram_range=(3, 5), sublinear_tf=True)
@@ -77,18 +80,18 @@ def status():
     return result
 
 
-def retrieve(query, k=3, *, mode=None):
+def retrieve(query, k=3, *, mode=None, public_only=False):
     settings()
     if not isinstance(query, str) or not 1 <= len(query.strip()) <= 2000 or type(k) is not int or not 1 <= k <= 10:
         raise ValueError('Câu hỏi từ một đến hai nghìn ký tự; số nguồn từ một đến mười.')
-    chunks, vectorizer, matrix = lexical_index(fingerprint())
+    chunks, vectorizer, matrix = lexical_index(fingerprint(), public_only)
     result = {'method': 'lexical_tfidf', 'sources': [], 'answerable': False, 'version': VERSION}
     if not chunks:
         return {**result, 'warning': 'Kho tri thức chưa có tài liệu.'}
     lexical = (matrix @ vectorizer.transform([query]).T).toarray().ravel()
     scores = {d['id']: (float(s), 0., float(s)) for d, s in zip(chunks, lexical, strict=True)}
     by_id = {d['id']: d for d in chunks}
-    if (mode or os.getenv('RAG_MODE', 'lexical')) == 'hybrid':
+    if not public_only and (mode or os.getenv('RAG_MODE', 'lexical')) == 'hybrid':
         try:
             meta = store.manifest(index_path())
             model = os.getenv('EMBED_MODEL', '')

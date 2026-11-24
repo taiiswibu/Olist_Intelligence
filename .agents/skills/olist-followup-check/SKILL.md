@@ -17,4 +17,4 @@ description: Kiểm tra bản nháp giao việc chăm sóc khách so với bản
 - Trả valid=false và findings ngắn nếu thiếu căn cứ; không tự sửa dữ liệu nguồn hoặc thay phạm vi người dùng.
 - Với draft, cả "chuẩn bị gửi lại" cũng thiếu căn cứ về lịch sử gửi. Các trạng thái unknown là chưa biết, không phải chưa xảy ra. Câu hỏi như "Khách đã phản hồi chưa?" không khẳng định khách đã phản hồi; vẫn đối chiếu phần còn lại của câu với action.
 
-Với bản nháp lựa chọn có `allowed_focus`, kiểm tra mã, phạm vi góc trao đổi và loại việc. Chưa có văn bản để chấm diễn đạt; không từ chối chỉ vì bản nháp chưa chứa summary/note. Không yêu cầu lấy lại thông tin khách. Luồng benchmark văn bản cũ vẫn kiểm tra nội dung theo các quy tắc phía trên.
+Luồng lựa chọn hữu hạn dùng skill `olist-followup-plan` riêng; hướng dẫn trên áp dụng cho benchmark văn bản.

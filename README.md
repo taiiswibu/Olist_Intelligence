@@ -6,6 +6,8 @@ Không gian dữ liệu thương mại chạy local: dashboard, hỏi bằng ti�
 
 **v0.2 — HTML / CSS / JavaScript + FastAPI.** Frontend được phục vụ cùng backend trên một địa chỉ. Không cần Node, frontend build hoặc VPS để chạy trên Windows. Biểu đồ SVG lấy số liệu thật từ API; không dùng số liệu mẫu thay thế khi chưa có dữ liệu.
 
+Bản demo AI/ERP, sơ đồ kiến trúc, cách trình diễn và các giới hạn: [docs/AI_PORTFOLIO.md](docs/AI_PORTFOLIO.md).
+
 ## Chạy trên Windows
 
 1. Cài **Python 3.12 64-bit**, giải nén/clone mã nguồn vào một thư mục.

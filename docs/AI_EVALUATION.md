@@ -2,7 +2,7 @@
 
 Kiểm thử phần mềm chứng minh quyền, dữ liệu và phê duyệt chạy đúng. Nội dung AI cần so baseline và có người hiểu nghiệp vụ chấm riêng. Thứ tự ưu tiên/allowed_actions do quy tắc xác định, không tính là thành tích suy luận của model.
 
-## Bốn phương án
+## Baseline văn bản và luồng lựa chọn
 
 | Phương án | Cách làm |
 |---|---|
@@ -10,8 +10,11 @@ Kiểm thử phần mềm chứng minh quyền, dữ liệu và phê duyệt ch�
 | groq | Groq tự soạn |
 | gemini | Gemini tự soạn |
 | pipeline | Groq soạn, Gemini kiểm tra; bị từ chối vẫn tính chưa hoàn tất |
+| assisted | Groq chọn góc trao đổi, Gemini kiểm tra lựa chọn; nội dung dựng local, lỗi chuyển mẫu dự phòng có nhãn |
 
-Cùng tình huống, dữ kiện tối thiểu, prompt soạn và giới hạn đầu ra. Không mặc định hai model tốt hơn một. Chỉ giữ bước kiểm tra khi lợi ích đủ bù thời gian/chi phí.
+Bốn baseline văn bản dùng cùng tình huống, dữ kiện tối thiểu, prompt soạn và giới hạn đầu ra. Assisted đổi hợp đồng đầu ra sang lựa chọn hữu hạn; so tỷ lệ hoàn tất kỹ thuật với baseline, không coi đó là bằng chứng model viết tốt hơn. Không mặc định hai model tốt hơn một. Chỉ giữ bước kiểm tra khi lợi ích đủ bù thời gian/chi phí.
+
+Luồng mặc định trong addon hiện dùng assisted. `completed` đo có kết quả để đối chiếu, `ai_completed` chỉ đếm lựa chọn được hai model chấp nhận, `fallback_count` đếm mẫu quy tắc dự phòng. Một lượt dự phòng không được tính là AI thành công; CSV pilot giữ `actual_strategy=rules_fallback` và ghi nhận lệch phương pháp nếu lượt được giao là AI. Benchmark văn bản cũ vẫn gọi rõ strategy và không tự chuyển mẫu khi thất bại.
 
 ## Chạy và giữ bằng chứng
 

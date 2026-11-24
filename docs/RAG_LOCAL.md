@@ -2,6 +2,8 @@
 
 Kho tri thức nằm trong `docs/knowledge/`, do dự án biên soạn. Đây là tài liệu thiết kế và nghiệp vụ DEMO, chưa phải dữ liệu nội bộ của một doanh nghiệp.
 
+Tài liệu riêng của công ty có thể đặt dạng Markdown trong `data/knowledge/` rồi lập lại index. Thư mục này đã được loại khỏi Git. Kho tri thức và trợ lý tài liệu local đọc được các file đó; công cụ tra tài liệu của Đội agent/Agent Lab chỉ đọc `docs/knowledge/`, không nhận các file riêng này. Không đặt tài liệu mật vào thư mục tài liệu công khai của repository.
+
 Chạy Ollama, tải model embedding rồi lập index:
 
 ```powershell
