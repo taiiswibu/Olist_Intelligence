@@ -32,8 +32,8 @@
         },
         {
           "name": "historical_ml_prediction",
-          "model": "logistic",
-          "risk_score": 0.06747162362820804,
+          "model": "geo_logistic",
+          "risk_score": 0.04749353426018139,
           "local_model_retrained": true,
           "holdout_used_for_fit": false
         },
@@ -64,7 +64,7 @@
         "03-bao-cao.jpg": "Báo cáo thật từ công cụ BI · Chỉnh nhận xét, biểu đồ, lưu và tải file",
         "04-rag.jpg": "RAG local · Model chọn trích đoạn, backend đối chiếu nguyên văn với nguồn",
         "06-rag-tu-choi.jpg": "Ngoài phạm vi tài liệu · Từ chối trả lời và không gọi model sinh nội dung",
-        "07-ml-giao-tre.jpg": "ML hồi cứu sau train lại · Logistic chọn trên validation · Giữ số cảnh báo sai và giới hạn test đã xem",
+        "07-ml-giao-tre.jpg": "ML ưu tiên giảm cảnh báo sai · Geo Logistic chọn trên ba giai đoạn phát triển · Tháng 7 chỉ kiểm tra lại",
         "08-doi-soat-erp.jpg": "Đối soát giá và thuế bằng Odoo · Giá BRL lấy từ dòng báo giá DEMO đang có",
         "09-kiem-chung.jpg": "Đối soát CSV, số dòng, checksum và nhật ký · Không thay dữ liệu thiếu bằng số giả"
       },
@@ -209,8 +209,8 @@
     },
     {
       "path": "media/demo/07-ml-giao-tre.jpg",
-      "bytes": 185322,
-      "sha256": "ab7e418541a24f7657457f234b1602c63915125661e3d2db15a8c3c0e8afbe92"
+      "bytes": 241968,
+      "sha256": "a4000802ad75cdd1a8d03c43866b7a19ecb3e6da2f72f7261eefa7e6a406d56b"
     },
     {
       "path": "media/demo/08-doi-soat-erp.jpg",
@@ -313,7 +313,7 @@
     }
   },
   "checks": {
-    "backend_tests": 288,
+    "backend_tests": 292,
     "offline_release_checks": "passed",
     "javascript_syntax": "passed",
     "configured_secrets_absent_in_delivery_text": true,
@@ -329,7 +329,7 @@
     "Screenshots come from verified browser executions without caption overlays. Three PDF page images are retained from the earlier capture; raw downloads and earlier attempts remain local outside Git."
   ],
   "capture_commit": "e1f48b61629b671c59a0f84d4e65e7681aebea03",
-  "updated_at_utc": "2026-11-24T09:15:39.475246+00:00",
+  "updated_at_utc": "2026-11-24T09:50:51.666058+00:00",
   "source_sha256_at_capture_commit": {
     "olist/rag.py": "520d5d7740f2606ca44cc20d2706b35e80de54d02e7eda2ec1cb2243013e1444",
     "olist/knowledge.json": "39d4c623b478c0c62082bff1ceae30a5fe95f524add373b4c91f10b3c004e473",
@@ -338,67 +338,51 @@
     "tests/test_rag.py": "a3f6d3739d40643d19b42d2298a13214c34421b41b9272ca8a9f830d3c81d40b"
   },
   "ml_recapture": {
-    "trained_at_utc": "2026-11-24T09:10:10.854185+00:00",
+    "trained_at_utc": "2026-11-24T09:44:51.337352+00:00",
     "report": "reports/ml_evaluation.json",
-    "report_sha256_lf": "bb1927611a36b3093bd800b8bf2fa10d50f831518d20309cc326a19133214b27",
+    "report_sha256_lf": "19af678b7fe604075a0e97f0bfe329c92939a46bbc93c23f2f266a805e393d97",
     "source_sha256_lf": {
-      "olist/ml.py": "46bd9286dedf5c7e4658038ab57132ddbf7f38e81933b4ae5107436dde8eb5c2",
-      "tests/test_ml.py": "3c5e84a784001ab6276ab918745f49e22900dbaf61b158e365213b5cc837a65a",
-      "frontend/assets/app.js": "d370ff2b1e664095d8c260730cccf55c8a473b017a71600cba9a0cd11fcfea31",
-      "olist/knowledge.json": "8a39a2292faf820aeaebf179bf0cc9d4e7562f59e03b6db48ed064e9b4351512"
+      "olist/ml.py": "9e098c96f77fab38edeac5ec386cfa5b98e7f61c3e3e1f4254405a7cd2ee3aa7",
+      "olist/ml_features.py": "63412fe2a4bdeeaec1f975dda27cc2c167a86475027c15b5d34a26331f1d5f65",
+      "frontend/assets/app.js": "92e5c4fb7e5b564dfd6f9cdf282a3c7d3ea90a6d8c437bd90db5dd3e9fe8f743",
+      "olist/knowledge.json": "1a6c8e441b53b3691ff295d883caeaa9cca9e0f49eae129a0ba98c0557fd3bda"
     },
     "prediction": {
-      "risk_score": 0.06747162362820804,
-      "threshold": 0.09,
+      "risk_score": 0.04749353426018139,
+      "threshold": 0.18071463867046839,
       "high_risk": false,
-      "model": "logistic",
+      "model": "geo_logistic",
       "calibrated": false,
-      "note": "Điểm chưa hiệu chỉnh xác suất; đánh giá hồi cứu, không cam kết dự báo thực tế."
+      "note": "Điểm chưa hiệu chỉnh xác suất; ngưỡng được chọn để giảm cảnh báo sai trên validation, không phải độ chính xác."
     },
     "http_status": 200,
     "javascript_errors": [],
     "caption_overlay": false,
+    "candidate_rows": 11,
+    "desktop_viewport": {
+      "width": 1600,
+      "height": 1000
+    },
+    "selected_model_uses_history_labels": false,
     "evaluation_kind": "replay_of_previously_exposed_july_2018_holdout",
-    "rag_dev_after_knowledge_update": {
-      "kind": "regression_not_new_holdout",
-      "suite_sha256": "af8fe2ee15e999ba2526b3a5719e00b7ec2723f5aac365f2819bc0116fdb940c",
-      "summary": {
-        "lexical": {
-          "queries": 12,
-          "answerable_queries": 8,
-          "unknown_queries": 4,
-          "hit_at_1": 0.75,
-          "hit_at_3": 1.0,
-          "mrr_at_3": 0.875,
-          "unknown_refusal_rate": 0.25,
-          "latency_p50_ms": 0.0,
-          "actual_hybrid_queries": 0
-        },
-        "hybrid": {
-          "queries": 12,
-          "answerable_queries": 8,
-          "unknown_queries": 4,
-          "hit_at_1": 1.0,
-          "hit_at_3": 1.0,
-          "mrr_at_3": 1.0,
-          "unknown_refusal_rate": 1.0,
-          "latency_p50_ms": 562.0,
-          "actual_hybrid_queries": 12
-        }
-      },
+    "development_promotion_gate": {
+      "passed": true,
+      "mean_baseline_precision": 0.2121360369059114,
+      "latest_baseline_precision": 0.18410041841004185,
+      "mean_relative_precision_gain": 0.09320691171825657
+    },
+    "rag_index_after_knowledge_update": {
+      "mode": "hybrid",
+      "version": "rag-local-v2",
+      "chunks": 22,
+      "ready": true,
       "index": {
-        "mode": "hybrid",
-        "version": "rag-local-v2",
+        "version": "rag-sqlite-vec-v1",
+        "model": "embeddinggemma:300m",
+        "digest": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+        "corpus_hash": "ca456612d23dbd3f4c43b6851d093aae2bb14f4f8537e7a7d3a44d623e0a76a8",
         "chunks": 22,
-        "ready": true,
-        "index": {
-          "version": "rag-sqlite-vec-v1",
-          "model": "embeddinggemma:300m",
-          "digest": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
-          "corpus_hash": "a8e0efbf4c16e745278ce1ae230ffbbedb690aef76e8e394226cb46eba8949b0",
-          "chunks": 22,
-          "dimensions": 768
-        }
+        "dimensions": 768
       }
     }
   }

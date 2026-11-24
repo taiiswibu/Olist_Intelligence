@@ -313,9 +313,11 @@ Nhập câu hỏi rồi **Tra cứu**. Xem câu trả lời, mã trích dẫn v�
 
 ### 6.5. ML rủi ro giao hàng
 
-Chọn đơn lịch sử, bấm **Tính điểm rủi ro** và đọc cùng bảng so sánh validation/tháng 7. Bản train hiện tại dùng Logistic Regression, ngưỡng `0,09`; có số cảnh báo đúng, sai và bỏ sót. Điểm chưa hiệu chỉnh xác suất. Không dùng để tự từ chối đơn hoặc kết luận seller gây trễ.
+Chọn đơn lịch sử, bấm **Tính điểm rủi ro** và đọc cùng bảng so sánh. Model hiện tại là `geo_logistic`, dùng 26 đặc trưng; ngưỡng điểm khoảng `0,181` để ưu tiên giảm cảnh báo sai. Ngưỡng không phải độ chính xác hoặc xác suất trễ 18,1%.
 
-Clone mới chưa có artifact có thể chạy `.\.venv\Scripts\python.exe manage.py train`. Pipeline so sánh prior, Logistic Regression, HistGradientBoosting và hai bản hiệu chỉnh sigmoid. Chọn model/ngưỡng trên validation, không chọn lại theo tháng 7 đã xem. Model lưu local ở `models/delivery.joblib`, không đưa lên Git. Đây là huấn luyện ML bảng, chưa fine-tune LLM.
+Có precision, recall, số cảnh báo đúng/sai và bỏ sót để đối chiếu. Điểm chưa hiệu chỉnh xác suất, chỉ minh họa các đơn lịch sử; không tự từ chối đơn hoặc kết luận seller gây trễ.
+
+Train local bằng `.\.venv\Scripts\python.exe manage.py train`. Cần 9 CSV Olist gốc và database đã setup. Model và bộ đặc trưng nằm ở `models/delivery.joblib`, `models/delivery_features.joblib`; cả hai không lên Git. Thiếu hoặc không khớp bộ đặc trưng thì yêu cầu train lại, không dùng số dự phòng.
 
 ![Điểm ML và giới hạn](media/demo/07-ml-giao-tre.jpg)
 
@@ -570,36 +572,54 @@ Corpus/nhãn do dự án biên soạn. Đúng nguyên văn chứng minh xuất x
 
 ### 11.3. ML giao trễ
 
-Đã huấn luyện lại trên Olist gốc. Quy trình tách theo thời gian và chỉ nhận nhãn đã biết trước mốc kế tiếp:
+Mục tiêu lần này là **tăng tỷ lệ đúng trong các cảnh báo**, đồng thời phát hiện ít nhất 30% đơn trễ trên từng tập validation. Không dùng accuracy tổng thể: tháng 7 có 96,81% đơn đúng hạn, đoán tất cả đúng hạn cũng cho con số cao nhưng không bắt được đơn trễ nào.
 
-| Tập | Phạm vi | Số đơn |
-|---|---|---:|
-| Fit | Duyệt trước 01/03/2018; giao và ngày hẹn trước 01/03 | 50.475 |
-| Hiệu chỉnh | Duyệt tháng 3–4; giao và ngày hẹn trước 01/05 | 8.377 |
-| Validation | Duyệt tháng 5; kết quả biết trước 01/07 | 6.418 |
-| Kiểm tra lại | Duyệt tháng 7; delivered đủ nhãn | 6.047 |
+Bổ sung khoảng cách thẳng giữa tâm ZIP của khách/seller, tỷ lệ cùng bang, tuyến giao, vùng ZIP, thể tích hàng, cước/giá mỗi item và thời gian hẹn theo khoảng cách. ZIP trùng được gộp trước khi join; tọa độ thiếu giữ missing, không thay bằng khoảng cách 0. Chỉ fit imputer/encoder trên tập huấn luyện.
 
-Thử prior, Logistic Regression, HistGradientBoosting và hai bản sigmoid. Model gốc chỉ fit tập đầu; sigmoid dùng tập riêng qua [FrozenEstimator/CalibratedClassifierCV](https://scikit-learn.org/stable/modules/generated/sklearn.calibration.CalibratedClassifierCV.html). Chọn AP validation cao nhất; AP bằng nhau thì chọn Brier validation thấp hơn. Mỗi model chọn ngưỡng F1 riêng trên validation, từ `0,01` đến `0,99`; không fit lại sau khi chọn.
+Đã thử cả lịch sử seller/tuyến, chỉ nhận kết quả được biết trước thời điểm dự đoán và khóa nguồn ở mốc fit. **Model được chọn không dùng nhóm lịch sử này**; nó dùng 12 đặc trưng cũ và 14 đặc trưng vận chuyển không dựa vào nhãn giao trễ.
 
-**Validation chọn Logistic Regression chưa hiệu chỉnh**, ngưỡng `0,09`. Sigmoid không được chọn: Brier validation của Logistic tăng từ `0,06239` lên `0,07005`. Có thử hiệu chỉnh không đồng nghĩa hiệu chỉnh sẽ tốt hơn khi tỷ lệ giao trễ đổi theo thời gian.
+So 10 cấu hình ML cùng baseline prior trên ba cửa sổ thời gian. Mỗi cửa sổ chỉ fit đơn đã duyệt, đã giao và có ngày hẹn trước mốc fit. Validation dùng đơn có kết quả biết trước mốc ghi dưới đây:
 
-Tháng 7 có 193 đơn trễ trên 6.047 đơn, tỷ lệ **3,19%**. Đây là tập test đã xem từ lần trước; kết quả dưới đây là **kiểm tra lại**, không phải test độc lập mới:
+| Validation | Mốc fit | Số đơn fit | Số đơn validation | Nhãn validation biết trước |
+|---|---|---:|---:|---|
+| Tháng 1/2018 | 01/01/2018 | 38.684 | 6.297 | 01/03/2018 |
+| Tháng 3/2018 | 01/03/2018 | 50.475 | 6.770 | 01/05/2018 |
+| Tháng 5/2018 | 01/05/2018 | 65.486 | 6.418 | 01/07/2018 |
 
-| Model | AP validation | AP tháng 7 | ROC-AUC tháng 7 | Brier tháng 7 |
-|---|---:|---:|---:|---:|
-| Prior | 0,06809 | 0,03192 | 0,50000 | 0,03137 |
-| Logistic Regression — được chọn | 0,12003 | 0,06690 | 0,62363 | 0,03251 |
-| HistGradientBoosting | 0,11710 | 0,05680 | 0,63772 | 0,03296 |
+Chọn ngưỡng theo [precision–recall](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.precision_recall_curve.html): precision cao nhất trong các ngưỡng phát hiện ít nhất 30% đơn trễ. Chọn model theo precision trung bình ba cửa sổ; chỉ thay model khi tăng ít nhất 5% tương đối so với baseline và không kém baseline ở tháng 5 gần nhất. Tỷ lệ 30% là ràng buộc validation, không bảo đảm trên dữ liệu tương lai.
 
-Tại ngưỡng `0,09`, model cảnh báo **1.232 đơn**: đúng 70, cảnh báo sai 1.162, bỏ sót 123 đơn trễ. Precision **5,68%**, recall **36,27%**, F1 **0,09825**. AP cao hơn baseline nhưng Brier vẫn kém prior, nên chưa coi điểm là xác suất tin cậy và chưa dùng tự động quyết định nghiệp vụ.
+**Chọn `geo_logistic`**, ngưỡng tháng 5 `0,1807146`, không fit lại sau khi chọn. So với Logistic chỉ dùng 12 đặc trưng cũ, trong cùng lần fit và cùng mục tiêu recall:
 
-So với bản cũ, AP tháng 7 tăng từ `0,04995` lên `0,06690`; recall giảm từ `45,08%` xuống `36,27%`. Hai quy trình dùng tập fit/ngưỡng khác nhau, không thể kết luận bản mới tốt hơn mọi mặt. Giữ toàn bộ ứng viên, ngưỡng, confusion counts, hash dữ liệu/code/artifact trong [ml_evaluation.json](reports/ml_evaluation.json).
+| Validation | Precision baseline | Precision mới | Recall hai cách |
+|---|---:|---:|---:|
+| Tháng 1 | 8,00% | 8,52% | 30,12% |
+| Tháng 3 | 37,23% | 41,46% | 30,08% |
+| Tháng 5 | 18,41% | 19,58% | 30,21% |
+| Trung bình | 21,21% | 23,19% | khoảng 30,13% |
 
-F1 chưa phản ánh chi phí hay khả năng xử lý cảnh báo của sales. Chỉ có đơn đã giao đủ nhãn và snapshot lịch sử; không chứng minh ngày hẹn/thuộc tính chưa từng bị sửa. Muốn chứng minh hiệu quả mới cần dữ liệu tương lai chưa dùng phát triển.
+Tháng 5 cùng bắt đúng **132 đơn trễ**, cảnh báo sai giảm **585 → 542**. Đây là kết quả phát triển đã dùng chọn model/ngưỡng, chưa phải bằng chứng độc lập.
+
+**Tháng 7 là tập test đã xem từ trước**, chỉ kiểm tra lại sau khi khóa lựa chọn. Có 6.047 đơn, trong đó 193 đơn trễ:
+
+| Chỉ số tháng 7 | Bản trước (`logistic`, ngưỡng 0,09) | Bản mới (`geo_logistic`) |
+|---|---:|---:|
+| Precision trong cảnh báo | 5,68% | 6,93% |
+| Recall | 36,27% | 34,20% |
+| Đơn trễ phát hiện được | 70 | 66 |
+| Cảnh báo sai | 1.162 | 886 |
+| Đơn trễ bỏ sót | 123 | 127 |
+| AP | 0,06690 | 0,07487 |
+| Brier | 0,03251 | 0,04051 |
+
+Giảm 276 cảnh báo sai nhưng bắt ít hơn 4 đơn trễ; Brier kém hơn trước. So với baseline cùng lần fit 65.486 đơn, bản mới bắt 66 thay vì 58 đơn trễ và có 886 thay vì 1.013 cảnh báo sai. Không đổi model/ngưỡng theo những kết quả tháng 7 này.
+
+Lượt thử ban đầu dùng fit cách validation hai tháng có kết quả tháng 5 kém baseline nên bị loại trước khi xem lại tháng 7. Giữ kết quả thử và toàn bộ ứng viên trong [ml_evaluation.json](reports/ml_evaluation.json). Các file dữ liệu/model/cache vẫn nằm local.
+
+**Chất lượng còn thấp:** khoảng 7 trong 100 cảnh báo là đúng trên tháng 7. Điểm chưa hiệu chỉnh xác suất, chưa phản ánh chi phí hay khả năng xử lý cảnh báo. Chỉ có đơn delivered đủ nhãn, khoảng cách ZIP là xấp xỉ và snapshot không chứng minh thuộc tính chưa từng bị sửa. Muốn chứng minh hiệu quả mới cần dữ liệu tương lai chưa dùng phát triển; đây chưa phải model vận hành cho doanh nghiệp.
 
 ### 11.4. Bằng chứng phần mềm
 
-- **288 test backend** sau cập nhật ML; **42 test addon** tại mốc kiểm tra Odoo trước đó. Xem kết quả và phạm vi của CI/lượt phát hành tương ứng.
+- **292 test backend** sau cập nhật ML; **42 test addon** tại mốc kiểm tra Odoo trước đó. Xem kết quả và phạm vi của CI/lượt phát hành tương ứng.
 - [verification.json](reports/verification.json): đối soát CSV độc lập và kiểm tra HTTP.
 - [ai_delivery_20261124.json](reports/ai_delivery_20261124.json): commit/hash/model/mẫu số của lượt đo trước khi gom tài liệu.
 - [demo_evidence.json](reports/demo_evidence.json): ảnh, file tải, trạng thái và giới hạn lần chụp.
