@@ -53,6 +53,8 @@ Agent cloud chỉ được tra tài liệu công khai của dự án. Các file 
 
 Script `python tests/browser_ai_demo.py --record` kiểm tra RAG desktop/mobile và đọc lượt gợi ý ngân sách đã có trong Odoo. Script này cần Playwright, Edge, `python -m playwright install ffmpeg` và một lượt gợi ý BRL 200 có hai phương án. Đây là QA tự động trên dữ liệu hiện có, không phải người dùng thực hiện pilot. Video MP4 bàn giao nằm tại `.openai/exports/ai-demo/demo-ai-local.mp4`, giữ ngoài Git cùng ảnh và kết quả browser.
 
+Có thể thêm `--followup-review ID` để đọc một đề xuất chăm sóc hiện có, kiểm tra trạng thái sẵn sàng và ô duyệt chưa được tick. Script không tạo đề xuất hoặc duyệt hoạt động. File WebM do script ghi; bản MP4 bàn giao được chuyển định dạng bằng FFmpeg, không tăng tốc thao tác trong video.
+
 ## Bằng chứng và giới hạn
 
 Xem [đánh giá AI](AI_EVALUATION.md), [báo cáo bàn giao](../reports/ai_delivery_20261124.json) và [cách tái lập RAG](RAG_LOCAL.md). Báo cáo ghi phiên bản mã nguồn, mẫu số, kết quả lỗi/dự phòng và thời gian; các lượt cũ được giữ.

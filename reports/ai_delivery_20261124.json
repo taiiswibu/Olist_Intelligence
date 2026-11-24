@@ -1,0 +1,366 @@
+{
+  "schema_version": "ai-delivery-v1",
+  "kind": "local_engineering_demo_not_business_effectiveness_study",
+  "created_at_utc": "2026-11-24T04:49:18.592536+00:00",
+  "implementation_commit": "69742780a86a4e77f43bebc7c0afccd42b1cc75c",
+  "data_scope": "Public Olist history, project-authored knowledge, Odoo DEMO; synthetic fixtures only in tests/disposable databases.",
+  "rag": {
+    "index": {
+      "version": "rag-sqlite-vec-v1",
+      "model": "embeddinggemma:300m",
+      "digest": "85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+      "corpus_hash": "bb0fa0563ca3c1681e42b5e4729ded712061c2577c171c5c08aac273aa837b2a",
+      "chunks": 22,
+      "dimensions": 768
+    },
+    "frozen_test": {
+      "source_commit": "a153cefc219e5208498361ac6a05b4ad21f13e1a",
+      "suite_sha256": "f43f2f1fde21b3fda8f1d125eead5e9c5fc8b1b9013d561983de1a8683a1071b",
+      "summary": {
+        "lexical": {
+          "queries": 12,
+          "answerable_queries": 8,
+          "unknown_queries": 4,
+          "hit_at_1": 1.0,
+          "hit_at_3": 1.0,
+          "mrr_at_3": 1.0,
+          "unknown_refusal_rate": 0.25,
+          "latency_p50_ms": 0.0,
+          "actual_hybrid_queries": 0
+        },
+        "hybrid": {
+          "queries": 12,
+          "answerable_queries": 8,
+          "unknown_queries": 4,
+          "hit_at_1": 1.0,
+          "hit_at_3": 1.0,
+          "mrr_at_3": 1.0,
+          "unknown_refusal_rate": 1.0,
+          "latency_p50_ms": 554.5,
+          "actual_hybrid_queries": 12
+        }
+      }
+    },
+    "generation": {
+      "answerable_cases": 8,
+      "accepted_local_extractive_answers": 7,
+      "verbatim_citations": 9,
+      "unverified_outputs_replaced_with_sources": [
+        "test-import"
+      ],
+      "unknown_refused_before_generation": 4
+    },
+    "current_retrieval_regression": {
+      "source_commit": "69742780a86a4e77f43bebc7c0afccd42b1cc75c",
+      "summary": {
+        "lexical": {
+          "queries": 12,
+          "answerable_queries": 8,
+          "unknown_queries": 4,
+          "hit_at_1": 1.0,
+          "hit_at_3": 1.0,
+          "mrr_at_3": 1.0,
+          "unknown_refusal_rate": 0.25,
+          "latency_p50_ms": 0.0,
+          "actual_hybrid_queries": 0
+        },
+        "hybrid": {
+          "queries": 12,
+          "answerable_queries": 8,
+          "unknown_queries": 4,
+          "hit_at_1": 1.0,
+          "hit_at_3": 1.0,
+          "mrr_at_3": 1.0,
+          "unknown_refusal_rate": 1.0,
+          "latency_p50_ms": 578.0,
+          "actual_hybrid_queries": 12
+        }
+      },
+      "suite_reused_not_new_holdout": true
+    },
+    "limits": [
+      "Small project-authored demo corpus and labels; not independent business validation.",
+      "Source relevance and verbatim checks do not prove that a quote fully answers a question.",
+      "Fixed lexical-then-hybrid order; latency includes model warming and is not a load test."
+    ]
+  },
+  "followup": {
+    "suite_sha256": "fe652bdd8453a467f5db201ead16fac5822333f302c2c42c51945ba72af744b1",
+    "split": "dev",
+    "case_ids": [
+      "draft_expires_today-v0",
+      "draft_future_activity-v0",
+      "sent_due_tomorrow-v0",
+      "draft_expiry_boundary-v0",
+      "draft_no_expiry-v0",
+      "draft_overdue_and_expired-v0",
+      "sent_activity_today-v0",
+      "sent_expired-v0",
+      "sent_outside_expiry_window-v0",
+      "sent_overdue_activity-v0"
+    ],
+    "repeats": 1,
+    "first_run": {
+      "source_commit": "a153cefc219e5208498361ac6a05b4ad21f13e1a",
+      "summary": {
+        "assisted": {
+          "cases": 10,
+          "completed": 10,
+          "completion_rate": 1,
+          "contract_pass_rate": 1,
+          "ai_completed": 7,
+          "fallback_count": 3,
+          "fallback_reasons": {
+            "ReviewRejected": 3
+          },
+          "elapsed_p50_ms": 12851.5,
+          "elapsed_p95_ms": 13675.7,
+          "model_calls": 20,
+          "trace_entries": 20,
+          "http_requests_privacy_checked": 20,
+          "tokens_reported": 21079,
+          "estimated_cost": null,
+          "failures": {},
+          "http_status_counts": {},
+          "http_errors_without_status": 0,
+          "retries": 0,
+          "human_quality": "not_scored"
+        },
+        "gemini": {
+          "cases": 10,
+          "completed": 10,
+          "completion_rate": 1,
+          "contract_pass_rate": 1,
+          "ai_completed": 10,
+          "fallback_count": 0,
+          "fallback_reasons": {},
+          "elapsed_p50_ms": 7163.5,
+          "elapsed_p95_ms": 12956.25,
+          "model_calls": 10,
+          "trace_entries": 10,
+          "http_requests_privacy_checked": 10,
+          "tokens_reported": 14951,
+          "estimated_cost": null,
+          "failures": {},
+          "http_status_counts": {},
+          "http_errors_without_status": 0,
+          "retries": 0,
+          "human_quality": "not_scored"
+        },
+        "groq": {
+          "cases": 10,
+          "completed": 4,
+          "completion_rate": 0.4,
+          "contract_pass_rate": 0.4,
+          "ai_completed": 4,
+          "fallback_count": 0,
+          "fallback_reasons": {},
+          "elapsed_p50_ms": 5969.0,
+          "elapsed_p95_ms": 12199.95,
+          "model_calls": 10,
+          "trace_entries": 10,
+          "http_requests_privacy_checked": 10,
+          "tokens_reported": 15789,
+          "estimated_cost": null,
+          "failures": {
+            "GroundingRejected": 6
+          },
+          "http_status_counts": {},
+          "http_errors_without_status": 0,
+          "retries": 0,
+          "human_quality": "not_scored"
+        },
+        "pipeline": {
+          "cases": 10,
+          "completed": 3,
+          "completion_rate": 0.3,
+          "contract_pass_rate": 0.3,
+          "ai_completed": 3,
+          "fallback_count": 0,
+          "fallback_reasons": {},
+          "elapsed_p50_ms": 11430.0,
+          "elapsed_p95_ms": 12552.05,
+          "model_calls": 13,
+          "trace_entries": 13,
+          "http_requests_privacy_checked": 13,
+          "tokens_reported": 18344,
+          "estimated_cost": null,
+          "failures": {
+            "GroundingRejected": 7
+          },
+          "http_status_counts": {},
+          "http_errors_without_status": 0,
+          "retries": 0,
+          "human_quality": "not_scored"
+        },
+        "rules": {
+          "cases": 10,
+          "completed": 10,
+          "completion_rate": 1,
+          "contract_pass_rate": 1,
+          "ai_completed": 0,
+          "fallback_count": 0,
+          "fallback_reasons": {},
+          "elapsed_p50_ms": 15.0,
+          "elapsed_p95_ms": 32.0,
+          "model_calls": 0,
+          "trace_entries": 0,
+          "http_requests_privacy_checked": 0,
+          "tokens_reported": 0,
+          "estimated_cost": 0,
+          "failures": {},
+          "http_status_counts": {},
+          "http_errors_without_status": 0,
+          "retries": 0,
+          "human_quality": "not_scored"
+        }
+      }
+    },
+    "after_reviewer_contract_fix": {
+      "source_commit": "69742780a86a4e77f43bebc7c0afccd42b1cc75c",
+      "summary": {
+        "assisted": {
+          "cases": 10,
+          "completed": 10,
+          "completion_rate": 1,
+          "contract_pass_rate": 1,
+          "ai_completed": 10,
+          "fallback_count": 0,
+          "fallback_reasons": {},
+          "elapsed_p50_ms": 11930.0,
+          "elapsed_p95_ms": 12381.75,
+          "model_calls": 20,
+          "trace_entries": 20,
+          "http_requests_privacy_checked": 20,
+          "tokens_reported": 16352,
+          "estimated_cost": null,
+          "failures": {},
+          "http_status_counts": {},
+          "http_errors_without_status": 0,
+          "retries": 0,
+          "human_quality": "not_scored"
+        },
+        "rules": {
+          "cases": 10,
+          "completed": 10,
+          "completion_rate": 1,
+          "contract_pass_rate": 1,
+          "ai_completed": 0,
+          "fallback_count": 0,
+          "fallback_reasons": {},
+          "elapsed_p50_ms": 15.5,
+          "elapsed_p95_ms": 125.6,
+          "model_calls": 0,
+          "trace_entries": 0,
+          "http_requests_privacy_checked": 0,
+          "tokens_reported": 0,
+          "estimated_cost": 0,
+          "failures": {},
+          "http_status_counts": {},
+          "http_errors_without_status": 0,
+          "retries": 0,
+          "human_quality": "not_scored"
+        }
+      }
+    },
+    "models": {
+      "groq": "openai/gpt-oss-20b",
+      "gemini": "gemini-3.5-flash-lite"
+    },
+    "request_policy": {
+      "version": "followup-request-policy-v1",
+      "max_attempts": 2,
+      "min_interval_seconds": 12.0,
+      "max_wait_seconds": 30
+    },
+    "source_hashes": {
+      "olist/followups.py": "2c1f7b1377ff1cd74dd2e10e5d9288774f06e5485f1e2344b751a9c1a543f687",
+      "olist/followup_plans.py": "bcd73bd1139e8e35ef751451f8e6a9cb86595be0adc14cc47ea662eaa9871403",
+      "olist/followup_privacy.py": "65278de31e1779de3dc69e8933dafc55e3254fdbca11d40320b73e22a61b5982",
+      "olist/followup_grounding.py": "98bf8a3d288e8a5a16a8f09344311c2d7f1f17c1ab7230f559c54d030cf6547f",
+      "olist/followup_transport.py": "40f73e27bf38293d50c37342fda1c7fdc87f28112f2f660e2a18afa7b6ffcabf",
+      "olist/team_model.py": "88ba725d47ea82ac50b4fdc624dd7c97dfb4c27757d47551c9ed1ff2da00b311",
+      "olist/followup_evaluation.py": "4e56305f2579e9493f64e82f31a500018386c825823ef3180f0daaecfef0f601",
+      ".agents/skills/olist-customer-followup/SKILL.md": "f5847ac5799ebe43f21a985e6dc5a7905f8a0ecfb1cc87a97a29033be73163c2",
+      ".agents/skills/olist-followup-check/SKILL.md": "8c840c95831a6b123fd490fc89a028d09151bd5b115094a830c8e983de903ce6",
+      ".agents/skills/olist-followup-plan/SKILL.md": "99792cb3391cf2eb2212ea166a38bfe2e0eca10d4614257b4dea4ed55aac6db0",
+      ".agents/skills/olist-risk-review/SKILL.md": "48a29da2881d28b4e4e8e82fd9b25eb4f2763d4d5fbfd7769c0623431eb39d69",
+      ".agents/skills/olist-product-advice/SKILL.md": "7adce32e413d182b3d7892e37e475e2d71e3e7c0a1a5829b6b144282c19932ef"
+    },
+    "human_quality": "not_scored",
+    "limitations": [
+      "Ten development families, one variant and one repetition; no independent content ratings.",
+      "Assisted uses bounded choices and local rendering, while old baselines generate prose; completion does not prove superior writing.",
+      "Repeated development evaluation; service conditions can vary; no causal business benefit claim.",
+      "Rules also complete 10/10 and are faster; model value needs human assessment."
+    ]
+  },
+  "security": {
+    "private_markdown_folder": "data/knowledge/ (gitignored)",
+    "private_documents_excluded_from_cloud_agent_tools": true,
+    "followup_http_allowlist_checked_in_v2_benchmark": 20,
+    "real_odoo_http_requests_checked": 2,
+    "terminal_backend_payload_cleared": true,
+    "scope": "Local RAG and minimized native sales workflows; not a global privacy certification."
+  },
+  "checks": {
+    "backend_tests": 284,
+    "odoo_addon_tests": 42,
+    "odoo_native_failures": 0,
+    "javascript_syntax": "passed",
+    "offline_release_verification": "passed",
+    "windows_executed": true,
+    "raw_csv_reconciliation_2018_SP": {
+      "orders": 23871,
+      "gmv": 2919328.17,
+      "late_eligible": 23329,
+      "late_orders": 1167,
+      "passed": true
+    },
+    "real_odoo_proposal": {
+      "state": "ready",
+      "actual_strategy": "assisted",
+      "privacy_version": "followup-plan-minimized-v2",
+      "business_tables_unchanged": true,
+      "no_activity_approval": true,
+      "not_a_user_trial": true
+    },
+    "browser": {
+      "kind": "automated_real_data_browser_qa_not_human_pilot",
+      "rag_method": "hybrid_sqlite_vec",
+      "generation": "local_extractive",
+      "validated_citations": 1,
+      "unknown_refused": true,
+      "desktop_mobile": true,
+      "odoo_existing_options": 2,
+      "business_record_counts_unchanged": true,
+      "no_erp_proposal_or_approval": true,
+      "javascript_errors": []
+    },
+    "implementation_ci": {
+      "id": 45328321616,
+      "conclusion": "success",
+      "url": "https://github.com/taiiswibu/Olist_Intelligence/actions/runs/45328321616"
+    }
+  },
+  "artifacts": {
+    "architecture": "docs/AI_PORTFOLIO.md",
+    "rag_guide": "docs/RAG_LOCAL.md",
+    "evaluation_guide": "docs/AI_EVALUATION.md",
+    "video_local_path": ".openai/exports/ai-demo/demo-ai-local.mp4",
+    "video_seconds": 28.28,
+    "video_bytes": 1134370,
+    "video_sha256": "6a1e528b02e612d1888ce6b9df18a1bf492c00a19588037531b65e545595d6c7",
+    "video_kind": "Unsped automated browser demonstration, no human pilot claim; runtime artifacts excluded from Git."
+  },
+  "preserved_limits": {
+    "followup_holdout_used": false,
+    "delivery_ml_holdout_tuned": false,
+    "llm_fine_tuned": false,
+    "multiuser_load_tested": false,
+    "production_deployed": false,
+    "business_improvement_proven": false,
+    "customer_messages_sent": false,
+    "orders_confirmed_or_invoices_created": false
+  }
+}

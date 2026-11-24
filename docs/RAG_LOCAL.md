@@ -32,4 +32,6 @@ Bộ câu hỏi có nguồn kỳ vọng và câu ngoài phạm vi, nằm trong t
 
 Trích đoạn đúng nguyên văn chứng minh xuất xứ, chưa chứng minh đoạn đó trả lời đầy đủ câu hỏi. Corpus nhỏ và ngưỡng hiện tại không đủ để khẳng định vận hành ở quy mô doanh nghiệp.
 
+Lượt chốt với embedding thật có 22 đoạn, 768 chiều. Tập kiểm tra nhỏ có 8 câu có nguồn và 4 câu ngoài phạm vi: hybrid tìm đúng nguồn đầu tiên 8/8 và từ chối 4/4; baseline từ khóa cũng tìm đúng nguồn đầu tiên 8/8 nhưng chỉ từ chối 1/4 câu ngoài phạm vi. Qwen trả trích dẫn được chấp nhận ở 7/8 câu có nguồn; một đầu ra bị thay bằng thông báo đối chiếu nguồn. Các lần chạy lại được ghi là regression trên tập đã dùng, không gọi là holdout mới. Xem [báo cáo và giới hạn](../reports/ai_delivery_20261124.json).
+
 Tham khảo triển khai: [sqlite-vec Python](https://alexgarcia.xyz/sqlite-vec/python.html), [KNN](https://alexgarcia.xyz/sqlite-vec/features/knn.html), [Ollama embed](https://docs.ollama.com/api/embed), [EmbeddingGemma](https://ollama.com/library/embeddinggemma).

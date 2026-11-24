@@ -67,7 +67,7 @@ Khởi động lại `START_WINDOWS.bat`. Khóa kết nối riêng được gi�
 
 - **AI hỗ trợ bán hàng → Khách cần chăm sóc**: xem báo giá trong phạm vi được phép, lý do cần xem, hạn báo giá và lịch việc.
 - Ưu tiên việc quá hạn, báo giá hết/sắp hết hạn trong ba ngày, chưa có lịch chăm sóc, rồi đến các báo giá còn lại. Số tiền và ngày lấy từ Odoo, không phải dự đoán của AI.
-- Chọn tối đa hai mươi báo giá → **Phân tích AI**. Groq soạn đề xuất, Gemini kiểm tra. Màn hình tự lấy kết quả hoặc dùng **Lấy kết quả**. Có thể rời màn hình và mở lại cùng đề xuất, không tạo lượt AI khác.
+- Chọn tối đa hai mươi báo giá → **Phân tích AI**. Groq chọn góc trao đổi, Gemini kiểm tra lựa chọn; nội dung được dựng local từ bản chụp. Nếu chưa có kết quả AI hợp lệ, trả mẫu dự phòng có ghi rõ trong giải thích. Màn hình tự lấy kết quả hoặc dùng **Lấy kết quả**. Có thể rời màn hình và mở lại cùng đề xuất, không tạo lượt AI khác.
 - Ở **Đề xuất chờ duyệt**, đọc dữ liệu đối chiếu, lý do, nội dung nháp; sửa tên việc, loại việc, người phụ trách, ngày hẹn. Đánh dấu đã kiểm tra rồi bấm **Duyệt tạo việc** và xác nhận.
 - Việc xuất hiện trên báo giá trong Activities. Mở và đánh dấu hoàn tất bằng chức năng gốc Odoo. **Công việc và lịch sử** giữ người duyệt, thời điểm, nội dung đã duyệt và liên kết tới việc.
 

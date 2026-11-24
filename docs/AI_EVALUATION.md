@@ -16,6 +16,21 @@ Bốn baseline văn bản dùng cùng tình huống, dữ kiện tối thiểu, 
 
 Luồng mặc định trong addon hiện dùng assisted. `completed` đo có kết quả để đối chiếu, `ai_completed` chỉ đếm lựa chọn được hai model chấp nhận, `fallback_count` đếm mẫu quy tắc dự phòng. Một lượt dự phòng không được tính là AI thành công; CSV pilot giữ `actual_strategy=rules_fallback` và ghi nhận lệch phương pháp nếu lượt được giao là AI. Benchmark văn bản cũ vẫn gọi rõ strategy và không tự chuyển mẫu khi thất bại.
 
+## Mốc chốt ngày 24/11/2026
+
+[Báo cáo bàn giao](../reports/ai_delivery_20261124.json) giữ hai lượt phát triển với cùng mười họ, một biến thể/họ và một lần lặp:
+
+| Cách chạy | AI được chấp nhận | Mẫu dự phòng | Có kết quả để đối chiếu |
+|---|---:|---:|---:|
+| Pipeline văn bản cũ, lượt đầu | 3/10 | 0/10 | 3/10 |
+| Lựa chọn hữu hạn, lượt đầu | 7/10 | 3/10 | 10/10 |
+| Lựa chọn hữu hạn, sau tách skill reviewer | 10/10 | 0/10 | 10/10 |
+| Quy tắc, lượt cuối | Không gọi model | Không áp dụng | 10/10 |
+
+Chạy lại ba tình huống dev từng bị từ chối: hai tình huống tái hiện việc reviewer trộn quy tắc chấm văn bản vào lựa chọn, nhầm loại việc với action và cờ hiệu lực với lịch sử gửi; tình huống còn lại được chấp nhận khi chạy lại. Bản sau dùng skill lựa chọn riêng và khóa `selection` thay cho `draft`. Chỉ chỉnh trên dev, không mở tập dự phòng. Trung vị lượt cuối khoảng 11,93 giây cho assisted và 15,5 mili giây cho quy tắc; 20 request model đều qua chốt dữ liệu tại HTTP.
+
+Đây là quan sát phát triển, không phải thí nghiệm nhân quả hoặc chấm nội dung độc lập. Assisted dựng nội dung local theo lựa chọn hữu hạn, không có cùng bài toán viết tự do với pipeline cũ. Không suy ra AI viết hay hơn, tiết kiệm thời gian người bán hoặc tăng doanh thu. Chưa có đơn giá được xác minh cho lượt này nên chi phí để trống. Kết quả pilot người dùng cũ giữ nguyên.
+
 ## Chạy và giữ bằng chứng
 
 Fixture `tests/fixtures/followup_benchmark_v1.py` có **30 họ × 4 biến thể riêng tư = 120 mẫu**, không phải 120 tình huống nghiệp vụ độc lập. Có 10 họ/40 mẫu phát triển và 20 họ/80 mẫu dự phòng, không tách các biến thể của cùng họ sang hai tập. Dữ liệu tổng hợp chỉ ở test; không dùng để làm đầy ứng dụng hoặc Odoo.

@@ -2,6 +2,8 @@
 
 Cập nhật 22/11/2026. Dành cho Windows, Docker Desktop đã cài, chưa có Odoo và chưa cấu hình LLM.
 
+Bảng hiện trạng bên dưới là mốc ban đầu ngày 22/11. Bản đã kiểm tra với Odoo/API thật và RAG local được ghi tại [AI_PORTFOLIO.md](AI_PORTFOLIO.md) và báo cáo bàn giao đi kèm.
+
 ## 1. Bản này làm được gì?
 
 Dashboard HTML/CSS vẫn chạy bằng FastAPI tại `http://127.0.0.1:8000`. Assistant trên web dùng bộ định tuyến một công cụ. **Agent Lab là CLI tùy chọn riêng**, dùng LangChain `create_agent` trên runtime LangGraph, có vòng lặp gọi nhiều công cụ và lưu hội thoại bằng SQLite. Chưa thay Assistant web bằng Agent Lab.

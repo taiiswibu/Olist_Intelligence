@@ -1,8 +1,8 @@
 {
-  "verified_at_utc": "2026-11-24T04:38:01.667132+00:00",
+  "verified_at_utc": "2026-11-24T04:48:06.032733+00:00",
   "platform": "Windows-11-10.0.26200-SP0",
   "python": "3.12.2",
-  "unit_tests_passed": 283,
+  "unit_tests_passed": 284,
   "cloud_llm_tested": false,
   "odoo_server_tested": false,
   "postgres_server_tested": false,
@@ -218,8 +218,8 @@
     ]
   },
   "offline_agent_latency_ms": {
-    "p50": 366.9999999999618,
-    "p95": 1649.6500000000876,
+    "p50": 375.0,
+    "p95": 1686.950000000297,
     "note": "host CPU, no LLM requests; not a load test"
   }
 }
