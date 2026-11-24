@@ -1,5 +1,7 @@
 # AI hỗ trợ bán hàng trong Odoo
 
+Mở ứng dụng sẽ vào **Khách cần chăm sóc**. Cửa sổ **Nhu cầu và ngân sách** chỉ mở khi chọn menu **Gợi ý theo ngân sách**.
+
 ## Gợi ý sản phẩm theo nhu cầu và ngân sách
 
 Mở **AI hỗ trợ bán hàng → Gợi ý theo ngân sách**, chọn khách DEMO, nhập nhu cầu, số lượng nguyên và ngân sách gồm thuế bằng BRL rồi bấm **Xem phương án**. Chọn nhóm nhu cầu nếu hệ thống chưa nhận diện được một nhóm rõ ràng. Mỗi phương án là một sản phẩm với số lượng đã nhập; ba phương án là các lựa chọn thay thế, không phải một giỏ hàng cộng chung.

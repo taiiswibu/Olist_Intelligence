@@ -16,9 +16,10 @@ URL='http://127.0.0.1:8069'
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--database',required=True)
+    parser.add_argument('--setup-log',choices=['product-advisor-native-setup.log','sales-entry-native-setup.log'],default='product-advisor-native-setup.log')
     args=parser.parse_args()
     assert re.fullmatch(r'olist_ai_test_[a-f0-9]{10}',args.database)
-    assert 'QA_DATABASE='+args.database in (OUT/'product-advisor-native-setup.log').read_text(encoding='utf-8')
+    assert 'QA_DATABASE='+args.database in (OUT/args.setup_log).read_text(encoding='utf-8')
     common=xmlrpc.client.ServerProxy(URL+'/xmlrpc/2/common')
     models=xmlrpc.client.ServerProxy(URL+'/xmlrpc/2/object')
     admin=common.authenticate(args.database,'admin','admin',{})
@@ -57,7 +58,19 @@ def main():
         assert auth.get('result',{}).get('uid')==user
         page=context.new_page()
         page.on('pageerror',lambda e:errors.append(str(e)))
-        page.goto(URL+'/odoo/action-'+str(xmlid('olist_sales_ai.product_advice_start')))
+        page.goto(URL+'/odoo')
+        page.locator('.o_navbar_apps_menu button').click(timeout=60000)
+        queue_action=xmlid('olist_sales_ai.queue_action')
+        def queue_ran(response):
+            if not response.url.endswith('/web/action/run'):return False
+            data=response.request.post_data_json or {}
+            return data.get('params',{}).get('action_id')==queue_action
+        with page.expect_response(queue_ran,timeout=30000):
+            page.locator('.o_app[data-menu-xmlid="olist_sales_ai.root_menu"]').click()
+        page.locator('.o_list_view').wait_for(timeout=30000)
+        expect(page.locator('.modal-dialog')).to_have_count(0)
+        page.screenshot(path=str(OUT/'sales-app-default-entry.png'),full_page=True)
+        page.locator('.o_menu_sections [data-menu-xmlid="olist_sales_ai.product_advice_menu"]').click()
         dialog=page.locator('.modal-dialog')
         customer=dialog.locator('[name=partner_id] input')
         customer.fill(partner_name)
@@ -102,6 +115,7 @@ def main():
         assert not errors,errors
         context.close();browser.close()
     report={'kind':'automated_test_fixture_not_human_pilot','native_budget_and_tax':True,'no_quote_before_explicit_approval':True,
+        'app_entry_opens_queue':True,'advisor_requires_explicit_menu':True,
         'one_draft_after_approval':True,'idempotent_approval':True,'desktop_mobile':True,'model_calls':0,'javascript_errors':errors}
     (OUT/'product-advisor-browser-qa.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
     print(json.dumps(report))

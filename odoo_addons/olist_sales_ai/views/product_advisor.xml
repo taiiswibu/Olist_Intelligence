@@ -51,7 +51,7 @@
     <record id="product_advice_start" model="ir.actions.act_window"><field name="name">Nhu cầu và ngân sách</field><field name="res_model">olist.ai.product.advice.wizard</field><field name="view_mode">form</field><field name="target">new</field></record>
     <record id="product_advice_history" model="ir.actions.act_window"><field name="name">Lịch sử gợi ý sản phẩm</field><field name="res_model">olist.ai.product.advice</field><field name="view_mode">list,form</field></record>
     <record id="product_option_pending" model="ir.actions.act_window"><field name="name">Đề xuất từ sản phẩm</field><field name="res_model">olist.ai.product.option</field><field name="view_mode">list,form</field><field name="domain">[('state', 'in', ['proposed','done'])]</field></record>
-    <menuitem id="product_advice_menu" name="Gợi ý theo ngân sách" parent="root_menu" action="product_advice_start" sequence="5"/>
-    <menuitem id="product_advice_history_menu" name="Lịch sử gợi ý" parent="root_menu" action="product_advice_history" sequence="6"/>
-    <menuitem id="product_option_menu" name="Đề xuất từ sản phẩm" parent="root_menu" action="product_option_pending" sequence="7"/>
+    <menuitem id="product_advice_menu" name="Gợi ý theo ngân sách" parent="root_menu" action="product_advice_start" sequence="15"/>
+    <menuitem id="product_advice_history_menu" name="Lịch sử gợi ý" parent="root_menu" action="product_advice_history" sequence="16"/>
+    <menuitem id="product_option_menu" name="Đề xuất từ sản phẩm" parent="root_menu" action="product_option_pending" sequence="17"/>
 </odoo>
