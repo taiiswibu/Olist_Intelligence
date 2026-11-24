@@ -1,0 +1,30 @@
+{
+  "version": "rag-benchmark-v1",
+  "label_status": "project_authored_not_independent_business_review",
+  "cases": [
+    {"id":"dev-gmv","split":"dev","question":"GMV hàng hóa có bao gồm phí vận chuyển không?","section":"GMV hàng hóa và doanh thu"},
+    {"id":"dev-aov","split":"dev","question":"AOV lấy mẫu số là đơn hay số sản phẩm?","section":"AOV hàng hóa"},
+    {"id":"dev-late","split":"dev","question":"Giao buổi tối trong đúng ngày hẹn có bị tính trễ không?","section":"Tỷ lệ giao trễ"},
+    {"id":"dev-cancel","split":"dev","question":"Trạng thái unavailable có tính chung là đơn hủy không?","section":"Tỷ lệ hủy"},
+    {"id":"dev-join","split":"dev","question":"Làm sao tránh nhân đôi tiền khi ghép item và payment?","section":"Grain và chống nhân đôi số tiền"},
+    {"id":"dev-approval","split":"dev","question":"Sau khi duyệt đề xuất thì Odoo tạo chứng từ ở trạng thái nào?","section":"Duyệt tạo báo giá"},
+    {"id":"dev-leakage","split":"dev","question":"Có được đưa ngày giao thực tế vào biến đầu vào của model dự báo không?","section":"Dự báo giao trễ và leakage"},
+    {"id":"dev-missing","split":"dev","question":"Dữ liệu này có giá vốn và tồn kho không?","section":"Giá trị thiếu và dữ liệu không có"},
+    {"id":"dev-weather","split":"dev","question":"Dự báo thời tiết Hà Nội ngày mai thế nào?","section":null},
+    {"id":"dev-password","split":"dev","question":"Mật khẩu đăng nhập quản trị công ty là gì?","section":null},
+    {"id":"dev-refund","split":"dev","question":"Khách được đổi trả hàng trong bao nhiêu ngày?","section":null},
+    {"id":"dev-hr","split":"dev","question":"Nhân viên được nghỉ phép năm bao nhiêu ngày?","section":null},
+    {"id":"test-source","split":"test","question":"Bộ dữ liệu thương mại được thu thập trong giai đoạn nào và có giấy phép gì?","section":"Nguồn dữ liệu, giấy phép và thời gian"},
+    {"id":"test-customer","split":"test","question":"Đếm khách quay lại bằng customer_id hay customer_unique_id?","section":"Grain và chống nhân đôi số tiền"},
+    {"id":"test-seller","split":"test","question":"Seller xuất hiện trong đơn giao muộn có chắc là nguyên nhân gây trễ không?","section":"Seller, ngành hàng và số đơn"},
+    {"id":"test-split","split":"test","question":"Ngưỡng phân loại dự báo giao muộn được chọn từ validation hay test?","section":"Chia tập và đánh giá ML"},
+    {"id":"test-local","split":"test","question":"Bản local đã có đăng nhập nhiều người và RBAC doanh nghiệp chưa?","section":"Giới hạn bản local"},
+    {"id":"test-import","split":"test","question":"Nhập dữ liệu Olist sang Odoo có tự xác nhận đơn và xuất kho không?","section":"Import dữ liệu Olist vào Odoo"},
+    {"id":"test-api","split":"test","question":"Phần mềm có biết số dư tài khoản API và đảm bảo miễn phí không?","section":"Nguồn API và chi phí"},
+    {"id":"test-agent","split":"test","question":"LLM có được tự chạy SQL tùy ý để tính KPI không?","section":"Agent và nguồn số liệu"},
+    {"id":"test-warranty","split":"test","question":"Điện thoại khách mua được bảo hành mấy tháng?","section":null},
+    {"id":"test-credit","split":"test","question":"Hạn mức tín dụng riêng của khách Nguyễn Văn An là bao nhiêu?","section":null},
+    {"id":"test-recipe","split":"test","question":"Hướng dẫn cách nấu phở bò ngon?","section":null},
+    {"id":"test-salary","split":"test","question":"Mức lương của trưởng phòng bán hàng công ty là bao nhiêu?","section":null}
+  ]
+}

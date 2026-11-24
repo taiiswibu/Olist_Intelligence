@@ -3,6 +3,15 @@ import pytest
 from olist.ingest import build_facts
 
 
+@pytest.fixture(autouse=True)
+def offline_rag(monkeypatch):
+    # Live Ollama is exercised by the explicit benchmark, never by unit tests.
+    monkeypatch.setenv('RAG_MODE', 'lexical')
+    monkeypatch.setenv('EMBED_MODEL', '')
+    monkeypatch.setenv('RAG_ANSWER_MODEL', '')
+    monkeypatch.setenv('OLLAMA_MODEL', '')
+
+
 @pytest.fixture
 def raw():
     return {

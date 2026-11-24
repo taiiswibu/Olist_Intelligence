@@ -251,6 +251,16 @@ def search(payload: Search):
     return rag.retrieve(payload.question)
 
 
+@app.post('/rag/answer', dependencies=secured)
+def knowledge_answer(payload: Search):
+    return rag.answer(payload.question)
+
+
+@app.get('/rag/status', dependencies=secured)
+def knowledge_status():
+    return rag.status()
+
+
 @app.get("/orders/{order_id}", dependencies=data_secured)
 def order(order_id: str):
     if len(order_id) != 32:
