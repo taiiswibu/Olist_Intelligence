@@ -1,9 +1,9 @@
 {
   "schema_version": "readme-demo-v1",
-  "created_at_utc": "2026-11-24T05:56:33.828464+00:00",
+  "created_at_utc": "2026-11-24T08:54:21.132684+00:00",
   "kind": "automated_software_demonstration_not_human_quality_study",
   "data_scope": "Public historical Olist and local Odoo DEMO. No synthetic records seeded in the main database.",
-  "capture_source": "Final source hashes after recorder corrections; retained artifacts come from verified executions. Numerical outputs were not edited.",
+  "capture_source": "Browser screenshots recaptured without injected caption overlays. Existing PDF page images are retained unchanged. Numerical outputs were not edited.",
   "phases": {
     "web": {
       "kind": "automated_demo_not_human_evaluation",
@@ -59,6 +59,17 @@
         "09-kiem-chung.jpg"
       ],
       "javascript_errors": [],
+      "screenshot_descriptions": {
+        "01-tong-quan.jpg": "Olist thật · Lọc năm 2018, bang SP · GMV hàng hóa, không phải lợi nhuận",
+        "02-tro-ly.jpg": "Trợ lý cơ bản · Số liệu lấy từ công cụ BI và có truy vấn đối chiếu",
+        "03-bao-cao.jpg": "Báo cáo thật từ công cụ BI · Chỉnh nhận xét, biểu đồ, lưu và tải file",
+        "04-rag.jpg": "RAG local · Model chọn trích đoạn, backend đối chiếu nguyên văn với nguồn",
+        "05-rag-mobile.jpg": "RAG trên điện thoại",
+        "06-rag-tu-choi.jpg": "Ngoài phạm vi tài liệu · Từ chối trả lời và không gọi model sinh nội dung",
+        "07-ml-giao-tre.jpg": "ML thử nghiệm · Đọc điểm cùng giới hạn holdout; không tự ra quyết định",
+        "08-doi-soat-erp.jpg": "Đối soát giá và thuế bằng Odoo · Giá BRL lấy từ dòng báo giá DEMO đang có",
+        "09-kiem-chung.jpg": "Đối soát CSV, số dòng, checksum và nhật ký · Không thay dữ liệu thiếu bằng số giả"
+      },
       "business_rows_unchanged": true,
       "no_confirmation_invoice_or_activity_approval": true
     },
@@ -70,20 +81,22 @@
           "name": "multi_agent",
           "status": "complete",
           "evidence_tools": [
-            "search_business_docs",
             "business_kpis",
             "search_business_docs",
             "search_business_docs"
           ],
-          "trace_entries": 23,
+          "trace_entries": 20,
           "model_calls": 7,
-          "tool_calls": 4
+          "tool_calls": 3
         }
       ],
       "screenshots": [
         "10-doi-agent.jpg"
       ],
       "javascript_errors": [],
+      "screenshot_descriptions": {
+        "10-doi-agent.jpg": "Đội agent · Tách công cụ BI, nguồn tài liệu và bước kiểm tra; có thể chưa hoàn tất khi API lỗi"
+      },
       "business_rows_unchanged": true,
       "no_confirmation_invoice_or_activity_approval": true
     },
@@ -93,11 +106,11 @@
       "checks": [
         {
           "name": "agent_current_quotation_review",
-          "status": "incomplete",
-          "model_calls": 6,
+          "status": "complete",
+          "model_calls": 7,
           "evidence_tools": [
             "review_current_quotation",
-            "search_odoo_sales"
+            "search_business_docs"
           ],
           "new_quote_created": false
         },
@@ -112,6 +125,10 @@
         "22-ai-rui-ro-da-luu.jpg"
       ],
       "javascript_errors": [],
+      "screenshot_descriptions": {
+        "21-agent-erp.jpg": "Agent kiểm tra bản chụp form · Số lấy từ Odoo, chưa lưu đề xuất hoặc ghi báo giá",
+        "22-ai-rui-ro-da-luu.jpg": "Đọc diễn giải AI đã lưu từ bản cũ · Nguồn đã đổi phải kiểm tra lại"
+      },
       "business_rows_unchanged": true,
       "no_confirmation_invoice_or_activity_approval": true
     },
@@ -153,6 +170,15 @@
         "17-de-xuat-bao-gia.jpg"
       ],
       "javascript_errors": [],
+      "screenshot_descriptions": {
+        "11-cham-soc-odoo.jpg": "Đề xuất chăm sóc đã có · Có nguồn và model/skill; chưa tick duyệt tạo việc",
+        "12-do-thao-tac.jpg": "Lượt đo thao tác đã lưu · Giữ cả thất bại; không tạo kết quả chấm người dùng mới",
+        "13-rui-ro-bao-gia.jpg": "Bản kiểm tra mới · Cờ rủi ro do quy tắc Odoo, chưa phải đánh giá tín dụng",
+        "14-truoc-sau.jpg": "So hai bản kiểm tra · Giữ nguồn và cờ cũ, không tự kế thừa xác nhận",
+        "15-ghi-nhan.jpg": "Cửa sổ ghi nhận xử lý · Chỉ mở để xem, chưa lưu kết luận nghiệp vụ",
+        "16-goi-y-san-pham.jpg": "Danh mục DEMO thật · Odoo lọc ngân sách; AI chưa có kết quả hợp lệ, giữ phương án local",
+        "17-de-xuat-bao-gia.jpg": "Bước duyệt riêng · Chưa tick, chưa tạo báo giá mới"
+      },
       "business_rows_unchanged": true,
       "no_confirmation_invoice_or_activity_approval": true
     }
@@ -160,88 +186,88 @@
   "screenshots": [
     {
       "path": "media/demo/01-tong-quan.jpg",
-      "bytes": 115750,
-      "sha256": "1bfacf11312c50dc7ed0fd9776905294272447c034249483d96379f87e636bce"
+      "bytes": 132972,
+      "sha256": "86cdf04e703c65f48c5dcde28a431c03ed2e9a03cef9eaa570eedafd9b98c787"
     },
     {
       "path": "media/demo/02-tro-ly.jpg",
-      "bytes": 215428,
-      "sha256": "dcade5def03efaadf2addd064e01db55e7dec391f99c7797719997af1ee68ac0"
+      "bytes": 210277,
+      "sha256": "f489dfd6c82a5623d7d0dd4fe27a9f239356f425b16d4bc18daa0ca8841c9ac0"
     },
     {
       "path": "media/demo/03-bao-cao.jpg",
-      "bytes": 145135,
-      "sha256": "8cb7198842e172a1fe994cba150bef31a4094fac12164e3fa9590abdf397a8fa"
+      "bytes": 137757,
+      "sha256": "ae26f8bca8aceb16f6387336680a252664fc038a69a662cd81eaf8ec7923ab6f"
     },
     {
       "path": "media/demo/04-rag.jpg",
-      "bytes": 143571,
-      "sha256": "dc003948c25eab302b37c0e309e1405d7bc316da283ec755b8a7742fc240be54"
+      "bytes": 148608,
+      "sha256": "6d27f22dcd14709edf6d047135cc22c1419948356606462cfacc0dc50f444982"
     },
     {
       "path": "media/demo/05-rag-mobile.jpg",
-      "bytes": 96947,
-      "sha256": "0a2c6e98759130da8f8b205832262952b3f8aa2ea15d7a8da39b2c4796826546"
+      "bytes": 96585,
+      "sha256": "d6cfd87bfe6c204c548c9470845f9e8f471e4904b3b6e7da36ba6f539834cfd7"
     },
     {
       "path": "media/demo/06-rag-tu-choi.jpg",
-      "bytes": 124858,
-      "sha256": "f747badfdd8e6670176eb1f94f9dfde351cd4f80b780914fdb05023506b44cce"
+      "bytes": 120575,
+      "sha256": "f4e3c46e16a2f5716c230741b6d0b4bb87d5c620927b4d60007b8455e8fd8600"
     },
     {
       "path": "media/demo/07-ml-giao-tre.jpg",
-      "bytes": 138558,
-      "sha256": "1b0219e22935380952f4a4aaaccbe8ca4d0e21ccbd93507f0cef396b37fc1268"
+      "bytes": 131249,
+      "sha256": "2aebe4d28c091212709e8ee0ceb0083ee222941da0f19e3fbd6d0851a2769c34"
     },
     {
       "path": "media/demo/08-doi-soat-erp.jpg",
-      "bytes": 115757,
-      "sha256": "faa1912f4ab8f562220f5d014ba29cd6695e562e46a2a7c764c2f8885154db03"
+      "bytes": 106824,
+      "sha256": "58e37a8142c934c110b648f2d0faa07a7868175900cdbea25c358780532d462a"
     },
     {
       "path": "media/demo/09-kiem-chung.jpg",
-      "bytes": 110951,
-      "sha256": "b7de60210773351e778d7e8030a98d6eedf251826e0d98ae21d56da7c9c26730"
+      "bytes": 123914,
+      "sha256": "983ca083501a6d07e123ef401485f530426e76602e61a9e5f8ebfd0abd162874"
     },
     {
       "path": "media/demo/10-doi-agent.jpg",
-      "bytes": 228285,
-      "sha256": "548b33f3f9c4c9f5530e789ebe341f9fa4a2690f612ad21bffe6aba9b63d0ec4"
+      "bytes": 256592,
+      "sha256": "b5c7a860920efde3369816133b69895692b835d6dab3b134a0ec76ac538af9cc"
     },
     {
       "path": "media/demo/11-cham-soc-odoo.jpg",
-      "bytes": 107343,
-      "sha256": "f1911ead3e89c327aec47e99051af18dc3863b09eb66ccc24ef1e262eff085d5"
+      "bytes": 98065,
+      "sha256": "def53d40d9859030c5a9ccda33cbbcfd65aacf4fde923af2be8013cd40db6223"
     },
     {
       "path": "media/demo/12-do-thao-tac.jpg",
-      "bytes": 72637,
-      "sha256": "edc84c2ec99be87b9b98d6d8ac6e4f92bb24fc2a8985518994a16ea9337e5868"
+      "bytes": 63068,
+      "sha256": "5c8dccd6a853414212686e15e519862d5b845facf901fb491a67003111c02e27"
     },
     {
       "path": "media/demo/13-rui-ro-bao-gia.jpg",
-      "bytes": 184796,
-      "sha256": "8179338ac6544c957ae11af799d9ce0f78ec6d138fc34b0d35d3304295fd3eaa"
+      "bytes": 176996,
+      "sha256": "9dd282f7c3efbc0cd2ec0c15c7b18a2817a49a601d2a0d4f2c0bbe0ec880ff4a"
     },
     {
       "path": "media/demo/14-truoc-sau.jpg",
-      "bytes": 184709,
-      "sha256": "d256fa7f60abeeb096e1168f09f48a2b4e2598264f2487572b5090be47c1e107"
+      "bytes": 177019,
+      "sha256": "84e7cb6546c0547b7114d0f70a1fefd465f346cea461b76cf7e13686dd9d2bf5"
     },
     {
       "path": "media/demo/15-ghi-nhan.jpg",
-      "bytes": 169283,
-      "sha256": "79106c38bc22a9f23665d1cdae729160e829afb84929eb90d47431f2f062ae95"
+      "bytes": 161896,
+      "sha256": "c0a84a8e8653c287a206a776cfbd5b7476a920a6d040ec4d2c6e8b3d78fb3c61"
     },
     {
       "path": "media/demo/16-goi-y-san-pham.jpg",
-      "bytes": 152616,
-      "sha256": "7394fd81e6aa5bc29ba6f8843960892fe9414fc61687ceed5d36a47f95403367"
+      "bytes": 142143,
+      "sha256": "5e164e42fc4c9f601ae66cb389cf963122f2de83031c64a7b9d1e8354dc8ae92"
     },
     {
       "path": "media/demo/17-de-xuat-bao-gia.jpg",
-      "bytes": 98475,
-      "sha256": "6e04a8052b39738ed59f9d02230ab49c87a7ba359fe825851b4b15c2c338ab3e"
+      "bytes": 90675,
+      "sha256": "785792a53e410bab83f7f1fed04d5d0285ec156f7845547e85cb34786eeb27a8"
     },
     {
       "path": "media/demo/18-pdf-bao-cao.jpg",
@@ -260,22 +286,15 @@
     },
     {
       "path": "media/demo/21-agent-erp.jpg",
-      "bytes": 228376,
-      "sha256": "727796ae122e16c50cb985ee3a0c212f14e3330b808f03ba7cdd020a86fa7877"
+      "bytes": 245275,
+      "sha256": "34e480673dd2a7c8dacd4c2661f27da61fd163ba23ab83cff70cdc55f32a7650"
     },
     {
       "path": "media/demo/22-ai-rui-ro-da-luu.jpg",
-      "bytes": 132337,
-      "sha256": "0d70aa09cab15e0088720117dca0f821d085d0b98dee3adbd88fca78ffcfcf66"
+      "bytes": 125670,
+      "sha256": "91f78f04b67969eb4b0e44d1008650e231f1cd64adffe27e0cf34130390fdebc"
     }
   ],
-  "video": {
-    "path": "media/demo/demo-du-an.mp4",
-    "seconds": 144.88,
-    "bytes": 4805797,
-    "sha256": "9466a8ec2282587116b436d5eb66907f486ea21eb8d91215526104403e955c22",
-    "editing": "Concatenated web/team/ERP/Odoo recordings; unchanged playback speed; no synthetic UI inserted."
-  },
   "rag_regression_after_corpus_move": {
     "lexical": {
       "queries": 12,
@@ -310,11 +329,11 @@
   },
   "limits": [
     "A demonstration of one flow is not a benchmark of business benefit.",
-    "The ERP agent returned incomplete although Odoo calculation evidence was present; it is not counted as AI success.",
-    "Product ranking was rejected; local budget-filtered options stayed visible; it is not counted as AI success.",
+    "The ERP agent completed during this recapture; the earlier capture at commit 3fa1c19 was incomplete. These individual runs do not establish a stable completion rate.",
+    "Product ranking was rejected in the saved advice; local budget-filtered options stayed visible; it is not counted as AI success.",
     "Risk disposition dialog was opened but no business decision was saved.",
     "Saved follow-up, human measurement and older AI risk explanation records are read-only demonstrations; no new human ratings were created.",
-    "Screenshots are selected final recorder executions; earlier recorder errors and raw files remain local outside Git."
+    "Screenshots come from verified browser executions without caption overlays. Three PDF page images are retained from the earlier capture; raw downloads and earlier attempts remain local outside Git."
   ],
   "source_final_sha256_lf": {
     "olist/rag.py": "520d5d7740f2606ca44cc20d2706b35e80de54d02e7eda2ec1cb2243013e1444",
@@ -322,6 +341,6 @@
     "olist/rag_store.py": "a98e44d1865f443e3021c7e6a5a74f94c47159b94ab3b3e6bd5e296f20243ae8",
     "olist/api.py": "811a76f92d8838c27e0af60c0ad64d6941058b3221b07ccde911a360dc27cca3",
     "tests/test_rag.py": "a3f6d3739d40643d19b42d2298a13214c34421b41b9272ca8a9f830d3c81d40b",
-    "tests/browser_readme_demo.py": "3dbfc9575ccd0fd8a6b71e68c82b032f5af30c8ca762ca5fb63fd9b552c06f9c"
+    "tests/browser_readme_demo.py": "71d9d0f9e3d407f3e4362fe86b32a1aa26435c3541630d52537672366f2dc58f"
   }
 }

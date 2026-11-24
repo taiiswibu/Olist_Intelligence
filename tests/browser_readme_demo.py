@@ -18,7 +18,6 @@ from olist.erp import Odoo
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--phase',choices=['web','team','erp','odoo'],required=True)
-    parser.add_argument('--record',action='store_true')
     parser.add_argument('--existing-risk',type=int,help='Reuse a review created during a previous capture.')
     parser.add_argument('--existing-advice',type=int,help='Reuse advice created during a previous capture.')
     args=parser.parse_args()
@@ -37,7 +36,6 @@ def main():
     with sync_playwright() as p:
         browser=p.chromium.launch(channel='msedge',headless=True)
         options={'viewport':{'width':1440,'height':1000},'accept_downloads':True}
-        if args.record:options.update(record_video_dir=str(output/('recording-'+args.phase)),record_video_size={'width':1440,'height':1000})
         context=browser.new_context(**options)
         assert context.request.post(cfg.api_url+'/session',headers={'Origin':cfg.api_url},data={'key':cfg.app_token}).status==200
         auth=context.request.post(cfg.odoo_url+'/web/session/authenticate',data={'jsonrpc':'2.0','params':{'db':cfg.odoo_db,'login':cfg.odoo_login,'password':cfg.odoo_password}}).json()
@@ -45,13 +43,12 @@ def main():
         page=context.new_page()
         page.on('pageerror',lambda error:report['javascript_errors'].append(str(error)))
         page.set_default_timeout(30000)
-        def caption(text):
-            page.evaluate("""text=>{let e=document.querySelector('#demo-caption');if(!e){e=document.createElement('div');e.id='demo-caption';e.style.cssText='position:fixed;bottom:10px;left:17%;right:5%;z-index:10000;padding:11px;background:#103c34;color:white;border-radius:7px;text-align:center;font:15px sans-serif;pointer-events:none';document.body.append(e);}e.textContent=text;}""",text)
         def shot(name,text,*,full=False):
-            caption(text)
+            assert page.locator('#demo-caption').count()==0
             if full:page.evaluate('window.scrollTo(0,0)')
-            page.screenshot(path=str(output/(name+'.jpg')),type='jpeg',quality=85,full_page=full)
+            page.screenshot(path=str(output/(name+'.jpg')),type='jpeg',quality=85,full_page=full,animations='disabled')
             report['screenshots'].append(name+'.jpg')
+            report.setdefault('screenshot_descriptions',{})[name+'.jpg']=text
             page.wait_for_timeout(850)
         def nav(name,ready):
             if page.url.startswith(cfg.api_url):
@@ -271,9 +268,7 @@ def main():
             (output/('report-'+args.phase+'.json')).write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
             with (output/'attempts.jsonl').open('a',encoding='utf-8') as history:
                 history.write(json.dumps(report,ensure_ascii=False)+'\n')
-            video=page.video
             context.close()
-            if video:video.save_as(str(output/(args.phase+'.webm')))
             browser.close()
     print(json.dumps(report,ensure_ascii=True))
 

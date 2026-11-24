@@ -8,7 +8,7 @@ Bài toán chính là giúp người bán tra số liệu, tìm tài liệu, ki�
 
 ![Dashboard với bộ lọc](media/demo/01-tong-quan.jpg)
 
-[Xem video 2 phút 25 giây](media/demo/demo-du-an.mp4) · [Bằng chứng demo](reports/demo_evidence.json) · [Báo cáo đo AI](reports/ai_delivery_20261124.json)
+[Ảnh chứng minh chức năng](#6-cách-dùng-và-demo-từng-chức-năng) · [Bằng chứng demo](reports/demo_evidence.json) · [Báo cáo đo AI](reports/ai_delivery_20261124.json)
 
 ## Mục lục
 
@@ -336,7 +336,7 @@ Không tự dùng giá thẻ USD làm BRL. Thuế lấy theo công ty/vị trí 
 
 **Nhờ agent kiểm tra** chuyển bản chụp form sang trợ lý ERP để giải thích. Model không được đổi giá, số lượng hoặc thuế trong bản chụp. Quyền tạo đề xuất trong chat không thay bước duyệt.
 
-Trong lượt quay, công cụ Odoo đã trả bản đối soát nhưng bước tổng hợp của agent có trạng thái **chưa hoàn tất**. Bằng chứng số vẫn được hiển thị; không tính lượt đó là AI hoàn thành.
+Agent hoàn tất trong lượt chụp lại; lượt trước từng chưa hoàn tất dù công cụ Odoo đã trả số. Đây là kết quả từng lần chạy, chưa chứng minh tỷ lệ hoàn thành ổn định.
 
 Duyệt lặp/lấy lại sau lỗi giữ `origin` để tìm và đối chiếu chứng từ. Nếu kẹt `executing`, phải kiểm tra Odoo trước khi khôi phục, không tự phát lại lệnh ghi.
 
@@ -388,7 +388,7 @@ Nguồn đổi thì **Kiểm tra lại** để tạo bản mới. Tab **Trước
 
 Ảnh diễn giải AI đọc bản đã lưu trước đó và có cảnh báo nguồn cũ; không phải một lượt giải thích mới trên bản hiện tại.
 
-Trong lượt quay chỉ mở cửa sổ ghi nhận, không lưu kết luận nghiệp vụ thay người dùng. Hành vi lưu/lịch sử/quyền được kiểm tra riêng trong database test.
+Trong lượt chụp chỉ mở cửa sổ ghi nhận, không lưu kết luận nghiệp vụ thay người dùng. Hành vi lưu/lịch sử/quyền được kiểm tra riêng trong database test.
 
 </details>
 
@@ -413,7 +413,7 @@ Nhập **R$ 1,00** có thể không có món vừa tiền. Phải nhập điều
 
 Chọn phương án chỉ mở đề xuất. Đối chiếu nguồn giá, tick và **Duyệt tạo báo giá nháp** riêng. Không xác nhận đơn hoặc lập hóa đơn.
 
-**Lượt quay có đầu ra xếp hạng bị bộ kiểm tra từ chối.** Hai phương án Odoo đã lọc vẫn được giữ, trạng thái ghi đúng chưa có xếp hạng AI hợp lệ. Đây không được tính là AI thành công.
+**Lượt minh họa có đầu ra xếp hạng bị bộ kiểm tra từ chối.** Hai phương án Odoo đã lọc vẫn được giữ, trạng thái ghi đúng chưa có xếp hạng AI hợp lệ. Đây không được tính là AI thành công.
 
 ![Gợi ý và trạng thái thực tế](media/demo/16-goi-y-san-pham.jpg)
 
@@ -530,7 +530,7 @@ Chưa có LoRA/QLoRA hoặc tối ưu weights LLM. Đây là tối ưu cách gia
 
 Allowlist được kiểm tra ở body HTTP thật của cả hai model trong các luồng tối thiểu. Test dùng canary tên/email/giá. Backend bỏ payload tạm khi job kết thúc; Odoo vẫn giữ snapshot/audit local.
 
-`.env`, CSV gốc, database, model, cache và tài liệu riêng không lên Git. Ảnh/video ở `media/demo/` là phần minh họa được chọn từ Olist công khai/Odoo DEMO, không phải dữ liệu khách doanh nghiệp.
+`.env`, CSV gốc, database, model, cache và tài liệu riêng không lên Git. Ảnh ở `media/demo/` là phần minh họa được chọn từ Olist công khai/Odoo DEMO, không phải dữ liệu khách doanh nghiệp.
 
 Web dùng cookie HttpOnly/SameSite Strict hoặc token, kiểm tra same-origin cho thao tác ghi. Addon có quyền người lập/quản lý nhóm/công ty. FastAPI local chưa có đăng nhập nhiều người, RBAC tài liệu theo phòng ban hoặc kiểm thử tải doanh nghiệp. Không mở cổng app ra Internet.
 
@@ -589,7 +589,7 @@ Brier kém baseline, chưa hiệu chỉnh xác suất, không tự quyết đị
 - **284 test backend**, **42 test addon** tại mốc chuẩn bị README; xem kết quả và phạm vi của CI/lượt phát hành tương ứng.
 - [verification.json](reports/verification.json): đối soát CSV độc lập và kiểm tra HTTP.
 - [ai_delivery_20261124.json](reports/ai_delivery_20261124.json): commit/hash/model/mẫu số của lượt đo trước khi gom tài liệu.
-- [demo_evidence.json](reports/demo_evidence.json): ảnh, file tải, trạng thái và giới hạn lần quay mới.
+- [demo_evidence.json](reports/demo_evidence.json): ảnh, file tải, trạng thái và giới hạn lần chụp.
 - [ml_evaluation.json](reports/ml_evaluation.json): split, baseline, ngưỡng và giới hạn ML.
 
 Đường dẫn/hash trong báo cáo cũ thuộc commit được ghi trong báo cáo. Không viết lại lịch sử hoặc xóa kết quả chưa tốt khi dọn tài liệu. Test cấu trúc/quyền không thay đánh giá nội dung độc lập.
@@ -609,7 +609,7 @@ Có thể trình bày khoảng 8–10 phút, tùy thời gian chờ API:
 | 7 | Odoo xem chăm sóc/lượt đo/rủi ro/trước-sau | Có nguồn, lịch sử và bước kiểm tra |
 | 8 | Quà sinh nhật, 200 BRL; mở đề xuất | Lọc ngân sách, chặn AI sai, duyệt riêng |
 
-Ảnh/video quay tự động trên app thật, không phải người dùng độc lập đánh giá. Trong lượt quay, cửa sổ ghi nhận chỉ mở để xem, không lưu kết luận nghiệp vụ. Các bảng báo giá, khách, hóa đơn và hoạt động được đối chiếu trước/sau để kiểm tra không có phê duyệt ngoài ý muốn.
+Ảnh chụp tự động trên app thật, không phải người dùng độc lập đánh giá. Trong lượt chụp, cửa sổ ghi nhận chỉ mở để xem, không lưu kết luận nghiệp vụ. Các bảng báo giá, khách, hóa đơn và hoạt động được đối chiếu trước/sau để kiểm tra không có phê duyệt ngoài ý muốn.
 
 Một số ảnh đọc bản DEMO đã có. Trạng thái AI không hợp lệ được giữ, không đổi chữ giả thành thành công. Hành vi phê duyệt có ghi ERP được kiểm tra trong database test; fixture không đưa vào database đang dùng.
 
@@ -617,16 +617,15 @@ Tái lập khi app/Odoo chạy và có bản ghi DEMO phù hợp:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install playwright pypdf openpyxl
-.\.venv\Scripts\python.exe -m playwright install ffmpeg
-.\.venv\Scripts\python.exe tests/browser_readme_demo.py --phase web --record
-.\.venv\Scripts\python.exe tests/browser_readme_demo.py --phase team --record
-.\.venv\Scripts\python.exe tests/browser_readme_demo.py --phase erp --record
-.\.venv\Scripts\python.exe tests/browser_readme_demo.py --phase odoo --record
+.\.venv\Scripts\python.exe tests/browser_readme_demo.py --phase web
+.\.venv\Scripts\python.exe tests/browser_readme_demo.py --phase team
+.\.venv\Scripts\python.exe tests/browser_readme_demo.py --phase erp
+.\.venv\Scripts\python.exe tests/browser_readme_demo.py --phase odoo
 ```
 
-Script dùng Edge trên Windows và bản DEMO của lần chuẩn bị này, không phải bộ seed thay Olist. Xem `--help` để dùng lại review/advice đã tạo khi quay lại. File gốc/PDF/Excel/CSV nằm ngoài Git ở `.openai/qa/readme-demo/`; chỉ ảnh/video được chọn mới vào `media/demo/`.
+Script dùng Edge trên Windows và bản DEMO của lần chuẩn bị này, không phải bộ seed thay Olist. Xem `--help` để dùng lại review/advice đã tạo khi chụp lại. File gốc/PDF/Excel/CSV nằm ngoài Git ở `.openai/qa/readme-demo/`; chỉ ảnh được chọn mới vào `media/demo/`.
 
-Để render trang đầu PDF thành ảnh có thể dùng PyMuPDF; FFmpeg dùng để ghép/chuyển video. Đây là công cụ tạo bằng chứng tùy chọn, không cần cho người dùng chạy app.
+Để render trang PDF thành ảnh có thể dùng PyMuPDF. Đây là công cụ tạo bằng chứng tùy chọn, không cần cho người dùng chạy app.
 
 ## 13. Kiểm thử, cập nhật và xử lý lỗi
 
@@ -703,7 +702,7 @@ odoo_addons/           Module bán hàng và test native Odoo
 scripts/              Setup, seed DEMO, benchmark, kiểm tra
 tests/                Unit/integration/browser
 reports/              Bằng chứng và kết quả có phiên bản
-media/demo/           Ảnh/video minh họa cho README
+media/demo/           Ảnh minh họa cho README
 data/                 CSV/database/tài liệu riêng, không commit
 models/               Artifact ML local, không commit
 README.md             Hướng dẫn và báo cáo chính
