@@ -121,7 +121,13 @@ Số liệu được chụp từ công cụ BI và lưu local trong `data/proces
 
 Module chạy trong Odoo: **[AI hỗ trợ bán hàng](docs/ODOO_AI_FOLLOWUP.md)** — xem khách cần chăm sóc, Groq/Gemini đề xuất việc và người dùng duyệt trước khi tạo Activities. Có phân quyền nhân viên/quản lý nhóm; bản đầu chỉ dùng Olist DEMO.
 
+**Gợi ý theo ngân sách:** nhập nhu cầu, số lượng và ngân sách gồm thuế; Odoo tính giá BRL rồi lọc phương án. Groq/Gemini xếp hạng qua dữ kiện tối thiểu. Chọn sản phẩm để lập đề xuất và duyệt riêng trước khi tạo báo giá nháp.
+
 **Kiểm tra rủi ro báo giá:** xem cờ hiệu lực, dòng hàng, chiết khấu, thuế và điều khoản ngay trên báo giá DEMO. AI chỉ nhận mã cờ để gợi ý câu hỏi đối chiếu; dữ liệu nguồn đổi thì cần kiểm tra lại. Chức năng không sửa báo giá.
+
+**Ghi nhận xử lý:** chọn cần sửa/đúng chủ đích/cần quản lý xem, lưu lý do và lịch sử tại Odoo; kiểm tra lại để xem bằng chứng trước/sau. Bản mới không tự kế thừa xác nhận cũ.
+
+**Tải báo cáo rủi ro PDF/Excel:** lấy bằng chứng và lịch sử của hai bản đối chiếu từ Odoo, có cảnh báo nguồn cũ và các điểm cần xem tiếp. Xuất file không gọi thêm model.
 
 Đánh giá và riêng tư: **[Baseline, benchmark và dữ liệu gửi model](docs/AI_EVALUATION.md)**. Luồng chăm sóc chỉ gửi mã tạm và dữ kiện tối thiểu; có chế độ quy tắc không gọi cloud. Kết quả tự động tách riêng phiếu chấm nội dung của người dùng.
 

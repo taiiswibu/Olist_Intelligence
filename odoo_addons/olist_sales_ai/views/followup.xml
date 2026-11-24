@@ -87,7 +87,7 @@
         <field name="name">Lượt đo thao tác</field><field name="res_model">olist.ai.followup.review</field><field name="view_mode">list,form</field>
         <field name="domain">[('trial_started_at', '!=', False)]</field>
     </record>
-    <menuitem id="root_menu" name="AI hỗ trợ bán hàng" sequence="35" groups="sales_team.group_sale_salesman"/>
+    <menuitem id="root_menu" name="AI hỗ trợ bán hàng" action="queue_action" sequence="35" groups="sales_team.group_sale_salesman"/>
     <menuitem id="queue_menu" name="Khách cần chăm sóc" parent="root_menu" action="queue_action" sequence="10"/>
     <menuitem id="pending_menu" name="Đề xuất chờ duyệt" parent="root_menu" action="pending_action" sequence="20"/>
     <menuitem id="history_menu" name="Công việc và lịch sử" parent="root_menu" action="history_action" sequence="30"/>

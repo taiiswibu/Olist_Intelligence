@@ -1,0 +1,59 @@
+<odoo>
+    <record id="risk_report_paperformat" model="report.paperformat">
+        <field name="name">Olist đối chiếu rủi ro A4</field><field name="format">A4</field><field name="orientation">Portrait</field>
+        <field name="margin_top">12</field><field name="margin_bottom">12</field><field name="margin_left">12</field><field name="margin_right">12</field>
+        <field name="header_line" eval="False"/><field name="header_spacing">6</field><field name="dpi">90</field>
+    </record>
+    <record id="risk_report_action" model="ir.actions.report">
+        <field name="name">Báo cáo xử lý rủi ro</field><field name="model">olist.ai.quote.risk.review</field>
+        <field name="report_type">qweb-pdf</field><field name="report_name">olist_sales_ai.risk_report_document</field>
+        <field name="report_file">olist_sales_ai.risk_report_document</field>
+        <field name="print_report_name">'Olist-rui-ro-%s' % object.id</field>
+        <field name="attachment_use" eval="False"/>
+        <field name="paperformat_id" ref="risk_report_paperformat"/>
+    </record>
+    <template id="risk_report_document">
+        <t t-call="web.html_container"><t t-foreach="docs" t-as="o">
+            <div class="article" t-att-data-oe-model="o._name" t-att-data-oe-id="o.id" t-att-data-oe-lang="o.env.context.get('lang')">
+            <div class="page" style="font-family: 'DejaVu Sans', sans-serif; font-size: 12px;">
+                <style>.risk-report-row { page-break-inside: avoid; margin-bottom: 14px; } .risk-text { white-space: pre-wrap; overflow-wrap: anywhere; } .risk-label { color: #415473; }</style>
+                <h2>Báo cáo xử lý rủi ro báo giá</h2>
+                <p><strong>Báo giá: </strong><span t-out="report['quote']"/> · Bản kiểm tra <span t-out="report['review_id']"/></p>
+                <p>Kiểm tra: <span t-out="report['checked_at']"/> · <span t-out="report['owner']"/><br/>
+                    Xuất: <span t-out="report['exported_at']"/> · <span t-out="report['exported_by']"/> · Múi giờ: <span t-out="report['timezone']"/></p>
+                <p t-if="report['previous_id']">Đối chiếu với bản <span t-out="report['previous_id']"/> · <span t-out="report['previous_checked_at']"/></p>
+                <p t-else="">Chưa có bản trước để so sánh.</p>
+                <p t-out="report['source_notice']" t-att-style="'font-weight: bold; color: #9b3700;' if report['stale'] else ''"/>
+                <p><span t-out="report['current_count']"/> mã cờ trong bản này; <span t-out="report['attention_count']"/> mã chưa ghi nhận / cần sửa / cần quản lý xem.<br/>Đếm theo mã cảnh báo; cùng mã ở nhiều dòng chỉ tính một cờ.</p>
+                <h3>Bằng chứng và ghi nhận</h3>
+                <p t-if="not report['rows']">Chưa có cờ trong phạm vi hai bản được đối chiếu.</p>
+                <div t-foreach="report['rows']" t-as="row" class="risk-report-row">
+                    <strong class="risk-label"><span t-out="row['label']"/> · <span t-out="row['change']"/></strong>
+                    <div>Mức cần xem: <span t-out="row['level']"/></div>
+                    <div t-if="report['previous_id']" class="risk-text">Trước: <span t-out="row['before']"/></div>
+                    <div class="risk-text">Bản này: <span t-out="row['after']"/></div>
+                    <div t-if="report['previous_id']" class="risk-text">Ghi nhận bản trước: <span t-out="row['previous_decision']"/>. <span t-out="row['previous_reason']"/></div>
+                    <div class="risk-text">Ghi nhận bản này: <span t-out="row['decision']"/>. <span t-out="row['reason']"/></div>
+                    <div t-if="row['actor']"><span t-out="row['actor']"/> · <span t-out="row['recorded_at']"/></div>
+                </div>
+                <h3>Điểm cần đối chiếu tiếp</h3>
+                <p t-if="not report['attention_count']">Không có mã thuộc nhóm chưa ghi nhận / cần sửa / cần quản lý xem trong bản này. Các cờ quy tắc vẫn giữ như trên.</p>
+                <ul><t t-foreach="report['rows']" t-as="row"><li t-if="row['needs_attention']"><span t-out="row['label']"/> · <span t-out="row['decision']"/></li></t></ul>
+                <h3>Lịch sử ghi nhận</h3>
+                <p>Lịch sử của bản đang xuất và bản trước được liên kết; nhận xét hai bản được giữ riêng.</p>
+                <p t-if="not report['history']">Chưa có ghi nhận.</p>
+                <div t-foreach="report['history']" t-as="event" class="risk-report-row">
+                    <strong>Bản <span t-out="event['review_id']"/> · <span t-out="event['label']"/> · <span t-out="event['decision']"/></strong>
+                    <div><span t-out="event['actor']"/> · <span t-out="event['recorded_at']"/></div>
+                    <div class="risk-text" t-out="event['reason']"/>
+                </div>
+                <h3>Diễn giải AI đã lưu</h3>
+                <p t-out="report['ai_state']"/><p class="risk-text" t-out="report['ai_explanation'] or 'Chưa có diễn giải.'"/>
+                <p t-if="report['ai_error']" class="risk-text" t-out="report['ai_error']"/>
+                <p t-out="report['notice']"/>
+            </div>
+            </div>
+            <div class="footer" style="font-family: 'DejaVu Sans', sans-serif; font-size: 10px; text-align: right;">Olist Intelligence · Trang <span class="page"/> / <span class="topage"/></div>
+        </t></t>
+    </template>
+</odoo>

@@ -1,0 +1,14 @@
+{
+  "beauty": {"label": "Sức khỏe và làm đẹp", "terms": ["lam dep", "my pham", "cham soc ca nhan", "suc khoe"], "categories": ["health_beauty", "perfumery"]},
+  "sports": {"label": "Thể thao và giải trí", "terms": ["the thao", "tap luyen", "giai tri"], "categories": ["sports_leisure"]},
+  "home": {"label": "Nhà cửa và gia dụng", "terms": ["nha cua", "gia dung", "noi that", "trang tri", "nha bep"], "categories": ["furniture_decor", "bed_bath_table", "housewares", "home_appliances", "home_appliances_2", "home_confort", "home_comfort_2", "kitchen_dining_laundry_garden_furniture", "furniture_living_room", "furniture_bedroom", "furniture_mattress_and_upholstery", "small_appliances", "small_appliances_home_oven_and_coffee", "air_conditioning"]},
+  "fashion": {"label": "Thời trang và phụ kiện", "terms": ["thoi trang", "giay dep", "phu kien", "dong ho", "tui xach"], "categories": ["watches_gifts", "fashion_shoes", "fashion_bags_accessories", "fashion_male_clothing", "fashion_female_clothing", "fashion_underwear_beach", "fashion_sport", "fashion_childrens_clothes", "luggage_accessories"]},
+  "electronics": {"label": "Điện tử và máy tính", "terms": ["dien tu", "may tinh", "dien thoai", "cong nghe", "am thanh"], "categories": ["computers_accessories", "computers", "electronics", "telephony", "fixed_telephony", "audio", "consoles_games", "tablets_printing_image", "pc_gamer"]},
+  "toys": {"label": "Đồ chơi và trẻ em", "terms": ["do choi", "tre em", "em be", "cho be"], "categories": ["toys", "baby", "diapers_and_hygiene"]},
+  "pets": {"label": "Thú cưng", "terms": ["thu cung", "cho meo", "vat nuoi"], "categories": ["pet_shop"]},
+  "office": {"label": "Văn phòng và học tập", "terms": ["van phong", "hoc tap", "sach", "van phong pham"], "categories": ["office_furniture", "stationery", "books_general_interest", "books_technical", "books_imported"]},
+  "auto": {"label": "Ô tô", "terms": ["o to", "xe hoi"], "categories": ["auto"]},
+  "garden": {"label": "Làm vườn và dụng cụ", "terms": ["lam vuon", "dung cu", "sua chua", "xay dung"], "categories": ["garden_tools", "construction_tools_construction", "construction_tools_lights", "construction_tools_safety", "construction_tools_tools", "construction_tools_garden", "costruction_tools_garden", "costruction_tools_tools"]},
+  "food": {"label": "Thực phẩm và đồ uống", "terms": ["thuc pham", "do uong", "an uong"], "categories": ["food", "food_drink", "drinks", "la_cuisine"]},
+  "gifts": {"label": "Quà tặng", "terms": ["qua tang", "tang qua", "tang me", "tang bo", "sinh nhat"], "categories": ["watches_gifts", "perfumery", "health_beauty", "toys", "flowers"]}
+}

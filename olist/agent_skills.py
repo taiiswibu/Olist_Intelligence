@@ -7,7 +7,7 @@ SKILLS = {
     "olist-quote-pdf": ("Tải báo giá PDF", {"odoo_quotation_document"}),
 }
 FOLLOWUP_SKILLS = {"olist-customer-followup": "Chăm sóc khách hàng", "olist-followup-check": "Kiểm tra giao việc",
-                   "olist-risk-review": "Đối chiếu rủi ro báo giá"}
+                   "olist-risk-review": "Đối chiếu rủi ro báo giá", "olist-product-advice": "Xếp hạng sản phẩm"}
 
 
 def read(name):

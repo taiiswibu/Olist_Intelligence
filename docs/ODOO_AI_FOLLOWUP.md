@@ -1,5 +1,19 @@
 # AI hỗ trợ bán hàng trong Odoo
 
+Mở ứng dụng sẽ vào **Khách cần chăm sóc**. Cửa sổ **Nhu cầu và ngân sách** chỉ mở khi chọn menu **Gợi ý theo ngân sách**.
+
+## Gợi ý sản phẩm theo nhu cầu và ngân sách
+
+Mở **AI hỗ trợ bán hàng → Gợi ý theo ngân sách**, chọn khách DEMO, nhập nhu cầu, số lượng nguyên và ngân sách gồm thuế bằng BRL rồi bấm **Xem phương án**. Chọn nhóm nhu cầu nếu hệ thống chưa nhận diện được một nhóm rõ ràng. Mỗi phương án là một sản phẩm với số lượng đã nhập; ba phương án là các lựa chọn thay thế, không phải một giỏ hàng cộng chung.
+
+Odoo tính giá trên báo giá trong bộ nhớ, từ **OLIST DEMO BRL**, khách, vị trí tài chính và thuế hiện tại. Không tạo chứng từ ở bước tìm phương án. Giá thẻ USD không bị coi là BRL; khi quy đổi, hiển thị nguồn tỷ giá và ngày cấu hình của Odoo, chưa phải tỷ giá thị trường mới nhất. Thiếu tỷ giá có hiệu lực thì báo lỗi để kiểm tra cấu hình. Tối đa năm trăm sản phẩm DEMO; phí vận chuyển lịch sử, sản phẩm lưu trữ, không bán hoặc chưa có giá dương không được dùng làm lựa chọn. Chưa có lựa chọn khớp thì báo rõ, không thêm sản phẩm giả.
+
+Mặc định hiển thị ba lựa chọn rẻ nhất thuộc nhóm và đủ ngân sách. **Nhờ AI xếp hạng** dùng Groq chọn và Gemini kiểm tra trong tối đa mười hai ứng viên rẻ nhất đã qua lọc. AI chỉ nhận nhóm nhu cầu, mã tạm, nhóm hàng hữu hạn và mức giá tương đối; tên khách, nhu cầu nguyên văn, ID thật, số lượng, ngân sách, giá và thuế cụ thể giữ trong Odoo. Lý do chỉ lấy từ danh sách cho phép, không suy ra cấu hình, chất lượng, tồn kho hoặc giao hàng từ tên nhóm DEMO. Lỗi API hoặc kết quả sai thì giữ lựa chọn local và ghi trạng thái chưa có xếp hạng AI; không âm thầm ghi là AI thành công. `FOLLOWUP_AI_MODE=rules_only` trả thứ tự mẫu và không gọi model.
+
+Bấm **Chọn để lập đề xuất** để mở bản chờ duyệt, đọc nguồn giá và tổng tiền, tick đồng ý rồi **Duyệt tạo báo giá nháp**. Server đọc lại dữ liệu trước khi ghi; giá, thuế, khách hoặc ngày đối chiếu đã đổi thì yêu cầu tạo lượt gợi ý mới. Duyệt lặp dùng lại cùng chứng từ, không xác nhận đơn hoặc xuất hóa đơn. Xem lại tại **Lịch sử gợi ý** và **Đề xuất từ sản phẩm**; nhân viên xử lý lượt của mình, quản lý xử lý nhóm mình, trong công ty đang chọn.
+
+Kiểm thử dùng giá/thuế và phép đổi tiền biết trước trong database tạm, kiểm tra riêng tư tại HTTP của cả hai model và luồng duyệt trên trình duyệt. Đây là bằng chứng hành vi kỹ thuật; chưa chứng minh xếp hạng AI phù hợp hơn ba lựa chọn theo giá hoặc giúp người bán nhanh hơn. Danh mục DEMO hiện chủ yếu có nhóm hàng, chưa đủ thông số để kết luận sản phẩm đáp ứng một yêu cầu kỹ thuật cụ thể.
+
 ## Kiểm tra rủi ro báo giá
 
 Mở báo giá DEMO nháp/đã gửi → **Kiểm tra rủi ro**. Odoo đối chiếu hạn hiệu lực (sắp hết trong ba ngày), dòng sản phẩm, số lượng, đơn giá, chiết khấu, thuế đã chọn, trạng thái sản phẩm và điều khoản thanh toán. Mỗi cờ kèm bằng chứng tại máy và mức cần xem; đây chưa phải đánh giá tín dụng, lợi nhuận hoặc kết luận tuân thủ thuế.
@@ -11,6 +25,26 @@ Chiết khấu dương, giá bằng không hoặc chưa chọn thuế có thể 
 Bản kiểm tra giữ nguyên nguồn và lịch sử. Khi dòng hàng, hiệu lực, cấu hình được kiểm tra hoặc ngày đối chiếu thay đổi, màn hình báo **Nguồn đã đổi**; bấm **Kiểm tra lại** để tạo bản mới. Nhân viên xem báo giá của mình, quản lý xem nhóm mình, trong công ty đang chọn. Chức năng không tạo Activity, gửi tin, xác nhận đơn hay xuất hóa đơn. Mọi thay đổi chứng từ thực hiện và duyệt riêng trong Odoo.
 
 Kiểm thử riêng: `tests/test_quote_risks.py` kiểm tra tại HTTP của cả hai model; addon `tests/test_risk.py` kiểm tra quy tắc, nguồn cũ, quyền và không ghi nghiệp vụ. Browser runner `tests/browser_quote_risks.py` chỉ nhận database tạm có dấu sở hữu từ `scripts/test_odoo_ai.py --keep-database`; không đưa dữ liệu fixture vào database đang sử dụng. Chưa có kết quả người bán chấm hoặc bằng chứng AI phát hiện rủi ro tốt hơn quy tắc.
+
+### Ghi nhận và kiểm tra lại
+
+Bấm **Ghi nhận xử lý**, chọn **Cần sửa**, **Đúng chủ đích** hoặc **Cần quản lý xem** cho cờ cần xử lý và nhập lý do (tối đa một nghìn ký tự). Các cờ chưa chọn được giữ nguyên. Nhận xét áp dụng cho toàn bộ bằng chứng của mã cờ trong bản đang xem; người bán tự ghi nhận, quản lý xem theo quyền nhóm. **Đúng chủ đích** vẫn giữ cờ và chưa thay cho phê duyệt chứng từ. Bộ lọc **Cần quản lý xem** dùng lựa chọn mới nhất của từng cờ, không tạo Activity hoặc gửi thông báo.
+
+Desktop nhập trực tiếp trong bảng. Trên điện thoại, chạm thẻ cảnh báo để chọn trạng thái và nhập lý do, lưu thẻ rồi bấm **Lưu ghi nhận**. Nếu nút xử lý nằm trong menu dấu ba chấm trên thanh công cụ thì mở menu này để chọn.
+
+Mỗi thay đổi lưu người ghi, thời điểm server và lý do vào **Lịch sử xử lý**. Không sửa/xóa lịch sử; ghi lại cùng lựa chọn và lý do không tạo thêm dòng. Nếu có người vừa ghi nhận cùng cờ khi bạn đang nhập, cửa sổ yêu cầu mở lại để đối chiếu. Nguồn đã đổi thì phải kiểm tra lại trước khi ghi nhận.
+
+**Kiểm tra lại** liên kết bản mới với bản đang xem; kiểm tra từ báo giá liên kết với bản gần nhất được phép đọc. Tab **Trước/sau** hiển thị bằng chứng và ba nhóm: mới xuất hiện, vẫn xuất hiện, không còn xuất hiện. Sửa một phần dòng hàng mà cùng mã vẫn còn thì tiếp tục ghi là vẫn xuất hiện. Cờ biến mất có thể do dữ liệu/trạng thái thay đổi, chưa tự chứng minh nghiệp vụ đã đúng. Bản mới bắt đầu **Chưa ghi nhận**, không tự nhận lý do hay xác nhận từ bản cũ.
+
+Các lý do chỉ lưu trong model ghi nhận tại Odoo, không đưa vào prompt hoặc ghi chú gửi khách. Luồng này hoạt động khi không có API model. Mốc thời gian dùng truy vết, chưa phải thời gian lao động hoặc bằng chứng tiết kiệm thời gian. Chỉnh giá, thuế và điều khoản trên form Odoo rồi kiểm tra lại; module không tự sửa S00021 hay chứng từ khác.
+
+### Tải báo cáo xử lý rủi ro
+
+Mở một bản kiểm tra → **Tải báo cáo PDF** hoặc **Tải báo cáo Excel** (trên điện thoại có thể nằm trong menu dấu ba chấm). File lấy bằng chứng đã lưu của bản đang xem và bản trước được liên kết, kèm ghi nhận, lý do, người ghi, thời điểm và các điểm cần đối chiếu tiếp. Nhận xét bản trước được giữ riêng; bản mới chưa ghi nhận thì file cũng ghi đúng trạng thái đó. Mỗi mã chỉ đếm một cờ dù xuất hiện ở nhiều dòng hàng.
+
+Excel có ba trang **Tổng quan**, **Đối chiếu**, **Lịch sử**; nội dung nhập được lưu dưới dạng chữ, không chạy công thức/link. PDF dùng mẫu báo cáo Odoo, có thời điểm xuất và múi giờ. Khi nguồn đã đổi, file ghi cảnh báo và giữ bằng chứng cũ; xuất lại từ bản mới sau khi kiểm tra lại nếu cần đối chiếu dữ liệu hiện tại. Chưa có bản trước hoặc chưa có AI/ghi nhận thì hiển thị rõ, không tự bổ sung.
+
+Xuất file chỉ đọc dữ liệu theo quyền báo giá/công ty hiện có, không gọi model, tạo ghi nhận, sửa chứng từ hoặc gửi file cho người khác. Lịch sử trong file gồm đúng hai bản được đối chiếu, tối đa một nghìn ghi nhận; vượt giới hạn thì báo lỗi và chưa xuất một phần. Các file có lý do và tên người ghi chỉ được tải qua phiên đăng nhập Odoo, không đưa lên Git hoặc dịch vụ tạo báo cáo bên ngoài.
 
 Xem thêm [baseline và bảo vệ dữ liệu](AI_EVALUATION.md). Luồng chăm sóc mặc định chỉ gửi mã tạm, trạng thái và dấu hiệu nghiệp vụ; tên khách, số tiền và ghi chú giữ local. Có thể đặt `FOLLOWUP_AI_MODE=rules_only` rồi khởi động lại backend để không gọi API model cho luồng này.
 
