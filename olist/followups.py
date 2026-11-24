@@ -232,6 +232,9 @@ def rules_draft(cases):
 
 
 async def analyze_strategy(payload, strategy="pipeline", *, request_policy=None):
+    if strategy == 'assisted':
+        from .followup_plans import analyze as planned_analyze
+        return await planned_analyze(payload, request_policy=request_policy)
     trace = []
     try:
         async with asyncio.timeout(90):
@@ -295,7 +298,7 @@ async def analyze(payload):
     if payload.purpose == "risk":
         from .quote_risks import analyze as risk_analyze
         return _clean(await risk_analyze(payload, local_only=mode == "rules_only" or payload.mode == "rules_only"))
-    return await analyze_strategy(payload, "rules" if mode == "rules_only" or payload.mode == "rules_only" else "pipeline")
+    return await analyze_strategy(payload, "rules" if mode == "rules_only" or payload.mode == "rules_only" else "assisted")
 
 
 async def run_job(request_id):

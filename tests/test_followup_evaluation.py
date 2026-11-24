@@ -71,6 +71,14 @@ def test_cost_is_unknown_without_pricing_and_uses_only_matching_model_rates():
     assert e.estimate_cost(trace, pricing) is None
 
 
+def test_fallback_is_service_completion_but_not_ai_completion():
+    record={'strategy':'assisted','completed':True,'contract_pass':True,'elapsed_ms':25,'trace':[],
+        'estimated_cost':None,'result_strategy':'rules_fallback','ai_completed':False,'fallback_reason':'HTTPStatusError'}
+    summary=e.summarize([record])['assisted']
+    assert summary['completed']==1 and summary['ai_completed']==0
+    assert summary['fallback_count']==1 and summary['fallback_reasons']=={'HTTPStatusError':1}
+
+
 def test_single_rater_is_explicit_exploratory_and_not_mixed_with_two_raters(tmp_path):
     first, second = tmp_path/"one", tmp_path/"two"
     for path in [first, second]:

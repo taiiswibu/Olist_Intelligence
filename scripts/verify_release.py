@@ -52,6 +52,8 @@ def main():
     init_env()
     os.environ["LLM_PROVIDERS"] = ""
     os.environ["RAG_MODE"] = "lexical"
+    os.environ['RAG_ANSWER_MODEL'] = ''
+    os.environ['OLLAMA_MODEL'] = ''
     os.environ["ODOO_PASSWORD"] = ""
     if not ready():
         raise SystemExit("Run python manage.py setup first")

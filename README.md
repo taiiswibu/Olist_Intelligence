@@ -86,7 +86,7 @@ Nguồn endpoint: https://ai.google.dev/gemini-api/docs/openai · https://consol
 
 Cài Ollama từ https://ollama.com/download. Có thể bắt đầu bằng `ollama pull qwen3:4b`, đặt `LLM_PROVIDERS=ollama`. Chưa benchmark trên GTX 1650 của bạn; ứng dụng giới hạn context 4096 token, vẫn cần thêm bộ nhớ ngoài weights.
 
-Corpus nằm trong `docs/knowledge/`, do dự án biên soạn; không phải tài liệu nội bộ Olist. Mặc định truy xuất **lexical TF-IDF** có bỏ dấu tiếng Việt. Có thể bật hybrid qua Ollama embedding: đặt `EMBED_MODEL`, chạy `python manage.py embed`, đặt `RAG_MODE=hybrid`. Chế độ model embedding thật chưa được xác minh trong môi trường phát hành.
+Corpus nằm trong `docs/knowledge/`, do dự án biên soạn; không phải tài liệu nội bộ Olist. Có truy xuất **hybrid TF-IDF + SQLite vector** với embedding Ollama local, kiểm tra index cũ và trả lời bằng trích đoạn có nguồn. Chạy `ollama pull embeddinggemma:300m`, đặt `EMBED_MODEL=embeddinggemma:300m`, chạy `python manage.py embed`, đặt `RAG_MODE=hybrid`. Xem [cách chạy và giới hạn RAG local](docs/RAG_LOCAL.md).
 
 ## Đội agent
 

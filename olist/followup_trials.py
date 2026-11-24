@@ -35,7 +35,7 @@ def read(path):
             sequence = int(row["sequence"])
             if sequence < 1 or (row["participant"], sequence) in sequences: raise ValueError()
             if row["method"] not in METHODS or row["outcome"] not in {"approved", "failed", "cancelled", "unfinished"}: raise ValueError()
-            if row["actual_strategy"] not in {"manual", "rules", "groq", "gemini", "pipeline", "unknown"}: raise ValueError()
+            if row["actual_strategy"] not in {"manual", "rules", "groq", "gemini", "pipeline", "assisted", "rules_fallback", "unknown"}: raise ValueError()
             if row["quotation_state"] not in {"draft", "sent"} or row["has_activity"] not in {"True", "False"}: raise ValueError()
             start, ready, end = (date(row[k]) for k in ("started_at_utc", "ready_at_utc", "finished_at_utc"))
             if not start or ready and ready < start or end and end < (ready or start): raise ValueError()
@@ -70,7 +70,7 @@ def summarize(path):
         selected = [r for r in rows if r["method"] == method]
         approved = [r for r in selected if r["outcome"] == "approved"]
         completed_times = [r["total_seconds"] for r in selected if r["total_seconds"] is not None]
-        matching = {"manual"} if method == "manual" else {"rules"} if method == "rules" else {"groq", "gemini", "pipeline"}
+        matching = {"manual"} if method == "manual" else {"rules"} if method == "rules" else {"groq", "gemini", "pipeline", "assisted"}
         methods[method] = {"assigned_trials": len(selected), "outcomes": dict(Counter(r["outcome"] for r in selected)),
             "approved_rate": len(approved)/len(selected) if selected else None,
             "approved_total_p50_seconds": median(r["total_seconds"] for r in approved) if approved else None,
