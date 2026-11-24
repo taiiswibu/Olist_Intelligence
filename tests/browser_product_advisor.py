@@ -69,7 +69,6 @@ def main():
             page.locator('.o_app[data-menu-xmlid="olist_sales_ai.root_menu"]').click()
         page.locator('.o_list_view').wait_for(timeout=30000)
         expect(page.locator('.modal-dialog')).to_have_count(0)
-        page.screenshot(path=str(OUT/'sales-app-default-entry.png'),full_page=True)
         page.locator('.o_menu_sections [data-menu-xmlid="olist_sales_ai.product_advice_menu"]').click()
         dialog=page.locator('.modal-dialog')
         customer=dialog.locator('[name=partner_id] input')
@@ -83,7 +82,6 @@ def main():
         try:
             expect(cards).to_have_count(3,timeout=15000)
         except Exception:
-            page.screenshot(path=str(OUT/'product-advisor-debug.png'),full_page=True)
             (OUT/'product-advisor-debug.html').write_text(page.content(),encoding='utf-8')
             print(json.dumps({'javascript_errors':errors}))
             raise
@@ -93,11 +91,6 @@ def main():
         options=call('olist.ai.product.option','read',advice['shown_option_ids'],fields=['unit_price','tax','total','remaining','state'])
         assert sorted(o['total'] for o in options)==[55,88,132]
         assert not advice['job_started'] and root('sale.order','search_count',[])==before
-        page.screenshot(path=str(OUT/'product-advisor-desktop.png'),full_page=True)
-        page.set_viewport_size({'width':390,'height':844})
-        cards.first.scroll_into_view_if_needed()
-        page.screenshot(path=str(OUT/'product-advisor-mobile.png'),full_page=True)
-        page.set_viewport_size({'width':1440,'height':1000})
         cards.first.get_by_role('button',name='Chọn để lập đề xuất',exact=True).click()
         page.locator('.o_form_view [name=approval_checked] input').wait_for(timeout=15000)
         assert root('sale.order','search_count',[])==before
@@ -116,7 +109,7 @@ def main():
         context.close();browser.close()
     report={'kind':'automated_test_fixture_not_human_pilot','native_budget_and_tax':True,'no_quote_before_explicit_approval':True,
         'app_entry_opens_queue':True,'advisor_requires_explicit_menu':True,
-        'one_draft_after_approval':True,'idempotent_approval':True,'desktop_mobile':True,'model_calls':0,'javascript_errors':errors}
+        'one_draft_after_approval':True,'idempotent_approval':True,'model_calls':0,'javascript_errors':errors}
     (OUT/'product-advisor-browser-qa.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
     print(json.dumps(report))
 

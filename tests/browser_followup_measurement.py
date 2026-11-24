@@ -71,13 +71,6 @@ def main():
         assert resumed["res_id"] == review["id"]
         page.locator("[name=summary] input").fill("Rà soát lịch chăm sóc")
         page.locator("[name=note] textarea").fill("Kiểm tra báo giá và chuẩn bị nội dung trao đổi với khách.")
-        page.evaluate("document.querySelector('.o_content')?.scrollTo(0, 0)")
-        page.screenshot(path=str(OUT / "measurement-ready-desktop.png"), full_page=True)
-        page.set_viewport_size({"width": 390, "height": 844})
-        page.screenshot(path=str(OUT / "measurement-ready-mobile.png"), full_page=True)
-        page.locator("[name=note]").scroll_into_view_if_needed()
-        page.screenshot(path=str(OUT / "measurement-note-mobile.png"), full_page=True)
-        page.set_viewport_size({"width": 1440, "height": 1000})
         page.locator("[name=approval_checked] input").check()
         page.get_by_role("button", name="Duyệt tạo việc", exact=True).click()
         page.locator(".modal-dialog").get_by_role("button", name="Ok", exact=True).click()
@@ -114,7 +107,7 @@ def main():
         context.close(); browser.close()
     report = {"database": args.database, "kind": "automated_test_fixture_not_human_pilot", "manual_trial_browser": True,
         "resume_keeps_same_trial": True, "explicit_approval_creates_activity": True, "quotation_still_draft": True,
-        "private_csv_download_parsed": True, "self_rating_flow": True, "customer_text_omitted": True, "desktop_mobile_screenshots": True,
+        "private_csv_download_parsed": True, "self_rating_flow": True, "customer_text_omitted": True,
         "javascript_errors": errors, "human_ratings_collected": 0}
     (OUT / "measurement-browser-qa.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps(report))

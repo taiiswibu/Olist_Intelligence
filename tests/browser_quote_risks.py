@@ -78,7 +78,6 @@ def main():
         page.locator(".modal-dialog").wait_for(state="detached", timeout=15000)
         page.wait_for_function("document.querySelector('[name=findings_html]')?.textContent.includes('Fixture: đã đối chiếu')")
         assert "Đúng chủ đích" in page.locator("[name=findings_html]").inner_text()
-        page.screenshot(path=str(OUT/"risk-handling-desktop.png"), full_page=True)
         events = rpc(user, password, "olist.ai.quote.risk.decision", "search_read", [["review_id", "=", review["id"]]], fields=["actor_id", "decision", "reason"])
         assert len(events) == 1 and events[0]["actor_id"][0] == user and events[0]["decision"] == "intentional"
         assert root("sale.order", "read", [quote], fields=quote_fields)[0] == before
@@ -87,7 +86,6 @@ def main():
         page.set_viewport_size({"width": 390, "height": 844})
         page.reload()
         page.locator(".o_form_view [name=findings_html]").wait_for(timeout=30000)
-        page.screenshot(path=str(OUT/"risk-handling-mobile.png"), full_page=True)
         # Open through the mobile toolbar; Odoo selects its native kanban view.
         handle_button = page.get_by_role("button", name="Ghi nhận xử lý", exact=True)
         if not handle_button.is_visible():
@@ -95,7 +93,6 @@ def main():
         handle_button.click()
         mobile_dialog = page.locator(".modal-dialog")
         mobile_dialog.locator(".o_kanban_record").filter(has_text="Có dòng chưa chọn thuế").wait_for(timeout=30000)
-        page.screenshot(path=str(OUT/"risk-handling-dialog-mobile.png"), full_page=True)
         card = mobile_dialog.locator(".o_kanban_record").filter(has_text="Có dòng chưa chọn thuế")
         card.click()
         child = page.locator(".modal-dialog").last
@@ -119,15 +116,9 @@ def main():
         comparison = page.locator("[name=comparison_html]").inner_text()
         for label in ["Vẫn xuất hiện", "Mới xuất hiện", "Không còn xuất hiện", "Trước:", "Sau:"]:
             assert label in comparison
-        page.locator("[name=comparison_html]").scroll_into_view_if_needed()
-        page.screenshot(path=str(OUT/"risk-comparison-desktop.png"), full_page=True)
-        page.set_viewport_size({"width": 390, "height": 844})
-        page.locator("[name=comparison_html]").scroll_into_view_if_needed()
-        page.screenshot(path=str(OUT/"risk-comparison-mobile.png"), full_page=True)
         reviews = rpc(user, password, "olist.ai.quote.risk.review", "search_read", [["order_id", "=", quote]], fields=["id", "job_started", "previous_review_id", "decision_ids"], order="id desc")
         assert len(reviews) == 2 and not any(r["job_started"] for r in reviews)
         assert reviews[0]["previous_review_id"][0] == review["id"] and not reviews[0]["decision_ids"]
-        page.set_viewport_size({"width": 1440, "height": 1000})
         source_before_export = root("sale.order", "read", [quote], fields=quote_fields)[0]
         with page.expect_download(timeout=60000) as pdf_download:
             page.get_by_role("button", name="Tải báo cáo PDF", exact=True).click()
