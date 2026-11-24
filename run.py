@@ -43,7 +43,7 @@ def check_port():
                     "Cổng 8000 đang có tiến trình sử dụng.\n"
                     "Mở http://127.0.0.1:8000/ để kiểm tra bản đang chạy.\n"
                     "Nếu là Olist cũ, dừng bằng Ctrl+C tại terminal đã mở nó rồi chạy lại.\n"
-                    "Xem mục xử lý lỗi trong README.md nếu không tìm thấy terminal."
+                    "Xem phần cài và chạy trong README.md."
                 ) from None
             raise SystemExit("Không mở được cổng 8000 (mã lỗi " + str(exc.errno) + "). Kiểm tra quyền hoặc cấu hình Windows.") from None
 

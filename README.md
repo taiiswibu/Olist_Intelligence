@@ -313,9 +313,9 @@ Nhập câu hỏi rồi **Tra cứu**. Xem câu trả lời, mã trích dẫn v�
 
 ### 6.5. ML rủi ro giao hàng
 
-Chọn đơn lịch sử, bấm **Tính điểm rủi ro** và đọc cùng bảng holdout. Điểm chưa hiệu chỉnh xác suất; kết quả còn yếu. Không dùng để tự từ chối đơn hoặc kết luận seller gây trễ.
+Chọn đơn lịch sử, bấm **Tính điểm rủi ro** và đọc cùng bảng so sánh validation/tháng 7. Bản train hiện tại dùng Logistic Regression, ngưỡng `0,09`; có số cảnh báo đúng, sai và bỏ sót. Điểm chưa hiệu chỉnh xác suất. Không dùng để tự từ chối đơn hoặc kết luận seller gây trễ.
 
-Clone mới chưa có artifact có thể chạy `manage.py train`. Khi phát triển, chọn model/ngưỡng trên validation; không chọn lại theo holdout đã xem. ML giao trễ và fine-tune LLM là hai việc khác nhau; dự án chưa fine-tune LLM.
+Clone mới chưa có artifact có thể chạy `.\.venv\Scripts\python.exe manage.py train`. Pipeline so sánh prior, Logistic Regression, HistGradientBoosting và hai bản hiệu chỉnh sigmoid. Chọn model/ngưỡng trên validation, không chọn lại theo tháng 7 đã xem. Model lưu local ở `models/delivery.joblib`, không đưa lên Git. Đây là huấn luyện ML bảng, chưa fine-tune LLM.
 
 ![Điểm ML và giới hạn](media/demo/07-ml-giao-tre.jpg)
 
@@ -570,21 +570,36 @@ Corpus/nhãn do dự án biên soạn. Đúng nguyên văn chứng minh xuất x
 
 ### 11.3. ML giao trễ
 
-Chọn trên validation: `HistGradientBoosting`. Holdout tháng 07/2018 có 6.047 đơn đủ nhãn:
+Đã huấn luyện lại trên Olist gốc. Quy trình tách theo thời gian và chỉ nhận nhãn đã biết trước mốc kế tiếp:
 
-| Chỉ số | Kết quả |
-|---|---:|
-| AP / PR-AUC | 0,04995 |
-| ROC-AUC | 0,60215 |
-| Precision tại ngưỡng 0,13 | 4,56% |
-| Recall | 45,08% |
-| Brier | 0,04151 |
+| Tập | Phạm vi | Số đơn |
+|---|---|---:|
+| Fit | Duyệt trước 01/03/2018; giao và ngày hẹn trước 01/03 | 50.475 |
+| Hiệu chỉnh | Duyệt tháng 3–4; giao và ngày hẹn trước 01/05 | 8.377 |
+| Validation | Duyệt tháng 5; kết quả biết trước 01/07 | 6.418 |
+| Kiểm tra lại | Duyệt tháng 7; delivered đủ nhãn | 6.047 |
 
-Brier kém baseline, chưa hiệu chỉnh xác suất, không tự quyết định nghiệp vụ. Không chọn lại model/ngưỡng theo holdout. Snapshot không chứng minh thuộc tính chưa từng bị sửa sau thời điểm dự đoán.
+Thử prior, Logistic Regression, HistGradientBoosting và hai bản sigmoid. Model gốc chỉ fit tập đầu; sigmoid dùng tập riêng qua [FrozenEstimator/CalibratedClassifierCV](https://scikit-learn.org/stable/modules/generated/sklearn.calibration.CalibratedClassifierCV.html). Chọn AP validation cao nhất; AP bằng nhau thì chọn Brier validation thấp hơn. Mỗi model chọn ngưỡng F1 riêng trên validation, từ `0,01` đến `0,99`; không fit lại sau khi chọn.
+
+**Validation chọn Logistic Regression chưa hiệu chỉnh**, ngưỡng `0,09`. Sigmoid không được chọn: Brier validation của Logistic tăng từ `0,06239` lên `0,07005`. Có thử hiệu chỉnh không đồng nghĩa hiệu chỉnh sẽ tốt hơn khi tỷ lệ giao trễ đổi theo thời gian.
+
+Tháng 7 có 193 đơn trễ trên 6.047 đơn, tỷ lệ **3,19%**. Đây là tập test đã xem từ lần trước; kết quả dưới đây là **kiểm tra lại**, không phải test độc lập mới:
+
+| Model | AP validation | AP tháng 7 | ROC-AUC tháng 7 | Brier tháng 7 |
+|---|---:|---:|---:|---:|
+| Prior | 0,06809 | 0,03192 | 0,50000 | 0,03137 |
+| Logistic Regression — được chọn | 0,12003 | 0,06690 | 0,62363 | 0,03251 |
+| HistGradientBoosting | 0,11710 | 0,05680 | 0,63772 | 0,03296 |
+
+Tại ngưỡng `0,09`, model cảnh báo **1.232 đơn**: đúng 70, cảnh báo sai 1.162, bỏ sót 123 đơn trễ. Precision **5,68%**, recall **36,27%**, F1 **0,09825**. AP cao hơn baseline nhưng Brier vẫn kém prior, nên chưa coi điểm là xác suất tin cậy và chưa dùng tự động quyết định nghiệp vụ.
+
+So với bản cũ, AP tháng 7 tăng từ `0,04995` lên `0,06690`; recall giảm từ `45,08%` xuống `36,27%`. Hai quy trình dùng tập fit/ngưỡng khác nhau, không thể kết luận bản mới tốt hơn mọi mặt. Giữ toàn bộ ứng viên, ngưỡng, confusion counts, hash dữ liệu/code/artifact trong [ml_evaluation.json](reports/ml_evaluation.json).
+
+F1 chưa phản ánh chi phí hay khả năng xử lý cảnh báo của sales. Chỉ có đơn đã giao đủ nhãn và snapshot lịch sử; không chứng minh ngày hẹn/thuộc tính chưa từng bị sửa. Muốn chứng minh hiệu quả mới cần dữ liệu tương lai chưa dùng phát triển.
 
 ### 11.4. Bằng chứng phần mềm
 
-- **284 test backend**, **42 test addon** tại mốc chuẩn bị README; xem kết quả và phạm vi của CI/lượt phát hành tương ứng.
+- **288 test backend** sau cập nhật ML; **42 test addon** tại mốc kiểm tra Odoo trước đó. Xem kết quả và phạm vi của CI/lượt phát hành tương ứng.
 - [verification.json](reports/verification.json): đối soát CSV độc lập và kiểm tra HTTP.
 - [ai_delivery_20261124.json](reports/ai_delivery_20261124.json): commit/hash/model/mẫu số của lượt đo trước khi gom tài liệu.
 - [demo_evidence.json](reports/demo_evidence.json): ảnh, file tải, trạng thái và giới hạn lần chụp.
