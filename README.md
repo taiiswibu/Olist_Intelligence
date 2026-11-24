@@ -23,9 +23,8 @@ Bài toán chính là giúp người bán tra số liệu, tìm tài liệu, ki�
 - [9. Vấn đề đã gặp và cách giải quyết](#9-vấn-đề-đã-gặp-và-cách-giải-quyết)
 - [10. Phạm vi dữ liệu và bảo mật](#10-phạm-vi-dữ-liệu-và-bảo-mật)
 - [11. Kết quả đo](#11-kết-quả-đo)
-- [12. Kịch bản trình diễn và tái lập bằng chứng](#12-kịch-bản-trình-diễn-và-tái-lập-bằng-chứng)
-- [13. Kiểm thử, cập nhật và xử lý lỗi](#13-kiểm-thử-cập-nhật-và-xử-lý-lỗi)
-- [14. Mã nguồn, dữ liệu và giấy phép](#14-mã-nguồn-dữ-liệu-và-giấy-phép)
+- [12. Kiểm thử và cập nhật](#12-kiểm-thử-và-cập-nhật)
+- [13. Mã nguồn, dữ liệu và giấy phép](#13-mã-nguồn-dữ-liệu-và-giấy-phép)
 
 ## 1. Chức năng
 
@@ -306,10 +305,9 @@ Nhập câu hỏi rồi **Tra cứu**. Xem câu trả lời, mã trích dẫn v�
 ![Trích đoạn có nguồn](media/demo/04-rag.jpg)
 
 <details>
-<summary>Xem từ chối ngoài phạm vi và giao diện điện thoại</summary>
+<summary>Xem từ chối ngoài phạm vi</summary>
 
 ![Không đủ bằng chứng](media/demo/06-rag-tu-choi.jpg)
-![RAG điện thoại](media/demo/05-rag-mobile.jpg)
 
 </details>
 
@@ -594,42 +592,9 @@ Brier kém baseline, chưa hiệu chỉnh xác suất, không tự quyết đị
 
 Đường dẫn/hash trong báo cáo cũ thuộc commit được ghi trong báo cáo. Không viết lại lịch sử hoặc xóa kết quả chưa tốt khi dọn tài liệu. Test cấu trúc/quyền không thay đánh giá nội dung độc lập.
 
-## 12. Kịch bản trình diễn và tái lập bằng chứng
+## 12. Kiểm thử và cập nhật
 
-Có thể trình bày khoảng 8–10 phút, tùy thời gian chờ API:
-
-| Bước | Thao tác | Điều cần chứng minh |
-|---|---|---|
-| 1 | Lọc 2018, SP; tải CSV | Cùng nguồn/phạm vi và định nghĩa KPI |
-| 2 | Trợ lý thường hỏi KPI; Đội agent hỏi KPI + AOV | Công cụ BI và tài liệu có nguồn |
-| 3 | Chỉnh báo cáo/biểu đồ; tải PDF/Excel | Tải file thật, không chỉ chụp form |
-| 4 | RAG hỏi ngày giao hẹn, rồi thời tiết | Có nguồn và biết từ chối |
-| 5 | ML chọn đơn lịch sử | Hiểu điểm yếu và holdout |
-| 6 | ERP tra cứu, đối soát, tải PDF đã có | Odoo tính số; chưa duyệt chưa ghi báo giá mới |
-| 7 | Odoo xem chăm sóc/lượt đo/rủi ro/trước-sau | Có nguồn, lịch sử và bước kiểm tra |
-| 8 | Quà sinh nhật, 200 BRL; mở đề xuất | Lọc ngân sách, chặn AI sai, duyệt riêng |
-
-Ảnh chụp tự động trên app thật, không phải người dùng độc lập đánh giá. Trong lượt chụp, cửa sổ ghi nhận chỉ mở để xem, không lưu kết luận nghiệp vụ. Các bảng báo giá, khách, hóa đơn và hoạt động được đối chiếu trước/sau để kiểm tra không có phê duyệt ngoài ý muốn.
-
-Một số ảnh đọc bản DEMO đã có. Trạng thái AI không hợp lệ được giữ, không đổi chữ giả thành thành công. Hành vi phê duyệt có ghi ERP được kiểm tra trong database test; fixture không đưa vào database đang dùng.
-
-Tái lập khi app/Odoo chạy và có bản ghi DEMO phù hợp:
-
-```powershell
-.\.venv\Scripts\python.exe -m pip install playwright pypdf openpyxl
-.\.venv\Scripts\python.exe tests/browser_readme_demo.py --phase web
-.\.venv\Scripts\python.exe tests/browser_readme_demo.py --phase team
-.\.venv\Scripts\python.exe tests/browser_readme_demo.py --phase erp
-.\.venv\Scripts\python.exe tests/browser_readme_demo.py --phase odoo
-```
-
-Script dùng Edge trên Windows và bản DEMO của lần chuẩn bị này, không phải bộ seed thay Olist. Xem `--help` để dùng lại review/advice đã tạo khi chụp lại. File gốc/PDF/Excel/CSV nằm ngoài Git ở `.openai/qa/readme-demo/`; chỉ ảnh được chọn mới vào `media/demo/`.
-
-Để render trang PDF thành ảnh có thể dùng PyMuPDF. Đây là công cụ tạo bằng chứng tùy chọn, không cần cho người dùng chạy app.
-
-## 13. Kiểm thử, cập nhật và xử lý lỗi
-
-### 13.1. Kiểm thử
+### 12.1. Kiểm thử
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt -r requirements-agent.txt
@@ -644,7 +609,7 @@ git diff --check
 
 `verify_release.py` cần dữ liệu đã setup, kiểm tra offline trong server tạm. `test_odoo_ai.py` cần Docker/Odoo, tự tạo/xóa database test, không dùng database chính. Không cần train lại ML khi đổi README/giao diện.
 
-### 13.2. Đo khi thay model/prompt/skill
+### 12.2. Đo khi thay model/prompt/skill
 
 ```powershell
 .\.venv\Scripts\python.exe scripts/benchmark_rag.py --split dev --answers --out data/processed/rag-dev-new.json
@@ -658,40 +623,11 @@ Thay model/prompt/skill: đo phần bị ảnh hưởng trên cùng bộ dev/bas
 
 Chấm nội dung cần phiếu mù/người chấm. So các phiên bản chỉ khi cùng tập, ca, số lặp và chính sách phù hợp. Không tự điền điểm chất lượng người dùng bằng kết quả test.
 
-### 13.3. Cập nhật
+### 12.3. Cập nhật
 
 Working tree sạch thì `git pull --ff-only`. Giữ `.env`, dữ liệu, model và Docker volumes. Đổi schema addon cần sao lưu database và nâng cấp module trong Odoo; restart container không tự nâng cấp schema.
 
-### 13.4. Lỗi thường gặp
-
-| Hiện tượng | Cách xử lý |
-|---|---|
-| Thiếu uvicorn/httpx | Dùng đúng `.venv\Scripts\python.exe` để pip/chạy, không dùng Code Runner/Python global |
-| Pip timeout | Chạy lại SETUP, giữ .venv/cache; script có timeout/retry |
-| Tiếng Việt cp1258 | Launcher hoặc `python -X utf8`; đặt `PYTHONUTF8=1` khi cần |
-| Cổng 8000 đã dùng | Mở web hiện có, nhận diện đúng tiến trình dự án rồi dừng đúng PID |
-| Không kết nối web | Kiểm tra launcher, /health, token và phiên; không đăng token lên Git |
-| Odoo không lên | Docker Desktop, compose ps và log dịch vụ |
-| Odoo AI 401/không lấy kết quả | Bridge token, backend 8000, môi trường container sau đổi .env |
-| Không thấy addon | Apps list, mount odoo_addons, tên module |
-| API 400/401/403/404 | Kiểm tra model ID/quyền/key, không retry như lỗi tạm thời |
-| API 429/503 | Xem quota/dịch vụ, tôn trọng Retry-After, dùng local/quy tắc |
-| RAG lexical_fallback | Kiểm tra Ollama, tên model, nguồn/digest và lập lại index |
-| Không có sản phẩm | Kiểm tra nhóm/số lượng/ngân sách BRL/danh mục; không thêm hàng giả |
-| Tổng thay đổi lúc duyệt | Lập đối soát mới, không ép ghi snapshot cũ |
-| PDF thiếu font | Cài dependencies; Windows dùng Arial, Linux dùng font được hỗ trợ |
-| ML thiếu artifact/khác sklearn | Tái tạo theo quy trình nghiên cứu, không chỉnh để làm đẹp holdout |
-
-Nhận diện cổng:
-
-```powershell
-Get-NetTCPConnection -LocalPort 8000 -State Listen |
-  Select-Object LocalAddress, OwningProcess
-```
-
-Tra `Win32_Process` bằng PID thực tế để xem executable/command line. Chỉ dừng đúng tiến trình đã xác định của dự án; không tắt toàn bộ `python.exe`.
-
-## 14. Mã nguồn, dữ liệu và giấy phép
+## 13. Mã nguồn, dữ liệu và giấy phép
 
 ```text
 frontend/             HTML/CSS/JavaScript, không cần build

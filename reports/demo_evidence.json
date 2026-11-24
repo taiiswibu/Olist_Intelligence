@@ -28,8 +28,7 @@
         {
           "name": "local_rag_and_refusal",
           "method": "hybrid_sqlite_vec",
-          "unknown_generation": "not_called",
-          "mobile_no_overflow": true
+          "unknown_generation": "not_called"
         },
         {
           "name": "historical_ml_prediction",
@@ -52,7 +51,6 @@
         "02-tro-ly.jpg",
         "03-bao-cao.jpg",
         "04-rag.jpg",
-        "05-rag-mobile.jpg",
         "06-rag-tu-choi.jpg",
         "07-ml-giao-tre.jpg",
         "08-doi-soat-erp.jpg",
@@ -64,7 +62,6 @@
         "02-tro-ly.jpg": "Trợ lý cơ bản · Số liệu lấy từ công cụ BI và có truy vấn đối chiếu",
         "03-bao-cao.jpg": "Báo cáo thật từ công cụ BI · Chỉnh nhận xét, biểu đồ, lưu và tải file",
         "04-rag.jpg": "RAG local · Model chọn trích đoạn, backend đối chiếu nguyên văn với nguồn",
-        "05-rag-mobile.jpg": "RAG trên điện thoại",
         "06-rag-tu-choi.jpg": "Ngoài phạm vi tài liệu · Từ chối trả lời và không gọi model sinh nội dung",
         "07-ml-giao-tre.jpg": "ML thử nghiệm · Đọc điểm cùng giới hạn holdout; không tự ra quyết định",
         "08-doi-soat-erp.jpg": "Đối soát giá và thuế bằng Odoo · Giá BRL lấy từ dòng báo giá DEMO đang có",
@@ -205,11 +202,6 @@
       "sha256": "6d27f22dcd14709edf6d047135cc22c1419948356606462cfacc0dc50f444982"
     },
     {
-      "path": "media/demo/05-rag-mobile.jpg",
-      "bytes": 96585,
-      "sha256": "d6cfd87bfe6c204c548c9470845f9e8f471e4904b3b6e7da36ba6f539834cfd7"
-    },
-    {
       "path": "media/demo/06-rag-tu-choi.jpg",
       "bytes": 120575,
       "sha256": "f4e3c46e16a2f5716c230741b6d0b4bb87d5c620927b4d60007b8455e8fd8600"
@@ -340,7 +332,7 @@
     "olist/knowledge.json": "39d4c623b478c0c62082bff1ceae30a5fe95f524add373b4c91f10b3c004e473",
     "olist/rag_store.py": "a98e44d1865f443e3021c7e6a5a74f94c47159b94ab3b3e6bd5e296f20243ae8",
     "olist/api.py": "811a76f92d8838c27e0af60c0ad64d6941058b3221b07ccde911a360dc27cca3",
-    "tests/test_rag.py": "a3f6d3739d40643d19b42d2298a13214c34421b41b9272ca8a9f830d3c81d40b",
-    "tests/browser_readme_demo.py": "71d9d0f9e3d407f3e4362fe86b32a1aa26435c3541630d52537672366f2dc58f"
-  }
+    "tests/test_rag.py": "a3f6d3739d40643d19b42d2298a13214c34421b41b9272ca8a9f830d3c81d40b"
+  },
+  "capture_commit": "e1f48b61629b671c59a0f84d4e65e7681aebea03"
 }
