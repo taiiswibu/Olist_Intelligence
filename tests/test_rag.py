@@ -12,16 +12,17 @@ from olist.api import app
 
 @pytest.fixture
 def corpus(tmp_path, monkeypatch):
-    folder=tmp_path/'docs/knowledge'
+    folder=tmp_path/'olist'
     folder.mkdir(parents=True)
-    (folder/'policy.md').write_text('## Đổi trả hàng\nSản phẩm được đổi trả trong bảy ngày nếu còn nguyên tem và hóa đơn. Liên hệ bộ phận bán hàng để đối chiếu điều kiện.',encoding='utf-8')
+    corpus=folder/'knowledge.json'
+    corpus.write_text(json.dumps([{'source':'policy','text':'## Đổi trả hàng\nSản phẩm được đổi trả trong bảy ngày nếu còn nguyên tem và hóa đơn. Liên hệ bộ phận bán hàng để đối chiếu điều kiện.'}]),encoding='utf-8')
     monkeypatch.setattr(rag,'ROOT',tmp_path)
     monkeypatch.setenv('EMBED_MODEL','fixture')
     monkeypatch.setenv('RAG_MODE','hybrid')
     monkeypatch.setattr(store,'model_identity',lambda model:{'model':model,'digest':'fixture-digest'})
     monkeypatch.setattr(store,'embed',lambda texts,model,**kw:np.asarray([[1.,0.,0.]]*len(texts),dtype=np.float32))
     rag.lexical_index.cache_clear()
-    return folder
+    return corpus
 
 
 def test_real_vector_database_and_stale_content(corpus):
@@ -30,7 +31,7 @@ def test_real_vector_database_and_stale_content(corpus):
     result=rag.retrieve('Điều kiện đổi trả hàng')
     assert result['method']=='hybrid_sqlite_vec' and result['answerable']
     assert result['sources'][0]['semantic_score']==1
-    (corpus/'policy.md').write_text('## Chính sách mới\n'+'Điều kiện giao hàng được thay đổi. '*10,encoding='utf-8')
+    corpus.write_text(json.dumps([{'source':'policy','text':'## Chính sách mới\n'+'Điều kiện giao hàng được thay đổi. '*10}]),encoding='utf-8')
     result=rag.retrieve('Điều kiện đổi trả hàng')
     assert result['method']=='lexical_fallback' and 'warning' in result
     assert not rag.status()['ready']
@@ -78,7 +79,9 @@ def test_invalid_embeddings_are_rejected(monkeypatch,vectors):
 
 
 def test_long_documents_not_silently_truncated(corpus):
-    (corpus/'long.md').write_text('## Long\n'+'Nội dung dài. '*700+'KẾT THÚC',encoding='utf-8')
+    data=json.loads(corpus.read_text(encoding='utf-8'))
+    data.append({'source':'long','text':'## Long\n'+'Nội dung dài. '*700+'KẾT THÚC'})
+    corpus.write_text(json.dumps(data),encoding='utf-8')
     assert any('KẾT THÚC' in d['text'] for d in rag.documents())
     assert max(len(d['text']) for d in rag.documents())<=1300
 

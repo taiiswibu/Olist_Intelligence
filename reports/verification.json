@@ -1,5 +1,5 @@
 {
-  "verified_at_utc": "2026-11-24T04:48:06.032733+00:00",
+  "verified_at_utc": "2026-11-24T05:46:03.567044+00:00",
   "platform": "Windows-11-10.0.26200-SP0",
   "python": "3.12.2",
   "unit_tests_passed": 284,
@@ -219,7 +219,7 @@
   },
   "offline_agent_latency_ms": {
     "p50": 375.0,
-    "p95": 1686.950000000297,
+    "p95": 2683.6000000002055,
     "note": "host CPU, no LLM requests; not a load test"
   }
 }

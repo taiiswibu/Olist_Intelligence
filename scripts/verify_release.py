@@ -1,4 +1,4 @@
-"""Repeatable real-data/API/Streamlit checks. No cloud credentials or ERP writes."""
+"""Repeatable real-data/API/HTML checks. No cloud credentials or ERP writes."""
 import os
 from pathlib import Path
 import sys

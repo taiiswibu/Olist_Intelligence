@@ -24,11 +24,16 @@ def normalize(text):
 
 def documents(*, public_only=False):
     chunks = []
-    files=[(p,p.name) for p in sorted((ROOT/'docs/knowledge').glob('*.md'))]
+    corpus=ROOT/'olist/knowledge.json'
+    public=json.loads(corpus.read_text(encoding='utf-8')) if corpus.exists() else []
+    if not isinstance(public,list) or any(not isinstance(d,dict) or set(d)!={'source','text'}
+            or not isinstance(d['source'],str) or not re.fullmatch(r'[a-z0-9_-]+',d['source'])
+            or not isinstance(d['text'],str) for d in public):
+        raise ValueError('Kho tri thức đóng gói không đúng định dạng.')
+    files=[(d['text'],d['source']) for d in public]
     if not public_only:
-        files += [(p,'local/'+p.name) for p in sorted((ROOT/'data/knowledge').glob('*.md'))]
-    for path,source in files:
-        text = path.read_text(encoding='utf-8')
+        files += [(p.read_text(encoding='utf-8'),'local/'+p.name) for p in sorted((ROOT/'data/knowledge').glob('*.md'))]
+    for text,source in files:
         for part in re.split(r'(?m)(?=^## )', text):
             if len(part.strip()) < 50:
                 continue

@@ -291,7 +291,7 @@ def erp_read(which):
     except ValueError:
         raise
     except Exception as exc:
-        raise HTTPException(503, "Chưa kết nối được Odoo. Xem docs/ODOO_WINDOWS.md và cấu hình .env") from exc
+        raise HTTPException(503, "Chưa kết nối được Odoo. Xem mục cài Odoo trong README.md và cấu hình .env") from exc
 
 
 @app.get("/erp/{kind}", dependencies=secured)
