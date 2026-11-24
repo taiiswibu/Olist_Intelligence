@@ -25,3 +25,5 @@ Các trường reply_status, activity_completion, activity_similarity luôn là 
 - review_existing_activity: "Rà soát công việc đang hẹn và tình trạng xử lý trước khi sắp xếp bước tiếp theo." Note là chỉ dẫn nội bộ, không phải lời chào gửi khách.
 
 Explanation chỉ giải thích trạng thái và reason_codes đang có. Không tự đề xuất chỉnh giá, giảm giá hoặc điều kiện hợp đồng khi chưa có yêu cầu/nguồn cho thay đổi đó.
+
+Luồng ổn định cung cấp `allowed_focus`: chỉ chọn góc trao đổi trong danh sách và loại việc. Nội dung tiếng Việt được dựng local từ dữ kiện; không thêm summary/note vào JSON khi schema chỉ yêu cầu lựa chọn. Luồng benchmark văn bản cũ vẫn dùng schema riêng để giữ baseline.

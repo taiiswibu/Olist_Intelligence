@@ -49,7 +49,7 @@ def test_final_http_payload_to_both_models_contains_only_minimized_data(monkeypa
     canaries = ["PERSON_PRIVATE_CANARY", "SECRET_QUOTE_CANARY", "837251.46", "client_omega@example.invalid",
                 "+84 900 765 432", "SECRET_ADDRESS_CANARY", "SUMMARY_PRIVATE_CANARY", "2026-11-21", data["database"]]
     requests = model_transport(monkeypatch, canaries)
-    result = asyncio.run(f.analyze(f.AnalysisRequest.model_validate(data)))
+    result = asyncio.run(f.analyze_strategy(f.AnalysisRequest.model_validate(data), "pipeline"))
     assert len(requests) == 2
     assert result["items"][0]["order_id"] == data["orders"][0]["id"]
     assert result["privacy_version"] == p.VERSION
@@ -73,7 +73,7 @@ def test_source_pii_and_notes_cannot_change_cloud_features_and_aliases_do_not_pe
 
 def test_model_invented_contact_is_blocked_before_reviewer(monkeypatch):
     requests = model_transport(monkeypatch, [], malicious=True)
-    with pytest.raises(f.AnalysisFailure):asyncio.run(f.analyze(f.AnalysisRequest.model_validate(payload())))
+    with pytest.raises(f.AnalysisFailure):asyncio.run(f.analyze_strategy(f.AnalysisRequest.model_validate(payload()), "pipeline"))
     assert len(requests) == 1
 
 

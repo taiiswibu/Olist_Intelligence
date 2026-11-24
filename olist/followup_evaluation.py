@@ -19,7 +19,7 @@ from . import agent_skills, followups, followup_privacy, followup_grounding, fol
 from .config import ROOT
 
 VERSION = "followup-evaluation-v1"
-STRATEGIES = {"rules": 0, "groq": 1, "gemini": 1, "pipeline": 2}
+STRATEGIES = {"rules": 0, "groq": 1, "gemini": 1, "pipeline": 2, "assisted": 2}
 SUITE = ROOT / "tests/fixtures/followup_benchmark_v1.py"
 RATING_FIELDS = ["sample_id", "rater", "business_correct", "grounded", "usable", "decision", "edit_seconds"]
 
@@ -62,6 +62,9 @@ def summarize(records):
         result[strategy] = {"cases": len(rows), "completed": sum(r["completed"] for r in rows),
             "completion_rate": mean(r["completed"] for r in rows),
             "contract_pass_rate": mean(r["contract_pass"] for r in rows),
+            "ai_completed": sum(r.get('ai_completed', r['completed'] and r['strategy']!='rules') for r in rows),
+            "fallback_count": sum(r.get('result_strategy')=='rules_fallback' for r in rows),
+            "fallback_reasons": dict(Counter(r['fallback_reason'] for r in rows if r.get('fallback_reason'))),
             "elapsed_p50_ms": percentile([r["elapsed_ms"] for r in rows], .5),
             "elapsed_p95_ms": percentile([r["elapsed_ms"] for r in rows], .95),
             "model_calls": sum(t.get("privacy", {}).get("requests_checked", 1) for t in traces),
@@ -103,7 +106,7 @@ async def run(output, strategies=("rules",), split="dev", limit=None, repeats=1,
               request_policy=None):
     strategies = tuple(strategies)
     if not strategies or len(set(strategies)) != len(strategies) or not set(strategies) <= STRATEGIES.keys():
-        raise ValueError("Chọn phương án duy nhất trong rules, groq, gemini, pipeline.")
+        raise ValueError("Chọn phương án duy nhất trong rules, groq, gemini, pipeline, assisted.")
     if split not in {"dev", "holdout"} or not 1 <= repeats <= 5 or limit is not None and limit <= 0:
         raise ValueError("Tập đánh giá, số tình huống hoặc số lần lặp chưa hợp lệ.")
     if set(strategies) != {"rules"} and not live:
@@ -115,14 +118,14 @@ async def run(output, strategies=("rules",), split="dev", limit=None, repeats=1,
     if budget > max_model_calls:
         raise ValueError(f"Lượt này cần tối đa {budget} lần gọi model, vượt --max-model-calls={max_model_calls}.")
     providers = {p.name: p for p in llm.providers()} if live else {}
-    needed = set().union(*({"groq", "gemini"} if s == "pipeline" else {s} if s != "rules" else set() for s in strategies))
+    needed = set().union(*({"groq", "gemini"} if s in {"pipeline", "assisted"} else {s} if s != "rules" else set() for s in strategies))
     if not needed <= providers.keys():
         raise ValueError("Chưa cấu hình đủ model; chưa chạy benchmark.")
     output = Path(output)
     if output.exists() and any(output.iterdir()):
         raise ValueError("Thư mục kết quả đã có dữ liệu; dùng thư mục mới để giữ lịch sử.")
     output.mkdir(parents=True, exist_ok=True)
-    code_files = [ROOT / "olist" / name for name in ["followups.py", "followup_privacy.py", "followup_grounding.py", "followup_transport.py", "team_model.py", "followup_evaluation.py"]]
+    code_files = [ROOT / "olist" / name for name in ["followups.py", "followup_plans.py", "followup_privacy.py", "followup_grounding.py", "followup_transport.py", "team_model.py", "followup_evaluation.py"]]
     skill_files = [ROOT / ".agents/skills" / name / "SKILL.md" for name in agent_skills.FOLLOWUP_SKILLS]
     commit = subprocess.run(["git", "-c", "safe.directory="+ROOT.as_posix(), "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True)
     dirty = subprocess.run(["git", "-c", "safe.directory="+ROOT.as_posix(), "status", "--porcelain"], cwd=ROOT, capture_output=True, text=True)
@@ -151,7 +154,7 @@ async def run(output, strategies=("rules",), split="dev", limit=None, repeats=1,
         for repeat in range(repeats):
             order = list(strategies); rng.shuffle(order)
             for strategy in order:
-                start = time.monotonic(); trace = []; items = []; error = None
+                start = time.monotonic(); trace = []; items = []; error = None; result = {}
                 try:
                     result = await followups.analyze_strategy(followups.AnalysisRequest.model_validate(case["payload"]), strategy, request_policy=policy)
                     trace = result["trace"]; items = result["items"]
@@ -163,6 +166,8 @@ async def run(output, strategies=("rules",), split="dev", limit=None, repeats=1,
                     set(items[0]["reason_codes"]) == set(case["expected_codes"])) and items[0]["activity_type"] in case["allowed_types"]
                 record = {"sample_id": uuid.uuid4().hex[:16], "case_id": case["id"], "family": case["family"], "tags": case["tags"],
                     "strategy": strategy, "repeat": repeat, "completed": completed, "contract_pass": bool(contract),
+                    "result_strategy": result.get('strategy'), "ai_completed": result.get('ai_completed', completed and strategy!='rules'),
+                    "fallback_reason": result.get('fallback_reason'),
                     "elapsed_ms": round((time.monotonic()-start)*1000, 2), "trace": trace, "items": items,
                     "error": error, "estimated_cost": estimate_cost(trace, pricing) if trace else 0 if strategy == "rules" else None}
                 records.append(record)
